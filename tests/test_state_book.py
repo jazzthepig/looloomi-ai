@@ -95,7 +95,7 @@ def test_rosters_are_the_frozen_november_ones_and_every_member_is_accounted_for(
     assert not (set(sb.SOURCES) & set(sb.UNAVAILABLE)) and "carry_b_top_rc" in sb.EXCLUDED
     assert {"s823_r6", "s819_short_s015", "s819_short_s030"} <= set(sb.SOURCES), "S-898:T-406 的三条已接"
     assert sb.SOURCES["s823_r6"][1] is True and sb.SOURCES["s819_short_s015"][1] is False, "R6 占本金扣现金;闸门空不扣"
-    assert "S642" in sb.UNAVAILABLE
+    assert "S642" in sb.SOURCES and "S642" not in sb.UNAVAILABLE, "T-428:S-642 空头臂已接进纸面账"
 
 
 def test_excess_and_weekend_legs() -> None:
@@ -145,12 +145,12 @@ def test_plan_opens_once_names_what_cannot_be_held_and_waits_for_late_sources(mo
     assert t_only and all(0 < h["weight"] <= sb.MAX_SCALE for h in t_only), "线下 ⇒ 只拿金"
     assert p["now"]["TxLEAD"]["cell"] == "线下·主流领" and p["now"]["TxLEAD"]["cannot_hold"] == {}
 
-    # 二线领那一格:S642 / S736 拿不到要写明,闸门空两档拿得到
+    # 二线领那一格(T-428 接上 S642 之后):S736_published 拿不到要写明,S642 与闸门空两档拿得到
     q = sb.plan_rows(_inputs(cut, lead_majors=False), {}, cut.isoformat())
     st = [h for h in q["holdings"] if h["arm"] == "TxLEAD" and h["key"] == "_state"]
-    assert st and all("线下·二线领;持有 2 / 名单 4;拿不到 S642,S736_published" in h["note"] for h in st), st[0]["note"]
-    assert {h["key"] for h in q["holdings"] if h["arm"] == "TxLEAD"} == {"_state", "s819_short_s015", "s819_short_s030"}
-    assert set(q["now"]["TxLEAD"]["cannot_hold"]) == {"S642", "S736_published"}
+    assert st and all("线下·二线领;持有 3 / 名单 4;拿不到 S736_published" in h["note"] for h in st), st[0]["note"]
+    assert {h["key"] for h in q["holdings"] if h["arm"] == "TxLEAD"} == {"_state", "S642", "s819_short_s015", "s819_short_s030"}
+    assert set(q["now"]["TxLEAD"]["cannot_hold"]) == {"S736_published"}
 
     # 金晚到一天:T_ONLY 停在前一天等它;HOLD_ALL 也等;TxLEAD 不拿金,照写
     p2 = sb.plan_rows(_inputs(cut, late={"XAUUSD": cut - dt.timedelta(days=1)}), {}, cut.isoformat())
@@ -307,6 +307,10 @@ def test_load_inputs_reads_every_source_and_says_which_it_could_not(monkeypatch)
         name = tail.split("?")[0]
         if name == "state_daily" and "style_rel_majors_30d" in tail:
             return lead_rows
+        if name == "ohlcv_daily" and "source=eq.binance_hist" in tail:      # T-428:S-642 的日线
+            return rows642
+        if name == "style_index_pit_daily" and "weighting=eq.cap" in tail:  # T-428:S-642 的闸门
+            return gate642
         return [dict(r) for r in tables.get(name, [])]
     gate = pd.Series(np.arange(len(days)) % 50 < 20, index=days)          # 开 20 天、关 30 天地轮
     daily_fund = {k: pd.Series(0.0001, index=days) for k in ("BTC", "ETH")}
@@ -359,3 +363,50 @@ def test_state_arm_members_never_turn_a_missing_price_into_a_zero_return() -> No
     assert max(raw2["s819_short_s015"]) == dt.date(2026, 11, 16) and max(raw2["s823_r6"]) == dt.date(2026, 11, 22)
     _, miss = sb._state_arm_members({"BTC": px}, fund, gate)
     assert set(miss) == {"s819_short_s015", "s819_short_s030"} and "s823_r6" not in miss, "缺 ETH ⇒ 闸门空写进 missing,不是 0"
+
+
+# ── T-428:S-642 空头臂(T-412 的生产纯函数 `s642_short`)接进这本账 ────────────────────────────
+S642_FIXTURE = ROOT / "tests" / "fixtures" / "s642_fixture.json"
+
+
+def _s642_fixture() -> tuple[dict, dict, list]:
+    import json
+    fx = json.loads(S642_FIXTURE.read_text())
+    keys = ("trade_date", "open", "high", "low", "close", "volume")
+    bars = {s: [dict(zip(keys, r)) for r in rows] for s, rows in fx["bars"].items()}
+    return fx, bars, [{"d": d, "ret": r} for d, r in fx["gate"]]
+
+
+def test_s642_member_reproduces_the_research_family_curve_day_by_day() -> None:
+    """卡 T-428 验收 ⑤:fixture 的信号窗口上,`_s642_member` 整段重算的逐日净值与研究族曲线逐日相同(≤ 1e-9)。
+
+    fixture 的覆盖在段尾是「票开了就停」的导出形状(2022-02-05 起每天只剩 9–16 个符号),
+    不是源停供 ⇒ 覆盖规则的截断点显式给到段末;生产路径走 `_s642_known_to`(另有一条测试)。"""
+    fx, bars, gate_rows = _s642_fixture()
+    seg = fx["meta"]["segment"]
+    m = sb._s642_member(bars, gate_rows, fx["meta"]["signal_to"],
+                        d_from=fx["meta"]["signal_from"], known_to=seg[1])
+    exp = {d: v for d, v in fx["expected"]}
+    assert m["nav"], "没算出净值"
+    assert set(exp) <= set(m["nav"]), f"缺 {len(set(exp) - set(m['nav']))} 天"
+    worst = max(abs(m["nav"][d] - v) / max(1.0, abs(v)) for d, v in exp.items())
+    assert worst <= 1e-9, f"逐日净值最大相对差 {worst:.3e}"
+    assert abs(m["nav"][seg[0]] - exp[seg[0]]) <= 1e-9, "段首净值也要一样"
+    assert m["rets"] and max(m["rets"]) == dt.date.fromisoformat(seg[1]), "收益序列到段末"
+
+
+def test_s642_stops_at_the_last_day_with_prices_instead_of_inventing_zeros() -> None:
+    """卡 T-428 验收 ③(S-898 / I1):价格停在某天、闸门照常往后走 ⇒ 最后一个给出的日子 = 价格的最后一天。
+
+    缺价的日子不许记成 0 收益(那是「没测到」,纸面账要等源);闸门停得更早 ⇒ 只到闸门最后一天。"""
+    fx, bars, gate_rows = _s642_fixture()
+    cut = "2022-02-04"                                   # 假装日线只到这天;闸门照常到 2022-11-05
+    trimmed = {s: [r for r in rows if str(r["trade_date"])[:10] <= cut] for s, rows in bars.items()}
+    trimmed = {s: r for s, r in trimmed.items() if r}
+    m = sb._s642_member(trimmed, gate_rows, "2022-11-05", d_from=fx["meta"]["signal_from"])
+    assert m["known_to"] == cut, m["known_to"]
+    assert m["rets"], "票还开着(OGN 2022-01-21 进)⇒ 收益非空"
+    assert max(m["rets"]) <= dt.date.fromisoformat(cut), "缺价的日子不许进这条序列"
+    g2 = [r for r in gate_rows if r["d"] <= "2022-01-30"]
+    m2 = sb._s642_member(trimmed, g2, "2022-11-05", d_from=fx["meta"]["signal_from"])
+    assert m2["known_to"] == "2022-01-30", m2["known_to"]

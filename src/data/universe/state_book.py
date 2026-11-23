@@ -43,6 +43,14 @@ SOURCE_OUTAGES: tuple[tuple[str, str, str], ...] = (
 )
 OUTAGE_BACKFILL_DAYS = 7
 HISTORY_DAYS = 200                   # σ 要 90 个日历日;多读一些
+#: S-642 空头臂(T-412 的生产纯函数 `src/data/signals/s642_short.py`)接进这本账的**固定起点**(卡 T-428)。
+#: 起点必须写死:每票 0.5% 净值风险 + 同时最多 10 张 ⇒ 今天的净值依赖更早开的票;起点一变,整段历史就变。
+S642_FROM = "2025-01-01"
+S642_WARMUP = 220                   # s642_short.WARMUP:信号日往前满 220 根
+S642_BARS_LEAD = 230                # 往前多留 10 根余量(币安日线一天一根)
+S642_BARS_FROM = (dt.date.fromisoformat(S642_FROM) - dt.timedelta(days=S642_BARS_LEAD)).isoformat()
+S642_GATE_FROM = "2023-01-01"       # 闸门要 200 天 majors 才出值;起点写死 ⇒ 闸门值不随 cutoff 变
+S642_SHARDS = 16                    # 并发分片读的片数(同一张表、同一个 `_get_all`)
 RULE = ("state_strength_v2:S-890(名单冻结 2026-11-01、26 条面板、判据 v2;d−1 收盘的状态;等权平均缩放后收益,"
         "缩放 min(3, 10%/σ90);对现金的超额)")
 WRITES_TABLES = ("forward_book_nav", "forward_book_holdings")
@@ -91,11 +99,12 @@ SOURCES: dict[str, tuple[str, bool]] = {
     "s823_r6": ("state_arms.r6_exposure + r6_returns 作用于 asset_mcap_daily BTC、币安永续资金费按天求和", True),
     "s819_short_s015": ("state_arms.gate_short_returns(s = 0.15):BTC / ETH 等权篮子、majors 闸门前一天关着才空", False),
     "s819_short_s030": ("state_arms.gate_short_returns(s = 0.30)", False),
+    # T-428:S-642 空头臂 = T-412 的生产纯函数在生产数据上整段重算(起点写死 S642_FROM);不扣现金(与研究族曲线同口径)
+    "S642": ("s642_short.run_short + nav 整段重算(起点 S642_FROM;ohlcv_daily binance_hist 日线 + style_index_pit_daily majors/cap 闸门)", False),
 }
 GATE_SHORTS = {"s819_short_s015": 0.15, "s819_short_s030": 0.30}
-#: 该拿、拿不到(S-890)。S642 的生产核在 T-412,接线另开卡。
+#: 该拿、拿不到(S-890)。
 UNAVAILABLE: dict[str, str] = {
-    "S642": "生产核已有(T-412),还没接进来",
     **{k: "只有研究回测" for k in ("S736_published", "S736_fixed", "S808", "S810", "S681_H2", "S681_H3", "S681_H4")},
 }
 EXCLUDED: dict[str, str] = {"carry_b_top_rc": "套息不进(S-835 没过准入)"}
@@ -330,6 +339,105 @@ def _state_arm_members(closes: dict, fund: dict, gate: Any) -> tuple[dict, dict]
     return raw, missing
 
 
+def _s642_known_to(bars: dict[str, list[dict]], gate: dict[str, bool]) -> Optional[str]:
+    """最后一个「当天有日线的符号数 ≥ 前一天(按日历日)的 80%、且闸门有值」的日子。
+
+    **价缺不许变成 0**(S-898 / I1):日历上**第一个**断点就截断(不是只截尾)—— 断点之后的盯市全是拿旧收盘
+    记出来的假平盘,那是「没测到」不是「收益为 0」。所以那天之后一律不给,纸面账等源。"""
+    cnt: dict[str, int] = {}
+    for rows in bars.values():
+        for r in rows:
+            d = str(r["trade_date"])[:10]
+            cnt[d] = cnt.get(d, 0) + 1
+    if not cnt or not gate:
+        return None
+    days = sorted(cnt)
+    gdays = sorted(gate)
+    d = max(D(days[0]), D(gdays[0]))                        # 闸门还没值的日子发不出信号,不算断点
+    end = D(days[-1])
+    prev, known_to = 0, None
+    while d <= end:
+        k = d.isoformat()
+        c = cnt.get(k, 0)
+        if c <= 0 or c < 0.8 * prev or k not in gate:
+            break                                            # 第一个断点就停
+        known_to = k
+        prev = c
+        d += dt.timedelta(days=1)
+    return known_to
+
+
+def _s642_member(bars: dict[str, list[dict]], gate_rows: list[dict], cutoff: str,
+                 d_from: str = S642_FROM, known_to: Optional[str] = None) -> dict:
+    """S-642 空头臂(T-412 的生产纯函数 `src/data/signals/s642_short.py`)在生产数据上整段重算。
+
+    `d_from` 写死成 `S642_FROM`:同时最多 10 张 ⇒ 今天的净值依赖更早开的票;起点一变,每天重算出来的历史就变。
+    `known_to` = 覆盖规则的截断点;None = 按 `_s642_known_to` 算(生产路径)。给值 = 显式截断,
+    只给复现/测试用(研究段导出的覆盖在段尾是「票开了就停」的形状,不是源停供)。
+    返回 {"rets": {日: 日收益}, "nav": {日: 净值}, "known_to": 最后可给的一天, "reason": 给不出的原因}。
+    同步纯函数;调用方放进线程。"""
+    from src.data.signals.s642_short import nav, run_short
+    from src.data.signals.short_paper import gate_closed_by_day
+    out: dict = {"rets": {}, "nav": {}, "known_to": None, "reason": ""}
+    if not bars or not gate_rows:
+        out["reason"] = "S-642 输入读不到(ohlcv_daily binance_hist 或 style_index_pit_daily majors/cap)"
+        return out
+    gate = gate_closed_by_day(gate_rows)
+    known_to = known_to or _s642_known_to(bars, gate)
+    out["known_to"] = known_to
+    if known_to is None:
+        out["reason"] = "S-642 日线或闸门读不到"
+        return out
+    if known_to < d_from:
+        out["reason"] = f"S-642 日线只到 {known_to}(还没到 {d_from})"
+        return out
+    bars = {s: [r for r in rows if str(r["trade_date"])[:10] <= known_to] for s, rows in bars.items()}
+    bars = {s: rows for s, rows in bars.items() if rows}
+    tk = run_short(bars, gate, d_from=d_from, d_to=known_to)
+    curve = nav(tk, bars, d_to=known_to)
+    if not curve:
+        out["reason"] = "S-642 没开出票(闸门没关过或宇宙筛全灭)"
+        return out
+    eq = {D(r["d"]): float(r["equity"]) for r in curve}
+    out["nav"] = eq
+    out["rets"] = daily_from_nav(eq)
+    return out
+
+
+async def _s642_inputs(cutoff: str) -> tuple[dict[str, list[dict]], list[dict]]:
+    """S-642 空头臂的输入:binance_hist 日线(`S642_BARS_FROM` → cutoff)+ majors/cap 闸门。
+
+    整段一次读(生产里这本账没写到昨天时每 3 小时最多一次):按日历日分片并发走现有的 `_get_all`,
+    每片显式 `order` —— 分片只改怎么取,不改取到哪些行。不新增取数入口、不出外网。"""
+    d0, d1 = D(S642_BARS_FROM), D(cutoff)
+    if d1 <= d0:
+        return {}, []
+    span = (d1 - d0).days
+    step = max(1, -(-span // S642_SHARDS))
+    tails: list[str] = []
+    for i in range(0, span + 1, step):
+        a = d0 + dt.timedelta(days=i)
+        b = d0 + dt.timedelta(days=min(i + step - 1, span))
+        tails.append(f"ohlcv_daily?select=symbol,trade_date,open,high,low,close,volume"
+                     f"&source=eq.binance_hist&trade_date=gte.{a.isoformat()}"
+                     f"&trade_date=lte.{b.isoformat()}&order=symbol.asc,trade_date.asc")
+    parts = await asyncio.gather(*[_get_all(t) for t in tails])
+    bars: dict[str, list[dict]] = {}
+    seen: set[tuple[str, str]] = set()
+    for part in parts:
+        for r in part or []:
+            k = (r["symbol"], str(r["trade_date"])[:10])
+            if k in seen:                       # 分片重叠(不该发生)也别把同一根日线算两遍
+                continue
+            seen.add(k)
+            bars.setdefault(r["symbol"], []).append(r)
+    for rows in bars.values():
+        rows.sort(key=lambda r: str(r["trade_date"])[:10])
+    gate_rows = await _get_all(f"style_index_pit_daily?select=d,ret&style=eq.majors&weighting=eq.cap"
+                                f"&d=gte.{S642_GATE_FROM}&d=lte.{cutoff}&order=d")
+    return bars, gate_rows
+
+
 async def load_inputs(cutoff: str) -> dict:
     """各成员对现金的超额日收益 + 三条状态轴。读不到的成员写进 missing(读不到 ≠ 收益为 0)。"""
     from src.data.universe.forward_books import tom_inputs
@@ -359,6 +467,16 @@ async def load_inputs(cutoff: str) -> dict:
         missing.update(miss)
     except Exception as e:  # noqa: BLE001 —— 读不到 ≠ 收益为 0:写进 missing,当天按不可持有
         missing.update({k: f"state_arms 输入读不到:{type(e).__name__}" for k in ("s823_r6", *GATE_SHORTS)})
+    try:                                   # T-428:S-642 空头臂 = T-412 的生产纯函数在生产数据上整段重算(起点写死 S642_FROM)
+        s_bars, s_gate = await _s642_inputs(cutoff)
+        m = await asyncio.to_thread(_s642_member, s_bars, s_gate, cutoff)
+        if m["rets"]:
+            raw["S642"] = m["rets"]
+            known["S642"] = D(m["known_to"])
+        else:
+            missing["S642"] = m["reason"] or "S-642 这轮读不到"
+    except Exception as e:  # noqa: BLE001 —— 读不到 ≠ 收益为 0
+        missing["S642"] = f"S-642 输入读不到:{type(e).__name__}"
     rv = await _get_all(f"r_money_daily?select=d,nav&d=lte.{cutoff}&order=d")
     if rv:
         raw["R-v2"] = daily_from_nav({D(r["d"]): float(r["nav"]) for r in rv if r.get("nav") is not None})
