@@ -1,0 +1,33 @@
+{
+  "status": "open",
+  "created": "2026-11-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "src/data/execution/",
+    "src/api/",
+    "src/data/signals/"
+  ],
+  "verified": null,
+  "id": "T-428",
+  "owner": "lane-a",
+  "title": "把 S-642 空头臂(T-412 的纯函数)接进纸面账 state_book:固定起点整段重算的逐日收益 + 读库 + 测试 —— 11-30 之前要落地",
+  "source": "台账 S-890 / S-898。纸面账 `src/data/universe/state_book.py` 的名单里 S642 在「线下 · 二线领」(主臂)与「线下 · 抽」(对照臂 TxL)两格,现在记在 `UNAVAILABLE`(「生产核已有,还没接进来」)。生产核 = `src/data/signals/s642_short.py`(T-412,lane-c,fixture 逐位相同)。**样板 = 同文件里 11-23 刚接的 `_state_arm_members`(R6 / 闸门空):同步纯计算放线程、读不到写进 missing、价缺不给数。**",
+  "allowed_paths": [
+    "src/data/universe/state_book.py",
+    "tests/test_state_book.py",
+    "tests/fixtures/",
+    "docs/research/",
+    "tasks/T-428.json"
+  ],
+  "acceptance": {
+    "check": "① `state_book.py` 加同步函数 `_s642_member(bars, gate_rows, cutoff)`:`s642_short.run_short(bars, gate, d_from=S642_FROM, d_to=cutoff)` → `s642_short.nav(...)` → {日: 日收益}。**`S642_FROM` 写死成常量(建议 \"2025-01-01\")**:同时最多 10 张 ⇒ 今天的净值依赖更早开的票,起点不固定的话每天重算出来的历史会变。闸门复用 `short_paper.gate_closed_by_day`(不重写)。② `load_inputs` 里读输入:`ohlcv_daily`(source = binance_hist)从 `S642_FROM` 往前留够热身(220 根 + 你量出来的最长回看)到 cutoff 的全部符号,显式 `order`,走现有的 `_get_all`;闸门行读 `style_index_pit_daily`(majors / cap)。**不新增任何取数入口、不出外网。** 计算走 `asyncio.to_thread`。③ **价缺不许变成 0(S-898 / I1):** 成员只给到「当天有日线的符号数 ≥ 前一天的 80%、且闸门有值」的最后一天;之后不给(纸面账会等)。写一条测试:价格停在某天、闸门照常 ⇒ 最后一个给出的日子 = 价格的最后一天。④ `SOURCES[\"S642\"] = (…, False)`(不扣现金,与研究面板同口径),从 `UNAVAILABLE` 里拿掉;`tests/test_state_book.py` 里「线下 · 二线领」那条断言改成 持有 3 / 名单 4、拿不到只剩 S736_published。⑤ **历史一致性:** 用 T-412 的 fixture(`tests/fixtures/s642_fixture.json`)证明 `_s642_member` 在 fixture 的信号窗口上与 fixture 的逐日净值逐日相同(≤ 1e-9)。另在回复里报一组数(不进测试):起点改成 `S642_FROM` 之后,2025-01 → 2026-10 的逐日收益与研究族曲线(`docs/research/t348_r3_families.csv` 的 S642)差多少(中位 / p95 / 最大 / 累计差 / 相关)—— 差来自「起点之前开的票不在」,量出来,不凑。⑥ 报实测:一次读多少行、读与算各几秒(生产里这本账没写到昨天时每 3 小时最多整段读一次)。超过 20 万行或 30 秒先停下来说。⑦ **不许动**:`RULE` 字符串、`ROSTERS`、`START`、`SOURCE_OUTAGES`、已有成员的来路。",
+    "expect": "代码 + 测试 + 回复里的两张小表;卡 in_review,推 lane-a/T-428。**合并前 Seth 读 diff(runtime)。期限 2026-11-30**:CG 12-01 恢复后纸面账会把 11-20 起等着的日子一次写出,写过的行不改 —— 在那之前接上,这一格才有 S642。"
+  },
+  "prior_value": "熊市里主臂名单最厚的一格(线下 · 二线领:S642 / S736 / 闸门空两档)现在只拿得到闸门空;对照臂「线下 · 抽」同样缺它。「谁在领」这几天离翻到二线领只差 1–2 个百分点。",
+  "notes": "2026-11-23T04:29:16Z Seth 开卡(台账 S-898;高维线)。"
+}

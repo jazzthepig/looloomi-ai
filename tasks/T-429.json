@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-429",
+  "owner": "lane-a",
+  "title": "两条状态轴不靠 CoinGecko 能不能读:稳定币轴换 DeFiLlama 口径、「谁在领」用币安价 + 冻结权重续算 —— 全历史对账,只量不改",
+  "source": "台账 S-898。CG 停订后 `state_daily` 的 `stable_supply_30d`(读 `cg_coin_mcap_daily` 的 USDT + USDC 市值)11-19 起为空、`style_rel_majors_30d`(读 `style_index_pit_daily`,权重来自 CG 市值)11-20 起为空 ⇒ 纸面账与形态记分都在等。Seth 11-23 的两条只读 SQL:① `stablecoin_issuer_daily`(source = defillama_stablecoins,免费,活到 11-22)的 USDT + USDC 30 日变化,与官方重叠 7 天差 ≤ 0.35pp、符号全同;② 用 11-19 的成员与市值权重 + `ohlcv_daily` binance_hist 收盘把两条风格指数续三天,11-19 那天影子 +0.26pp 对官方 +0.06pp(二线指数只有 41 / 77 名在币安有价,占市值 55%)。7 天、3 天不够下结论。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-429.json"
+  ],
+  "acceptance": {
+    "check": "新脚本 `docs/research/t429_cg_free_axes.py`(只读库,照现有研究脚本的取数方式;不 import `src/`)。**A. 稳定币轴:** `stablecoin_issuer_daily` 全历史(先报它从哪天起有 USDT、USDC 两条)算 USDT + USDC 合计的 30 日变化,与 `state_daily`(entity = panel, feature = stable_supply_30d)在全部重叠日比:天数、差的中位 / p95 / 最大(pp)、**符号一致率**、符号不一致的日子列出来(值都贴着 0 的那种单独数)、按年分。**B. 谁在领:** 对 2024-01-01 → 2026-11-19 的每个月初 m,做一次「假装 CG 在 m 那天停了」:用 m − 1 的成员与市值权重、之后只用 binance_hist 收盘把 majors 与 second_l1_l2 两条 cap 指数续 30 天,每天算影子 `style_rel_majors_30d`,与官方值比:第 1 / 7 / 14 / 30 天的差(中位 / p95 / 最大,pp)、**对门槛(严格更早全部官方值的均值)的同侧率**、币安有价的成员数与市值覆盖率的分布。**C. 结论只写读数**:哪条轴在多长的停供里可以续读、误差多大、什么时候会判错边;不提议改 `state_daily`(那是 Seth 与 Jazz 的口径决定)。落盘 `docs/research/t429_results.json` + 一页 `t429_cg_free_axes.md`;情景文件照规矩(问未来的值,结算日 ≥ 入账后 7 天)。",
+    "expect": "脚本 + 结果 + 一页说明;卡 in_review,推 lane-a/T-429。排在 T-428(S-642 接线)之后。"
+  },
+  "prior_value": "两条第二轴是纸面账与形态 #1 的输入;它们靠一个会停的付费源。量清楚无 CG 时能读到什么精度,才能决定要不要给它们留一条并行的读法。",
+  "notes": "2026-11-23T04:29:16Z Seth 开卡(台账 S-898;高维线)。"
+}
