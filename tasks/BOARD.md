@@ -3,6 +3,7 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-423 | lane-a | 把 T-379 / T-419 整理成能过范围检查的分支(T-379 的卡补一条允许路径 + T-419 重切一个干净分支),并把 T-419 的场景文件按台账格式重交 | 三样东西:① `lane-a/T-379` 推上来(只多一行改卡),且 `python3 scripts/check_pr_scope.py --branch lane-a/T-379 --base origin/main --head origin/lane-a/T-379` 的输出是 `✓ 范围检查`;② `lane-a/T-419-v2` 推上来,notes 里给 commit sha 与「它只含 5 个文件」的证据(`git diff --stat origin/lane-a/T-379..origin/lane-a/T-419-v2`);③ 场景文件改完后自查输出 `problems= [] n= 5`。**Seth 侧的动作**(不在你这一轮):先合 `lane-a/T-379`,再合 `lane-a/T-419-v2`(顺序不能反 —— 反了 T-419 的范围 diff 会涨到 36 个文件)。**不许**把 main 的旧内容带进 v2;**不许**改 T-419 卡的 allowed_paths;**不许**改 preflight 注册。 | T-421 裁决(2026-11-22,Seth):按键翻页**按原样合**(①)。三档实测(各 3 次取中位数,OFFSET 侧 vs 按键侧):① 无过滤整读 448,296 行 126.821s vs 131.403s(+3.61%,离散度 2.3×,且 `src/` 里零生产调用点);② ≥2024-06-20 173,994 行 34.850s vs 33.590s(−3.62%);③ `fetch_panel(2025-01-01)` 183,892 行 15.693s vs 15.384s(−1.97%)⇒ ②③ 都 ≤ ⇒ 预注册的升级判据成立(② 升 ①)。三档逐行 sha256 两边逐字相同(`20ee382b…` / `87e04260…` / `e68cd243…`)⇒ T-379 验收「逐行内容不许变」通过。 |  |
+| in_review | T-426 | lane-b | 真钱执行计划的收盘价不再只认 CoinGecko:BTC / ETH 收盘在 asset_mcap_daily 缺失时退到 ohlcv_daily(binance_hist),默认关、先量两源逐日差;并列出所有卡在 11-19 的前向账与真钱输入 | 分支 `lane-b/T-426` 推上来,卡 in_review;notes 写:① 的差表(max / p99 / 中位 bp、错一天与否);② 19 天里目标权重不同的天数与止损线最大差 bp;③④ 测试通过数与变异测试红的那一条;⑤ 的清单行数。报告 `docs/research/t426_exec_price_fallback.md`。开关开不开由 Seth 在合并后按 ①② 的数定 —— 你不替真钱做决定。 | 执行计划只有一个价源(CG 的 asset_mcap_daily);CG 断 ⇒ 计划 refused ⇒ X1V 既不能回场也拿不到新止损线。11-20 起已连续 3 天 + 。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
@@ -425,4 +426,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 17 · claimed 7 · blocked 4 · in_review 1 · done 388 · dropped 5
+open 17 · claimed 7 · blocked 4 · in_review 2 · done 388 · dropped 5
