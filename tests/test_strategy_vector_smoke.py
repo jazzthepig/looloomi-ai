@@ -422,17 +422,19 @@ def test_step7_sidecar_tag_on_ship_records() -> None:
     _check(">= 3 ship records have sidecar: tag",
            n_with_sidecar >= 3,
            detail=f"{n_with_sidecar} of {len(ship)} ship records have sidecar tag")
-    # S-500 / T-056: the sidecar source has to live INSIDE the repo. The old
-    # reports/ tree is gitignored — on any machine that is not the Mac it is
-    # simply not there, which is what made this test go red on a clean box
-    # (it measured this machine's stale 07-21 artefact, not the code).
+    # S-500 / T-056: the sidecar source has to be where the records say it is
+    # (docs/strategy_sources/sidecars/, not the legacy reports/ tree). S-902
+    # (2026-11-23): that store is no longer committed — the repo is public and
+    # strategy reports are private — so this runs only where the store exists
+    # (Mac main dir; lane / merge worktrees symlink to it). preflight skips this
+    # whole module on a machine without _data/strategy_records.json.
     repo = _P(__file__).resolve().parents[1]
     srcs = [t.split("sidecar:", 1)[1]
             for r in ship for t in r.get("tags", []) if t.startswith("sidecar:")]
     missing = [s for s in srcs if not (repo / s).exists()]
-    _check("every ship sidecar source is committed in the repo",
+    _check("every ship sidecar source exists on this machine (local store; not in the public repo since S-902)",
            not missing,
-           detail=f"{len(srcs) - len(missing)}/{len(srcs)} in-repo; missing={missing[:3]}")
+           detail=f"{len(srcs) - len(missing)}/{len(srcs)} present; missing={missing[:3]}")
 
 
 def test_step8_router_registered_with_correct_paths() -> None:

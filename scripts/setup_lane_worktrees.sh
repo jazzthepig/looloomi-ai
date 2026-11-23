@@ -19,6 +19,10 @@ for lane in a b c; do
   for f in MINIMAX_SYNC.md MINIMAX_SYNC_ARCHIVE.md; do [ -e "$dir/$f" ] || ln -s "$main_wt/$f" "$dir/$f"; done
   # S-501:台账 / 策略手册 / DECISIONS 不入库(公开仓库),同 SYNC 一样只有主目录一份。seth_bot 每轮也会补链。
   for f in REFUTATION_LEDGER.md STRATEGY_PLAYBOOK.md DECISIONS.md docs/DECISIONS.md; do [ -e "$dir/$f" ] || ln -s "$main_wt/$f" "$dir/$f"; done
+  # S-902:台账快照 / 策略报告也不入库,同样只有主目录一份(策略向量重建与它的 smoke 要读)。
+  for f in docs/strategy_sources/REFUTATION_LEDGER.snapshot.md docs/strategy_sources/sidecars; do
+    if [ -e "$main_wt/$f" ] && [ ! -e "$dir/$f" ] && [ -d "$(dirname "$dir/$f")" ]; then ln -s "$main_wt/$f" "$dir/$f"; fi
+  done
   # S-426:提交按 lane 署名。必须 --worktree(且开 worktreeConfig),否则写进共享配置,连 main 一起改名。
   git config extensions.worktreeConfig true
   git -C "$dir" config --worktree user.name "Minimax-$(echo $lane | tr a-z A-Z)"

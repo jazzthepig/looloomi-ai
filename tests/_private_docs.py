@@ -12,6 +12,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_DOCS = ("REFUTATION_LEDGER.md", "STRATEGY_PLAYBOOK.md", "DECISIONS.md", "docs/DECISIONS.md")
+#: S-902:由私有文档**派生**的东西同样不入库 —— 台账 R 段的逐字快照、策略报告。T-056 于 11-18 把它们合进了公开仓库,
+#: 当时的三道门都只认上面四个确切文件名(换个名字、换个目录就过了)。以 `/` 结尾 = 整个目录。
+PRIVATE_DERIVED = ("docs/strategy_sources/REFUTATION_LEDGER.snapshot.md", "docs/strategy_sources/sidecars/")
+#: 被跟踪的路径名里不许出现的名字(大小写不敏感)。
+PRIVATE_NAME_PARTS = ("REFUTATION_LEDGER", "STRATEGY_PLAYBOOK")
+#: 认内容,不认名字:台账的条目标题长这样(`## R76 …` / `## S-902 — …` / `## M-118 …`)。
+#: 任何被跟踪的文本里这种标题达到 `LEDGER_HEADINGS_LIMIT` 个 = 一份台账的拷贝(11-23 实测:全仓库只有那份快照命中,92 个)。
+LEDGER_HEADING = r"(?m)^## (?:R\d+|[SM]-\d+)\b"
+LEDGER_HEADINGS_LIMIT = 10
 
 
 def available(rel: str) -> bool:

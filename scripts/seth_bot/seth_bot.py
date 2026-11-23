@@ -38,18 +38,22 @@ BASE = os.environ.get("COMETCLOUD_BASE", "https://web-production-0cdf76.up.railw
 # 永不经执行器提交的路径(硬规则 + 交接块里一直手写的「永不 stage」清单)。
 # S-501:仓库是 public,这四份不入库(PRIVATE_DOCS)。
 PRIVATE_DOCS = ("REFUTATION_LEDGER.md", "STRATEGY_PLAYBOOK.md", "DECISIONS.md", "docs/DECISIONS.md")
+# S-902:由私有文档派生的拷贝(台账 R 段的逐字快照、策略报告)同样不入库 —— T-056 曾把它们合进公开仓库,
+# 当时的永不提交清单只认上面四个文件名。文件留在主目录,合并 / lane 的 worktree 软链回来。
+PRIVATE_DERIVED = ("docs/strategy_sources/REFUTATION_LEDGER.snapshot.md", "docs/strategy_sources/sidecars/")
 DENY = ("Shadow/", ".env", ".seth_bot/", ".lane_bot/", "MINIMAX_SYNC", "WEEKLY_REVIEW.md", "docs/reading/",
-        "scripts/lesson_enforcement_baseline.txt", "paper_trading/specs/eth_ls_walkforward_v1.json") + PRIVATE_DOCS
+        "scripts/lesson_enforcement_baseline.txt", "paper_trading/specs/eth_ls_walkforward_v1.json") + PRIVATE_DOCS + PRIVATE_DERIVED
 DENY_SUFFIX = (".pptx",)
 MAX_PATHS = 80
 # gitignored、但 Mac 侧 preflight 要读的东西:合并用的临时 worktree 里软链回主目录(S-500 / S-501)。
 # dashboard/node_modules 在这里的原因:preflight 的 vite 新鲜度守卫(v2, 2026-11-20)量的是
 # 「当前 src 编出来的产物 vs 已提交的 dist」—— 合并 worktree 里没有 node_modules 就量不到,
 # 只能退回提交时间比较,而那条尺子在「src 提交不改产物」时永远指红 ⇒ 合并被误挡。
-LOCAL_ONLY = ("_data", "dashboard/node_modules") + PRIVATE_DOCS
+LOCAL_ONLY = ("_data", "dashboard/node_modules") + PRIVATE_DOCS + tuple(p.rstrip("/") for p in PRIVATE_DERIVED)
 # 私有快照:不入公开仓库的文档,每轮有变化就提交进一个本地私有 git 仓库(带历史,可恢复)。
 PRIVATE_REPO = Path(os.environ.get("SETH_BOT_PRIVATE_REPO", str(ROOT.parent / "looloomi-private")))
-SNAPSHOT = PRIVATE_DOCS + ("MINIMAX_SYNC.md", "MINIMAX_SYNC_ARCHIVE.md", "WEEKLY_REVIEW.md", "PROJECT_STATE_LOG.md", "docs/reading")
+SNAPSHOT = PRIVATE_DOCS + ("MINIMAX_SYNC.md", "MINIMAX_SYNC_ARCHIVE.md", "WEEKLY_REVIEW.md", "PROJECT_STATE_LOG.md", "docs/reading") \
+    + tuple(p.rstrip("/") for p in PRIVATE_DERIVED)
 APPEND_ONLY = ("REFUTATION_LEDGER.md",)
 SHRINK_TOLERANCE = 2048          # 台账只追加;比上一份快照短 2KB 以上 = 被旧版本覆盖或截断,不快照、报警
 LANES = ("a", "b", "c")
@@ -668,7 +672,7 @@ def ensure_lane_links() -> None:
         wt = ROOT.parent / f"looloomi-ai-lane-{lane}"
         if not wt.is_dir():
             continue
-        for rel in PRIVATE_DOCS:
+        for rel in PRIVATE_DOCS + tuple(p.rstrip("/") for p in PRIVATE_DERIVED):
             link = wt / rel
             if not link.exists() and not link.is_symlink() and (ROOT / rel).exists() and link.parent.is_dir():
                 link.symlink_to(ROOT / rel)

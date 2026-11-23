@@ -41,17 +41,21 @@ from src.data.vector.strategy_schema import StrategyRecord, Verdict  # noqa: E40
 
 OUT_LOCAL = ROOT / "_data" / "strategy_records.json"
 
-# ── Committed source store (S-500 / T-056) ───────────────────────────────────
-# The strategy vector has to be reproducible on a machine that has NEITHER the
-# Mac-local REFUTATION_LEDGER.md NOR the gitignored reports/ tree. So every
-# source the pipeline mines is committed under docs/strategy_sources/:
+# ── Local source store (S-500 / T-056; NOT committed since S-902, 2026-11-23) ─
+# T-056 committed these two so a clean machine could rebuild the strategy
+# vector. The repo is public and the ledger / strategy reports are private
+# (Jazz 10-07, restated 11-23: "ledger and strategy should not be in the
+# repo") — so they are gitignored again and live only in the Mac main dir
+# (lane / merge worktrees symlink to it; seth_bot backs them up privately).
+# A clean clone cannot rebuild the vector, and says so (`resolve_ledger` → None).
+# The paths and the precedence below are unchanged:
 #
 #   REFUTATION_LEDGER.snapshot.md          — the R-entry sections of the live
 #                                            ledger, extracted verbatim
 #   sidecars/<topic>/<date>/REPORT.md      — the mined experiment reports
 #
-# Rule (and it is the whole point of the card): a LIVE local file always wins;
-# the committed copy is the fallback, never the source of truth. The local
+# Rule: a LIVE local file always wins; the stored copy is the fallback, never
+# the source of truth. The local
 # ledger keeps growing; the snapshot is a dated artefact and says so in its
 # own header. Nothing here invents numbers — the sidecars are byte-for-byte
 # copies of the reports that were mined.
@@ -74,7 +78,7 @@ def _repo_rel(path: Path) -> str:
     """Path relative to the repo root when it lives inside it, else as-is.
 
     Keeps the record's doc_source / sidecar tag readable and machine-checkable
-    no matter whether the source was the committed store or a local file.
+    no matter whether the source was the stored copy or a live file.
     The unresolved path wins — a symlinked ledger should still be reported
     under the name the pipeline used to reach it.
     """
@@ -89,9 +93,9 @@ def _repo_rel(path: Path) -> str:
 def resolve_ledger(explicit: Path | None = None) -> Path | None:
     """Which ledger do we mine R-entries from?
 
-    Order: explicit --ledger → live ./REFUTATION_LEDGER.md → committed snapshot.
-    The live file wins so a Mac run keeps seeing the newest R-entries; the
-    snapshot is what makes a clean clone work at all.
+    Order: explicit --ledger → live ./REFUTATION_LEDGER.md → locally stored snapshot (not in the repo, S-902).
+    The live file wins so a Mac run keeps seeing the newest R-entries. A clean
+    clone has neither and gets None — the vector is not rebuildable there.
     """
     if explicit is not None:
         if not explicit.exists():
@@ -116,7 +120,7 @@ def resolve_sidecar_dirs(explicit: list[Path] | None = None) -> list[Path]:
     """Sidecar stores to search, in priority order.
 
     Explicit --sidecar-dir first (that is the "explicit input" the card asks
-    for), then the committed store, then the legacy Mac-local reports/ tree.
+    for), then the local store, then the legacy Mac-local reports/ tree.
     """
     dirs: list[Path] = list(explicit or [])
     dirs += [SIDECAR_STORE, LEGACY_SIDECAR_ROOT]
@@ -421,7 +425,7 @@ def _enrich_with_report_sidecar(root: Path, rec: StrategyRecord,
     Resolution rules (in order, conservative):
       1. The ledger entry names a report path (`reports/<topic>/<date>/…`).
          We look that path up in the sidecar stores, in priority order:
-         committed docs/strategy_sources/sidecars/ first, then the legacy
+         local docs/strategy_sources/sidecars/ first, then the legacy
          Mac-local reports/ tree.
       2. If no store has it, do nothing (record keeps its body-parser dims).
 
@@ -1031,7 +1035,7 @@ def backfill(dry_run: bool = True, write_redis: bool = False,
     all_records.extend(DOCTRINAL_RECORDS)
     summary["sources"]["DOCTRINAL"] = len(DOCTRINAL_RECORDS)
 
-    # 2. R-entries from the ledger (live file, else committed snapshot)
+    # 2. R-entries from the ledger (live file, else the locally stored snapshot)
     rl_path = resolve_ledger(ledger_path)
     if rl_path is not None:
         rl_text = rl_path.read_text()
@@ -1134,7 +1138,7 @@ Provenance: {source} @ {stamp}
 
 def export_ledger_snapshot(ledger_path: Path | None = None,
                             out_path: Path = LEDGER_SNAPSHOT) -> dict:
-    """Copy the R-entry sections of the live ledger into the committed store.
+    """Copy the R-entry sections of the live ledger into the local store (gitignored since S-902 — never committed).
 
     Returns a small dict so the caller can print what it did.
     """
@@ -1180,13 +1184,13 @@ def main():
                    help="also push to Upstash Redis (requires env vars)")
     p.add_argument("--ledger", type=Path, default=None,
                    help="explicit ledger input (default: ./REFUTATION_LEDGER.md, "
-                        "else the committed snapshot)")
+                        "else the locally stored snapshot)")
     p.add_argument("--sync", type=Path, default=None,
                    help="explicit MINIMAX_SYNC input (default: ./MINIMAX_SYNC.md, "
                         "else docs/MINIMAX_SYNC.md)")
     p.add_argument("--sidecar-dir", type=Path, action="append", default=None,
                    help="explicit sidecar store (repeatable; searched before the "
-                        "committed store and the legacy reports/ tree)")
+                        "local store and the legacy reports/ tree)")
     p.add_argument("--export-snapshot", action="store_true",
                    help="write docs/strategy_sources/REFUTATION_LEDGER.snapshot.md "
                         "from the live ledger, then exit")

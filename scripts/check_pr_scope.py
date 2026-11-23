@@ -40,6 +40,7 @@ GLOBAL_FORBIDDEN = (
     "DECISIONS.md",            # S-501:以下三份不入库 —— lane 用 git add -f 也过不去
     "REFUTATION_LEDGER.md",
     "STRATEGY_PLAYBOOK.md",
+    "docs/strategy_sources/",  # S-902:台账快照 / 策略报告曾从这里进了公开仓库(T-056)—— 整个目录 lane 不碰
     ".env",
 )
 

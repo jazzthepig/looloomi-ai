@@ -129,3 +129,8 @@ _data/research/
 /docs/DECISIONS.md
 # S-503 lane_bot 的唤醒文件 / 运行记录 / 状态(本机状态,不入库)
 .lane_bot/
+
+# S-902(2026-11-23,Jazz:「ledger and strategy should not be in the repo」):台账的逐字快照与策略报告不入公开仓库。
+# 文件留在 Mac 主目录(唯一一份;私有备份 ~/Projects/looloomi-private),策略向量重建照常读它。
+/docs/strategy_sources/REFUTATION_LEDGER.snapshot.md
+/docs/strategy_sources/sidecars/

@@ -338,6 +338,16 @@ def test_a_core_worktree_override_stops_every_job() -> None:
         assert sb.worktree_override(root=repo) == "", "只认 [core] 节里的那一个"
 
 
+def test_derived_private_copies_are_denied_and_linked_into_worktrees() -> None:
+    """S-902:台账快照 / 策略报告曾经被提交进公开仓库 —— 永不提交清单当时只认四个文件名。"""
+    import scripts.seth_bot.seth_bot as sb
+    assert sb.path_problems(["docs/strategy_sources/REFUTATION_LEDGER.snapshot.md"])
+    assert sb.path_problems(["docs/strategy_sources/sidecars/r62_fragility_funding_ls/2026-07-21/REPORT.md"])
+    assert not sb.path_problems(["docs/strategy_sources/README.md"]), "说明文件照常能提交"
+    for rel in sb.PRIVATE_DERIVED:
+        assert rel.rstrip("/") in sb.LOCAL_ONLY and rel.rstrip("/") in sb.SNAPSHOT
+
+
 if __name__ == "__main__":
     import inspect as _inspect
     print("── S-500 seth_bot ──")
