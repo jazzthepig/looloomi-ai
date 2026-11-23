@@ -1,0 +1,26 @@
+{
+  "id": "T-432",
+  "owner": "seth",
+  "status": "blocked",
+  "created": "2026-11-23",
+  "verified": null,
+  "title": "CMC 每日收盘快照进 CIS 输入:全交易所成交量、全市场市值 / BTC 占比、max_supply、HYPE / SKY 的价(CG 停供期间的第二层兜底)",
+  "source": "台账 S-900。Jazz 11-23:「can we put cis score back by cmc and other api that we have?」库内兜底(币安收盘 + 流通量 × 价 + 校准成交量)已能让正式档按日发布,但仍缺四样:HYPE / SKY(币安无价 ⇒ 那两个名字没有行)、全市场市值(BTC 占比算不出,regime 少一个输入)、max_supply(封顶发行加分 ≤ 5 分 F)、成交量是估计值不是全交易所的数。CMC 的 `quotes/latest` + `global-metrics` 两笔调用能补齐,免费档日预算 40 次够用。生产上次报 `key_present=false`。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "migrations/",
+    "docs/SPINE.md",
+    "tasks/T-432.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① 新表 `cmc_close_daily`(d、symbol、price、market_cap、volume_24h、circulating / total / max supply、fetched_at)+ 一行全市场(total_mcap、btc_dominance);只在 UTC 00:00–00:30 之间取(过了这个窗口取到的不是收盘 ⇒ 当天不写,记拒绝原因)。② `cg_less_fallback` 的顺序:CG → CMC 快照 → 库内兜底;每一维的来源照旧写进行的 `inputs`。③ 没有 key ⇒ 循环记 refused「没有 CMC key」,不报 ok。④ 测试 + CG / CMC 重叠日的口径差量表(恢复后补)。",
+    "expect": "规则 5b 三样;第一行要等 key。"
+  },
+  "prior_value": "把「估计的成交量、缺两个名字、缺 BTC 占比」换成另一家 vendor 的真数;CG 再停一次时不用重新想。",
+  "notes": "2026-11-23T09:04:41Z Seth 开卡(高维线;台账 S-900)。blocked = 等 Jazz 在 Railway 上把 CMC 的 key 配成 `CMC_API_KEY`(key 的值只经 Jazz)。",
+  "blocked_by": "jazz:在 Railway 上把 CMC 的 key 配成 CMC_API_KEY(key 的值只经 Jazz)"
+}

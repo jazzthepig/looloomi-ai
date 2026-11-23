@@ -1,0 +1,25 @@
+{
+  "id": "T-430",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-23",
+  "verified": null,
+  "title": "账户里出现「不是系统开的仓位」:当场记下、每小时更新到平仓、发提醒 —— 只读,不拦、不下单",
+  "source": "台账 S-904 A / B。11-15 → 11-22 执行器账户里有手动永续(ETH 空,日终名义是净值的 1.8–3.4 倍),主机心跳每小时都读到 `perp_positions`,没有任何意图对应它;系统没记、没报。T-370 说的 `spec_account_daily` 11-23 实测 0 行,写入端没有调度者。逐笔记录不存在 ⇒ 复盘只能从日终快照倒推。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "migrations/",
+    "docs/SPINE.md",
+    "tasks/T-430.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① Railway 收主机心跳的地方:仓位(永续 + 现货)里凡是没有对应 open 意图 / 单票的,写一行(品种、方向、数量、名义、名义 ÷ 净值、首见时刻、最近一次看到的时刻、浮盈),同一个仓位更新不新建;平掉后补已实现盈亏的估计(ΔUSDC 口径,写明是估计)。② 日终落 `spec_account_daily`(调度者 = 现有的真钱快照循环)。③ 首见与名义 ÷ 净值超过系统永续硬顶(`RV2_GROSS_CAP_FRAC`)时各发一次 Telegram,文字只陈述事实,不带建议。④ 测试:有意图的仓位不记;没有意图的记一次;超过硬顶标出;读不到心跳 ≠ 没有仓位。⑤ **不改主机代码、不下单、不拦单**(手动单是账户主人的权利)。",
+    "expect": "规则 5b 三样:调度者(心跳入口 + 日终循环)、判活(`select * from spec_positions order by first_seen desc limit 3` / `select max(d) from spec_account_daily`)、第一行真实数据(下一次出现这种仓位的一小时内;在那之前用 11-15 的心跳回放证明会写)。"
+  },
+  "prior_value": "系统对「不经过它的动作」至少要看见、记下。没有这条,下一次还是只能事后从日终快照猜。",
+  "notes": "2026-11-23T09:04:41Z Seth 开卡(高维线;台账 S-904)。"
+}
