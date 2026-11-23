@@ -212,12 +212,13 @@ def test_run_state_arms_writes_from_the_start_day_and_never_rewrites() -> None:
     r, written = _run("2026-11-20", loader=loader)
     assert r["ok"], r
     nav_rows = written["forward_book_nav"]
-    assert {x["arm"] for x in nav_rows} == {"R6", "GATE_S15", "GATE_S30"}
+    assert {x["arm"] for x in nav_rows} == {"R6", "GATE_S15_V2", "GATE_S30_V2"}
     for x in nav_rows:
         assert x["d"] >= START, f"写了起算日之前的行:{x['d']}"
         assert x["book"] == "state_arms" and x["rule"]
-    seeds = [x for x in nav_rows if x["d"] == START]
-    assert len(seeds) == 3 and all(x["nav"] == 1.0 for x in seeds), "起算日当天就该有第一行"
+    seeds = {x["arm"]: x for x in nav_rows if x["ret"] is None}
+    assert set(seeds) == {"R6", "GATE_S15_V2", "GATE_S30_V2"} and all(x["nav"] == 1.0 for x in seeds.values()), "起算日当天就该有第一行"
+    assert seeds["R6"]["d"] == START and seeds["GATE_S15_V2"]["d"] == seeds["GATE_S30_V2"]["d"] == fb.GATE_V2_START
     # 再跑一次(库里已经有行)⇒ 不重写、写过的天不改
     have = [{"arm": x["arm"], "d": x["d"], "nav": x["nav"]} for x in nav_rows]
     r2, written2 = _run("2026-11-20", loader=loader, existing=have)
@@ -270,7 +271,7 @@ def test_gate_arms_never_turn_a_missing_price_into_a_zero_return() -> None:
 
     r, written = _run("2026-11-22", loader=loader)
     nav_rows = written["forward_book_nav"]
-    for arm in ("GATE_S15", "GATE_S30", "R6"):
+    for arm in ("GATE_S15_V2", "GATE_S30_V2", "R6"):
         assert max(x["d"] for x in nav_rows if x["arm"] == arm) == "2026-11-19", arm
     assert any("等源" in w for w in r.get("waiting", [])), r
     assert r["ok"], "等源不是失败"
@@ -278,8 +279,39 @@ def test_gate_arms_never_turn_a_missing_price_into_a_zero_return() -> None:
     async def loader_gate_short(cutoff):
         return closes, fund, gate[gate.index <= pd.Timestamp("2026-11-18")]
     r2, w2 = _run("2026-11-22", loader=loader_gate_short)
-    assert max(x["d"] for x in w2["forward_book_nav"] if x["arm"] == "GATE_S15") == "2026-11-19"
+    assert max(x["d"] for x in w2["forward_book_nav"] if x["arm"] == "GATE_S15_V2") == "2026-11-19"
     assert max(x["d"] for x in w2["forward_book_nav"] if x["arm"] == "R6") == "2026-11-22", "R6 不看闸门"
+
+
+def test_voided_v1_gate_arms_are_never_written_again_and_v2_starts_at_the_1119_close() -> None:
+    """S-898 补二(Jazz 11-23):v1 两条闸门臂在 11-19 作废(11-20 → 22 三行是价缺记成的 0,已进锚,不删不改);
+    v2 从 11-19 收盘 NAV = 1 另开,同一条规则。库里留着的 v1 行不影响 v2,也不会被续写。"""
+    from src.data.signals.state_arms import basket_funding, basket_returns, gate_calendar, gate_short_returns
+    closes, fund, gate = _fake_inputs()
+    assert fb.GATE_V1_VOIDED == ("GATE_S15", "GATE_S30") and fb.GATE_V2_START == "2026-11-19"
+    assert set(fb.GATE_S) == {"GATE_S15_V2", "GATE_S30_V2"} and not set(fb.GATE_S) & set(fb.GATE_V1_VOIDED)
+
+    async def loader(cutoff):
+        return closes, fund, gate
+    v1_rows = [{"arm": a, "d": d, "nav": 1.0 + 0.001 * i} for a in fb.GATE_V1_VOIDED
+               for i, d in enumerate(("2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20", "2026-11-21", "2026-11-22"))]
+    r, written = _run("2026-11-22", loader=loader, existing=v1_rows)
+    nav_rows = written["forward_book_nav"]
+    assert not [x for x in nav_rows if x["arm"] in fb.GATE_V1_VOIDED], "作废的臂不许再写"
+    assert not [h for h in written["forward_book_holdings"] if h["arm"] in fb.GATE_V1_VOIDED]
+    v2 = sorted((x for x in nav_rows if x["arm"] == "GATE_S15_V2"), key=lambda x: x["d"])
+    assert [x["d"] for x in v2] == ["2026-11-19", "2026-11-20", "2026-11-21", "2026-11-22"] and v2[0]["nav"] == 1.0
+    assert all("v2" in x["rule"] and x["as_of"] == "2026-11-19" for x in v2)
+    cal = gate_calendar(basket_returns(closes), basket_funding(fund), gate,
+                        start=str((pd.Timestamp(START) - pd.Timedelta(days=10)).date()), end="2026-11-22")
+    sr, _ = gate_short_returns(cal[0], cal[1], cal[2], 0.15)
+    nav = 1.0
+    for x in v2[1:]:
+        want = float(sr[pd.Timestamp(x["d"])])
+        nav *= 1 + want
+        assert abs(x["ret"] - want) < 1e-15 and abs(x["nav"] - nav) < 1e-12, "v2 的每一天 = 同一个核在真价上的收益"
+    seed_h = [h for h in written["forward_book_holdings"] if h["arm"] == "GATE_S15_V2" and h["as_of"] == "2026-11-19"]
+    assert {h["key"] for h in seed_h} == {"BTC", "ETH"}
 
 
 # ── (d) 不进真钱路径,但挂在 ③ 的每小时循环上 ───────────────────────────────

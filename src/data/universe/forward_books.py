@@ -85,17 +85,23 @@ RULE_FLEX_T20K = ("flex_t20k_v1:T-327(建臂日 2026-10-16;常数 加密 0.20 / 
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
 #: T-406(Jazz 11-15「向前建」):**状态敞口前向账** —— 两条只有研究回测的策略搬成生产纯函数,每天记一行。
 #: 臂 `R6` = 三态敞口(S-823:明显向上 +1.0 / 不明确 +0.3 / 明显向下 −0.3;d 收盘定、d+1 生效;换敞口 10bp;空头收资金费)。
-#: 臂 `GATE_S15` / `GATE_S30` = 闸门关着时空大盘(S-819:majors 200 日线闸门**关着**时,空 BTC/ETH 50/50,规模 s;
+#: 臂 `GATE_S15_V2` / `GATE_S30_V2`(v1 = `GATE_S15` / `GATE_S30`,11-19 作废)= 闸门关着时空大盘(S-819:majors 200 日线闸门**关着**时,空 BTC/ETH 50/50,规模 s;
 #: 闸门用**前一天**的;翻转当天扣 5bp × s;空头收资金费)。
 #: 闸门序列 = `state_arms.majors_gate_from_ret`(`style_index_pit_daily` 的 eq.majors / eq.cap)——
 #: 与研究 `t310_slots.load_gate` 在重叠历史上**逐日相同**(测试 `tests/test_state_arms.py` 证明)。
 STATE_ARMS_START = "2026-11-16"          # 起算日:合并(2026-11-15)之后的第一个 UTC 日
 STATE_ARMS_WARM_FROM = "2024-01-01"      # 起算前的历史:R6 要 230 天(200 日均线 + 30 日斜率),闸门要 200 天
-STATE_ARMS_ARMS = ("R6", "GATE_S15", "GATE_S30")
-GATE_S = {"GATE_S15": 0.15, "GATE_S30": 0.30}
+#: S-898 补二(Jazz 11-23):v1 的 `GATE_S15` / `GATE_S30` 在 2026-11-19 作废 —— 11-20 / 21 / 22 三行是价缺记成的假零
+#: (只有资金费);那些行已进锚,**不删不改、不再续写**。另开 v2 两条臂,11-19 收盘 NAV = 1,规则与核不变。
+GATE_V1_VOIDED = ("GATE_S15", "GATE_S30")
+GATE_V2_START = "2026-11-19"
+STATE_ARMS_ARMS = ("R6", "GATE_S15_V2", "GATE_S30_V2")
+GATE_S = {"GATE_S15_V2": 0.15, "GATE_S30_V2": 0.30}
 RULE_STATE_ARMS = ("state_arms_v1:T-406(R6 = S-823 三态敞口 明显向上 +1.0 / 不明确 +0.3 / 明显向下 −0.3,"
                    "d 收盘定 d+1 生效,换敞口 10bp,空头收资金费;GATE_S15 / GATE_S30 = S-819 闸门关着时空大盘 "
                    "BTC/ETH 50/50,规模 s,闸门用前一天的,翻转扣 5bp×s,空头收资金费;起算 2026-11-16)")
+RULE_GATE_V2 = ("state_arms_v1 / gate v2:S-819 闸门关着时空大盘(规则与核同 v1);2026-11-19 收盘另开 —— "
+                "v1 的 11-20 → 11-22 三行是价缺记成的 0,作废不改(S-898 补二,Jazz 11-23)")
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
     "forward_book_holdings": ("book", "arm", "as_of", "key", "weight", "note", "rule"),
@@ -488,7 +494,7 @@ async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) 
     """T-406 状态敞口前向账:从 `STATE_ARMS_WARM_FROM` 整段重算(纯函数、可复现),
     **只写 `STATE_ARMS_START` 之后还没写过的天;写过的不改**。
 
-    臂:`R6`(S-823 三态敞口)· `GATE_S15` · `GATE_S30`(S-819 闸门关着时空大盘)。
+    臂:`R6`(S-823 三态敞口)· `GATE_S15_V2` · `GATE_S30_V2`(S-819 闸门关着时空大盘;v1 两条 11-19 作废、不再写)。
     `loader` / `reader` / `writer` 可注入(测试用假的存取函数);不注入就走真库。
     输入不够时**不写**,并在 notes 里说清是哪条臂、缺哪样输入。
     """
@@ -517,15 +523,15 @@ async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) 
     waiting: list[str] = []
     start, cut = pd.Timestamp(STATE_ARMS_START), pd.Timestamp(cutoff)
 
-    def _hold(arm: str, as_of: str, key: str, weight: float, note: str) -> None:
+    def _hold(arm: str, as_of: str, key: str, weight: float, note: str, rule: str = RULE_STATE_ARMS) -> None:
         rows_h.append({"book": "state_arms", "arm": arm, "as_of": as_of, "key": key,
-                       "weight": float(weight), "note": note, "rule": RULE_STATE_ARMS})
+                       "weight": float(weight), "note": note, "rule": rule})
 
-    def _seed(arm: str) -> tuple[float, list[str]]:
+    def _seed(arm: str, seed_d: str = STATE_ARMS_START, rule: str = RULE_STATE_ARMS) -> tuple[float, list[str]]:
         done = sorted(d for (a, d) in have if a == arm)
         if not done:
-            rows_n.append({"book": "state_arms", "arm": arm, "d": STATE_ARMS_START, "nav": 1.0,
-                           "ret": None, "as_of": STATE_ARMS_START, "rule": RULE_STATE_ARMS})
+            rows_n.append({"book": "state_arms", "arm": arm, "d": seed_d, "nav": 1.0,
+                           "ret": None, "as_of": seed_d, "rule": rule})
             return 1.0, done
         return have[(arm, done[-1])], done
 
@@ -577,25 +583,27 @@ async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) 
         known_to = min(btc.index.max(), eth.index.max(), gate.index.max() + pd.Timedelta(days=1))
         if known_to < cut:
             waiting.append(f"GATE: 价格 / 闸门只到 {known_to.date()},等源(不把缺的价记成 0)")
+        gstart = pd.Timestamp(GATE_V2_START)                  # v2 的起算日(S-898 补二);v1 的行留在库里,不再写
         for arm, s in GATE_S.items():
             sr, closed = gate_short_returns(gcal[0], gcal[1], gcal[2], s)
-            w = sr[(sr.index > start) & (sr.index <= min(cut, known_to))]
-            nav, done = _seed(arm)
+            w = sr[(sr.index > gstart) & (sr.index <= min(cut, known_to))]
+            assert arm not in GATE_V1_VOIDED, "作废的 v1 臂不许再写"
+            nav, done = _seed(arm, GATE_V2_START, RULE_GATE_V2)
             if not done:
-                cw = closed[closed.index <= start]
+                cw = closed[closed.index <= gstart]
                 wc = float(cw.iloc[-1]) if len(cw) else False
-                _hold(arm, STATE_ARMS_START, "BTC", -s / 2 if wc else 0.0, "gate closed" if wc else "gate open")
-                _hold(arm, STATE_ARMS_START, "ETH", -s / 2 if wc else 0.0, "gate closed" if wc else "gate open")
+                _hold(arm, GATE_V2_START, "BTC", -s / 2 if wc else 0.0, "gate closed" if wc else "gate open", RULE_GATE_V2)
+                _hold(arm, GATE_V2_START, "ETH", -s / 2 if wc else 0.0, "gate closed" if wc else "gate open", RULE_GATE_V2)
             for d, x in w.items():
                 ds = d.date().isoformat()
                 if done and ds <= done[-1]:
                     continue
                 nav *= 1 + float(x)
                 rows_n.append({"book": "state_arms", "arm": arm, "d": ds, "nav": nav, "ret": float(x),
-                               "as_of": STATE_ARMS_START, "rule": RULE_STATE_ARMS})
+                               "as_of": GATE_V2_START, "rule": RULE_GATE_V2})
                 cw = bool(closed.get(d, False))
-                _hold(arm, ds, "BTC", -s / 2 if cw else 0.0, "gate closed" if cw else "gate open")
-                _hold(arm, ds, "ETH", -s / 2 if cw else 0.0, "gate closed" if cw else "gate open")
+                _hold(arm, ds, "BTC", -s / 2 if cw else 0.0, "gate closed" if cw else "gate open", RULE_GATE_V2)
+                _hold(arm, ds, "ETH", -s / 2 if cw else 0.0, "gate closed" if cw else "gate open", RULE_GATE_V2)
 
     for t, rows, oc in (("forward_book_nav", rows_n, "book,arm,d"),
                         ("forward_book_holdings", rows_h, "book,arm,as_of,key")):
