@@ -1718,6 +1718,8 @@ async def _cis_official_loop():
             r = await _co_run()
             print(f"[CIS-OFFICIAL] {str(r.get('reason'))[:160]}")
             _detail = {k: r.get(k) for k in ("written", "d", "signals", "incomplete")}
+            if r.get("snapshot_layer"):                         # S-909:第二层补的行,发布前就看得见
+                _detail["snapshot_layer"] = r.get("snapshot_layer")
             await _beat("_cis_official_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
             await _record_loop_attempt(
@@ -2526,13 +2528,20 @@ async def _market_snapshot_loop():
                 await _iteration_result("_market_snapshot_loop", r)
             await _beat("_market_snapshot_loop", **_beat_of(r),
                         detail={"written": r.get("written"), "ts": r.get("ts") or r.get("last_ts"), "status": r.get("status"),
+                                "close_of": r.get("close_of"),
                                 "btc_dominance": r.get("btc_dominance"), "by_identity": r.get("by_identity"),
                                 "rejected": r.get("rejected"), "note": r.get("note")})
         except Exception as _e:
             print(f"[SNAPSHOT] ⚠️  pass FAILED: {_e}")
             await _beat("_market_snapshot_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _iteration_error("_market_snapshot_loop", _e)
-        await _asyncio.sleep(600)
+        # 平时 10 分钟一醒;快到 UTC 00:00 时对齐到零点后 15 秒 —— 那一轮取的是前一天的收盘批次(S-909)
+        try:
+            from src.data.market.market_snapshot import next_wake_s as _ms_wake
+            _nap = _ms_wake()
+        except Exception:
+            _nap = 600
+        await _asyncio.sleep(_nap)
 
 
 @app.on_event("startup")

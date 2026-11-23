@@ -791,6 +791,13 @@ python3 -m pytest tests/test_research_reads_the_db.py -q || {
     echo "✗ preflight stage: S-908 —— 有新脚本直接打 CoinGecko(读库,或走 data_layer 过闸门);或名单里的文件已清、没从名单拿掉" >&2
     exit 1
 }
+# 3a-vicesima-octies. S-909 / T-432(2026-11-23):正式 CIS 的第二层兜底 —— 行情快照的收盘批次,只补库里没有任何场所价的名字
+#                     (HYPE / SKY 停供期间在正式档里一行都没有)。钉的是边界:已有来源的名字逐字节不动;门不过不补;来源写进行里;
+#                     回看价走旁路不塞日子;**BTC 占比与供给上限没接**(两家口径差正好跨过状态判定的门槛 / 会给 BNB、INJ 凭空加分)。
+python3 -m pytest tests/test_cis_snapshot_layer.py -q || {
+    echo "✗ preflight stage: S-909 —— 正式 CIS 第二层(收盘快照补缺)的边界红:动了已有来源的名字 / 门没拦住 / 来源没写进行 / 占比或上限被接上了" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

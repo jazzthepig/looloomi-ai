@@ -41,7 +41,13 @@ def _no_live_market_snapshot(request, monkeypatch):
     async def _none(*a, **k):
         return None
 
+    async def _no_closes(*a, **k):
+        return {}
+
     monkeypatch.setattr(_ms, "latest", _none)
+    # S-909:正式 CIS 的第二层读收盘批次(`close_batches`)—— 同一个道理,测试里默认读到「没有」;
+    # 要测第二层的(`tests/test_cis_snapshot_layer.py`)自己把批次递进去。
+    monkeypatch.setattr(_ms, "close_batches", _no_closes)
     yield
 
 

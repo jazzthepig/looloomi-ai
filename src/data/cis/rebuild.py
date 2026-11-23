@@ -96,11 +96,22 @@ def _pct(a: Optional[float], b: Optional[float]) -> Optional[float]:
 
 
 def crypto_market_data(px: pd.Series, mcap: pd.Series, vol: pd.Series, hi: pd.Series, lo: pd.Series,
-                       d: pd.Timestamp, static: Mapping[str, Any]) -> tuple[Optional[dict], list[str]]:
-    """纯函数。一个加密名字在 d 的 market_data(只用 ≤ d 的值)。返回 (dict 或 None, 缺的维度)。"""
+                       d: pd.Timestamp, static: Mapping[str, Any],
+                       lookback: Optional[Mapping[Any, float]] = None) -> tuple[Optional[dict], list[str]]:
+    """纯函数。一个加密名字在 d 的 market_data(只用 ≤ d 的值)。返回 (dict 或 None, 缺的维度)。
+
+    `lookback`(S-909):回看那一天序列里没有价时用的旁路价(`{日期: 价}`,来自行情快照里对方自己报的 24h / 7d 涨跌)。
+    **只给涨跌三项用** —— 不往序列里塞日子(塞了,那些日子就会被当成有行情的一天去打分)。不给 ⇒ 与原来逐字节相同。"""
     p = px.get(d)
     if p is None or pd.isna(p) or p <= 0:
         return None, ["price"]
+
+    def back(days: int) -> Optional[float]:
+        k = d - pd.Timedelta(days=days)
+        v = px.get(k)
+        if (v is None or pd.isna(v)) and lookback:
+            v = lookback.get(k)
+        return v
     miss: list[str] = []
     hist = px.loc[:d].dropna()
     m = mcap.get(d)
@@ -123,9 +134,9 @@ def crypto_market_data(px: pd.Series, mcap: pd.Series, vol: pd.Series, hi: pd.Se
     md = {
         "price": float(p), "market_cap": m, "volume_24h": float(v), "circulating_supply": circ,
         "total_supply": total, "max_supply": float(mx) if mx else None, "fdv": fdv,
-        "change_24h": _pct(p, px.get(d - pd.Timedelta(days=1))) or 0.0,
-        "change_7d": _pct(p, px.get(d - pd.Timedelta(days=7))) or 0.0,
-        "change_30d": _pct(p, px.get(d - pd.Timedelta(days=30))) or 0.0,
+        "change_24h": _pct(p, back(1)) or 0.0,
+        "change_7d": _pct(p, back(7)) or 0.0,
+        "change_30d": _pct(p, back(30)) or 0.0,
         "sparkline_return_7d": None,
         "ath_change_percentage": (p / ath - 1) * 100 if ath > 0 else 0.0,
         "high_24h": float(h), "low_24h": float(l),
@@ -202,7 +213,8 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
             md, miss = tradfi_market_data(*t, d, data.get("static_tf", {}).get(sym)) if t else (None, ["price"])
         else:
             c = data["crypto"].get(sym)
-            md, miss = crypto_market_data(*c, d, data["static"].get(sym, {})) if c else (None, ["price"])
+            md, miss = (crypto_market_data(*c, d, data["static"].get(sym, {}), (data.get("lookback_px") or {}).get(sym))
+                        if c else (None, ["price"]))
         if md:
             mds[sym] = (md, miss)
     if "BTC" not in mds:

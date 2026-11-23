@@ -21,6 +21,9 @@ Jazz 2026-11-21 停了 CoinGecko 订阅(省 10 天的钱)。实测代价(2026-11
 | 上限 | **无库内来源** | **如实缺**(CG coin detail 才有)⇒ F 支柱的 emission_bonus(≤ 5 分)丢掉 |
 | 全市场市值 | **无库内来源** | **如实缺**(`macro_daily.total_mcap` 也是 CG 来的)⇒ `bdom=None` ⇒ regime 判定少一个输入 |
 
+**第二层(S-909,11-23)**:币安没有价的名字(HYPE、SKY)用 `market_snapshot` 的收盘批次补价与成交额(见文件后半「第二层」)。
+上表里「上限」「全市场市值」两行**仍然如实缺** —— 量过,不能拿 CoinMarketCap 的顶上(口径差会改状态判定 / 凭空加分)。
+
 实测覆盖(2026-11-20):25 个加密名里 **23 个有 Binance 收盘价**(缺 HYPE、SKY)⇒
 兜底后 `加密名字有价的 23/25 = 0.92 ≥ MIN_CRYPTO_PRICED 0.90` ⇒ **硬闸能过**。
 `coin_supply_daily` 最后一批是 2026-11-20(300 行,全部带 circ/total)⇒ CG 死后再无新批次
@@ -463,8 +466,189 @@ async def apply_if_enabled(assets: Mapping[str, Mapping[str, Any]], data: dict[s
     sym2cg = sym2cg_map()
     raw = await load_raw(sym2cg)
     report = await asyncio.to_thread(apply, data, assets, raw, sym2cg, end, force, pd.Timestamp(OUTAGE[0]))
+    # 第二层(S-909):库里没有任何场所价的名字,用行情快照的收盘批次补。读不到批次 ⇒ 不补并照实记(读不到 ≠ 没有)。
+    if not force and report.get("no_fallback_price") and snapshot_layer_enabled():
+        try:
+            from src.data.market.market_snapshot import close_batches
+            closes = await close_batches(OUTAGE[0], str(pd.Timestamp(end).date()) if end is not None else None)
+        except Exception as e:                              # noqa: BLE001
+            report["snapshot_layer"] = {"source": SNAP_SOURCE, "error": f"收盘批次读不到:{type(e).__name__}: {str(e)[:120]}",
+                                        "filled": {}, "days": {}, "skipped": {}}
+        else:
+            await asyncio.to_thread(apply_snapshot, data, assets, closes, raw, sym2cg, report, end,
+                                    pd.Timestamp(OUTAGE[0]))
     data["cg_less_fallback"] = report
     return data, report
+
+
+# ── 第二层:行情快照的收盘批次(S-909 / T-432)────────────────────────────────────
+#
+# 第一层(上面)只有币安有价的名字。**库里没有任何场所价的名字**(现在 = HYPE、SKY)在停供期间一行都没有。
+# 第二层只补这些名字,只用 `market_snapshot` 里标了 `close_of` 的那一批(UTC 00:00 后第一轮取的 = 前一天的收盘):
+#
+#     价   = 那一批的价(CoinMarketCap)
+#     市值 = 流通量(`coin_supply_daily`,与另外 23 个名字同一个式子)× 价;日表没有流通量才用对方的市值
+#     成交 = 对方的 24h 成交额(另一家的口径,照实标)
+#     回看价(24h / 7d)序列里没有时 = 用对方自己报的涨跌倒推,**走旁路**(`data["lookback_px"]`),不往序列里塞日子
+#
+# **不接的两样,都是量过才决定的(台账 S-909):**
+#   * 全市场市值 / BTC 占比 —— 两家口径差 2.6 个点(CG 口径 56.3,CMC 58.9,11-19),而状态判定里唯一用到占比的
+#     门槛是 58;11-22 时 VIX 35.9、BTC 30 日 −24.5% ⇒ 另外两个条件都成立 ⇒ 一接,正式档的状态就从 RISK_OFF 变成
+#     STAGFLATION,纯粹因为换了一家的定义。
+#   * 供给上限 —— CMC 把 BNB 的上限报成流通量、INJ 报成 1 亿(流通 ÷ 上限 = 1)、AAVE 报 null;CG 口径下只有
+#     BTC / AAVE / SKY 三个名字有「已发行 ≥ 85%」的加分 ⇒ 照搬会给 BNB / INJ 凭空各加约 5 分 F。
+# **已有来源的名字一格不动。**
+SNAPSHOT_ENV = "CIS_SNAPSHOT_LAYER"
+SNAP_SOURCE = "cmc_close"
+#: 一道门:同一批里 CMC 的价对序列里同一天的收盘(币安 / CG)。可比的名字不够、或差得多 ⇒ 这一批不用。
+SNAP_GATE_MIN_NAMES = 15
+SNAP_GATE_MAX_MEDIAN_PCT = 1.0
+
+
+def snapshot_layer_enabled() -> bool:
+    """第二层的开关:`CIS_SNAPSHOT_LAYER=0` 关;没设 = 开(它只在第一层开着、且有名字没有场所价时才会被走到)。"""
+    return (os.environ.get(SNAPSHOT_ENV) or "").strip().lower() not in ("0", "off", "false", "no")
+
+
+def close_gate(batch_rows: Mapping[str, Mapping[str, Any]], crypto: Mapping[str, tuple], day: pd.Timestamp,
+               skip: frozenset = frozenset()) -> dict[str, Any]:
+    """纯函数。一批收盘快照的价,对序列里**同一天**已有的收盘(第一层 / CG 供的)。
+    返回 `{"ok", "n", "median_abs_pct", "max_abs_pct", "worst", "why"}`。`skip` = 不参与对比的名字(要被补的那些)。"""
+    diffs: dict[str, float] = {}
+    for sym, r in (batch_rows or {}).items():
+        if sym in skip or sym not in crypto:
+            continue
+        p = _f((r or {}).get("price"))
+        ref = crypto[sym][0].get(day)
+        if p is None or p <= 0 or ref is None or ref != ref or ref <= 0:
+            continue
+        diffs[sym] = (p / float(ref) - 1.0) * 100.0
+    n = len(diffs)
+    if n < SNAP_GATE_MIN_NAMES:
+        return {"ok": False, "n": n, "median_abs_pct": None, "max_abs_pct": None, "worst": None,
+                "why": f"可比的名字只有 {n} 个(要 ≥ {SNAP_GATE_MIN_NAMES})—— 当天的场所收盘还没到齐,这一轮不补"}
+    absd = sorted(abs(v) for v in diffs.values())
+    med = absd[n // 2] if n % 2 else (absd[n // 2 - 1] + absd[n // 2]) / 2.0
+    worst = max(diffs, key=lambda k: abs(diffs[k]))
+    out = {"ok": med <= SNAP_GATE_MAX_MEDIAN_PCT, "n": n, "median_abs_pct": round(med, 4),
+           "max_abs_pct": round(abs(diffs[worst]), 4), "worst": worst, "why": None}
+    if not out["ok"]:
+        out["why"] = (f"这一批的价与当天场所收盘差的中位数 {med:.2f}% > {SNAP_GATE_MAX_MEDIAN_PCT}% —— "
+                      f"不像是收盘时刻取的,不用")
+    return out
+
+
+def _set_day(s: pd.Series, day: pd.Timestamp, v: Optional[float]) -> pd.Series:
+    """序列里写一天(没有值就不写)。返回新的、按日期排好的序列。"""
+    if v is None or v != v:
+        return s
+    out = s.copy()
+    out.loc[day] = float(v)
+    return out.sort_index()
+
+
+def apply_snapshot(data: Mapping[str, Any], assets: Mapping[str, Mapping[str, Any]],
+                   closes: Mapping[str, Mapping[str, Any]], raw: Mapping[str, Any], sym2cg: Mapping[str, str],
+                   report: dict, end: Optional[pd.Timestamp] = None,
+                   since: Optional[pd.Timestamp] = None) -> dict[str, Any]:
+    """第二层(纯函数,改的是 `data`):给**没有任何场所价**的名字补收盘批次那几天。返回这一层的报告(也挂在 `report["snapshot_layer"]`)。
+
+    只动 `report["no_fallback_price"]` 里的名字;每个名字、每一天,序列里**已经有价的不动**(CG 回来的日子仍然走 CG)。
+    """
+    from src.data.cis.rebuild import TRADFI
+    crypto = data.setdefault("crypto", {})
+    supply = raw.get("supply") or {}
+    targets = [s for s in (report.get("no_fallback_price") or [])
+               if s in crypto and (assets.get(s) or {}).get("class") not in TRADFI]
+    layer: dict[str, Any] = {"source": SNAP_SOURCE, "targets": sorted(targets), "days": {}, "skipped": {},
+                             "filled": {}, "no_row": {}}
+    report["snapshot_layer"] = layer
+    report.setdefault("snap_days", {})
+    if not targets or not closes:
+        return layer
+    lo = pd.Timestamp(since).normalize() if since is not None else None
+    hi = pd.Timestamp(end).normalize() if end is not None else None
+    skip = frozenset(targets)
+    lookback = data.setdefault("lookback_px", {})
+    for iso in sorted(closes):
+        day = pd.Timestamp(iso).normalize()
+        if (lo is not None and day < lo) or (hi is not None and day > hi):
+            continue
+        batch = closes[iso] or {}
+        rows = batch.get("rows") or {}
+        gate = close_gate(rows, crypto, day, skip)
+        layer["days"][iso] = {"ts": batch.get("ts"), "gate": gate}
+        if not gate["ok"]:
+            layer["skipped"][iso] = gate["why"]
+            continue
+        for sym in targets:
+            px, mc, vol, h, l = crypto[sym]
+            cur = px.get(day)
+            if cur is not None and cur == cur and cur > 0:
+                continue                                    # 这一天已经有价(CG 回来了)⇒ 不动
+            r = rows.get(sym) or {}
+            p = _f(r.get("price"))
+            if p is None or p <= 0:
+                layer["no_row"].setdefault(iso, []).append(sym)
+                continue
+            sup_days = supply.get(sym2cg.get(sym) or "") or {}
+            # 流通量:≤ 这一天的最后一次快照(PIT)。`_pit_circ` 是对整段日期索引 ffill 的,单独问一天会问不到。
+            asof = [k for k in sup_days if k <= day and sup_days[k][0] is not None]
+            circ = float(sup_days[max(asof)][0]) if asof else float("nan")
+            if circ == circ and circ > 0:
+                mcap, mcap_src = float(circ) * p, "circulating_supply_x_close"
+            else:
+                mcap, mcap_src = _f(r.get("market_cap")), SNAP_SOURCE
+            v = _f(r.get("volume_24h"))
+            lb_src: dict[str, str] = {}
+            lb = lookback.setdefault(sym, {})
+            for label, days, key in (("24h", 1, "pct_24h"), ("7d", 7, "pct_7d")):
+                k = day - pd.Timedelta(days=days)
+                have = px.get(k)
+                if have is not None and have == have and have > 0:
+                    lb_src[label] = "series"
+                    continue
+                pct = _f(r.get(key))
+                if pct is not None and pct > -99.0:
+                    lb[k] = p / (1.0 + pct / 100.0)         # 对方自己报的涨跌 ⇒ 它那一刻的价;只给涨跌项用
+                    lb_src[label] = "cmc_pct"
+                else:
+                    lb_src[label] = "missing"
+            k30 = px.get(day - pd.Timedelta(days=30))
+            lb_src["30d"] = "series" if (k30 is not None and k30 == k30 and k30 > 0) else "missing"
+            px, mc, vol = _set_day(px, day, p), _set_day(mc, day, mcap), _set_day(vol, day, v)
+            crypto[sym] = (px, mc, vol, h, l)
+            layer["filled"].setdefault(sym, {})[iso] = {
+                "price": p, "mcap_source": mcap_src if mcap is not None else None,
+                "supply_asof": str(max(asof).date()) if (asof and mcap_src != SNAP_SOURCE) else None,
+                "volume": v, "ts": batch.get("ts"), "lookback": lb_src}
+            dims = report["snap_days"].setdefault(sym, {"price": [], "mcap": [], "volume": []})
+            dims["price"].append(iso)
+            if mcap is not None:
+                dims["mcap"].append(iso)
+            if v is not None:
+                dims["volume"].append(iso)
+    if layer["filled"]:
+        logger.warning("CG-less 第二层(收盘快照)补了 %s", {k: sorted(v) for k, v in layer["filled"].items()})
+    return layer
+
+
+def snapshot_preview(rows: list[dict], report: Optional[Mapping[str, Any]], day: str) -> Optional[dict[str, Any]]:
+    """纯函数。发布前给人看的:第二层在 `day` 补了谁、补出来的那一行长什么样(价、分、支柱)、门的读数。没走到第二层 ⇒ None。"""
+    layer = (report or {}).get("snapshot_layer")
+    if not layer:
+        return None
+    by = {r.get("symbol"): r for r in rows or [] if str(r.get("d"))[:10] == day}
+    filled = {}
+    for sym, days in (layer.get("filled") or {}).items():
+        if day not in days:
+            continue
+        r = by.get(sym) or {}
+        filled[sym] = {"price": days[day].get("price"), "score": r.get("score"), "f": r.get("pillar_f"),
+                       "m": r.get("pillar_m"), "lookback": days[day].get("lookback"), "missing": r.get("missing")}
+    return {"targets": layer.get("targets"), "day": (layer.get("days") or {}).get(day),
+            "skipped": (layer.get("skipped") or {}).get(day), "no_row": (layer.get("no_row") or {}).get(day),
+            "filled": filled, "error": layer.get("error")}
 
 
 #: 兜底接管时写进 `inputs` 的来源标记 —— 键是 `inputs` 里的字段名,值是那一维的来源。
@@ -520,9 +704,31 @@ def annotate_rows(rows: list[dict], report: Optional[Mapping[str, Any]]) -> list
     dims = report.get("missing_dimensions") or {}
     fb_days = report.get("fb_days") or {}
     vol_cal = report.get("vol_cal") or {}
+    snap = ((report.get("snapshot_layer") or {}).get("filled")) or {}
     for r in rows:
         miss = set(r.get("missing") or [])
         miss.update(dims.get(r.get("symbol")) or [])
         r["missing"] = sorted(miss)
         _mark_provenance(r, fb_days.get(r.get("symbol")) or {}, vol_cal.get(r.get("symbol")))
+        _mark_snapshot(r, snap.get(r.get("symbol")) or {})
     return rows
+
+
+def _mark_snapshot(r: dict, days: Mapping[str, Mapping[str, Any]]) -> None:
+    """第二层补的那一行:价 / 市值 / 成交的来源、那一批的时刻、回看价从哪来 —— 写进 `inputs`(正式表只追加,事后补不了)。
+    不是第二层补的行**一个键都不加**。"""
+    if not days:
+        return
+    inp = r.get("inputs")
+    meta = days.get(str(r.get("d"))[:10])
+    if not meta or not isinstance(inp, dict):
+        return
+    inp["px_source"] = SNAP_SOURCE
+    if meta.get("mcap_source"):
+        inp["mcap_source"] = meta["mcap_source"]
+    if meta.get("volume") is not None:
+        inp["vol_source"] = SNAP_SOURCE                     # 另一家的 24h 成交额,没有按 CG 口径校准
+    inp["snapshot_ts"] = meta.get("ts")
+    if meta.get("supply_asof"):
+        inp["supply_asof"] = meta["supply_asof"]            # 市值用的流通量是哪一天的快照(停供后冻结在 11-20)
+    inp["lookback"] = dict(meta.get("lookback") or {})

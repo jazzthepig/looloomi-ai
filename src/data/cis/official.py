@@ -221,13 +221,16 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     from src.data.cis.cg_less_fallback import annotate_rows
     rows = annotate_rows(rows, data.get("cg_less_fallback"))
     probs = completeness(rows, assets)
+    # S-909:第二层(收盘快照)补了谁、补出来的行长什么样 —— 发布之前的每一轮都放进回执(正式表只追加,发了改不了)
+    from src.data.cis.cg_less_fallback import snapshot_preview
+    preview = snapshot_preview(rows, data.get("cg_less_fallback"), d.isoformat())
     hard = [p for p in probs if is_hard(p)]
     if hard:
         # 硬性输入缺(BTC / 大部分加密名字没有收盘)—— 永远不发半批;过了 06:00 还缺 = 心跳红
         return {"ok": now.hour < PUBLISH_DEADLINE_HOUR, "refused": True, "written": 0, "refreshed": refreshed,
                 "reason": f"{d} 缺硬性输入({'; '.join(hard)})—— 不发,下一小时再补再试"}
     if probs and now.hour < PUBLISH_DEADLINE_HOUR:
-        return {"ok": True, "refused": True, "written": 0, "refreshed": refreshed,
+        return {"ok": True, "refused": True, "written": 0, "refreshed": refreshed, "snapshot_layer": preview,
                 "reason": f"{d} 数据还不齐({'; '.join(probs)})—— UTC {PUBLISH_DEADLINE_HOUR}:00 前等"}
     group_pct(rows)
     prev_rows = await _prev_rows(d)
@@ -256,6 +259,8 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
         out_ret["cg_less_fallback"] = {"took_over": fb.get("took_over"),
                                        "still_missing": fb.get("still_missing"),
                                        "no_fallback_price": fb.get("no_fallback_price")}
+    if preview:
+        out_ret["snapshot_layer"] = preview
     return out_ret
 
 
