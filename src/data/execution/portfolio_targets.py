@@ -110,6 +110,32 @@ def passive_legs_live(env: dict | None = None) -> bool:
     return raw not in ("0", "off", "false", "no")
 
 
+#: 11-23(S-905,Jazz:「这个rule的确不可以太死,现在全市场一起跌,rebalance失效了,我们需要回归到现实」):
+#: 被动腿**暂停机械再平衡** —— 窗口内的日子,计划里不给主机下发这两条腿的目标 ⇒ 主机对它们 0 笔订单(不纠偏、
+#: 再平衡日也不动、不买不卖)。起因:11-20 机器按「偏离 > 5%」卖了 28.86 美元 SPYX,而那次「偏离」是账户净值被别的仓位
+#: 压低造成的;一起跌的时候守比例没有均值回归可吃。**到期自动回到原规则** —— 要延长得再写一次决定(改这里,先记台账)。
+#: 环境变量 `T25_PASSIVE_LEGS_REBALANCE`:`on` = 立刻恢复原规则;`hold` = 窗口外也不动;没设 = 按窗口。
+#: 明确的动作压过缺省的「不动」:11-13 的开关关了(清仓)、或者有一条生效的偏离(overlay)动这两条腿 ⇒ 照那个动作办。
+#: 只管这两条腿:加密腿(X1V)、R-v2、止损线都不碰。目标表照常写(权重作参考),这两行 `executable = false`。
+PASSIVE_HOLD = ("2026-11-23", "2026-12-31")
+PASSIVE_REBALANCE_ENV = "T25_PASSIVE_LEGS_REBALANCE"
+PASSIVE_HOLD_WHY = (f"Jazz 11-23:被动腿暂停机械再平衡,持有不动(S-905;到 {PASSIVE_HOLD[1]} 为止,到期回到原规则;"
+                    f"恢复 = 环境变量 {PASSIVE_REBALANCE_ENV}=on)—— 权重仅作参考")
+
+
+def passive_legs_hold(d: str, env: dict | None = None) -> bool:
+    """d 这天(计划日,不是墙上时钟 —— 回放得出同一个答案)机器是否不动被动腿。"""
+    e = env if env is not None else os.environ
+    if not passive_legs_live(e):                              # 11-13 的开关关了 = Jazz 明确要清掉 ⇒ 不拦
+        return False
+    raw = str(e.get(PASSIVE_REBALANCE_ENV, "")).strip().lower()
+    if raw in ("on", "1", "true", "yes", "rebalance"):
+        return False
+    if raw == "hold":
+        return True
+    return PASSIVE_HOLD[0] <= str(d)[:10] <= PASSIVE_HOLD[1]
+
+
 def t25_weights(override: Optional[dict] = None, passive_live: Optional[bool] = None) -> dict[str, float]:
     """T25 的权重 + 现金 = 1 − 其余。不给 override = 推荐比例(唯一出处 forward_books);给 = 当期 RBv2 权重(键 crypto / equity / gold)。
     `passive_live=False`(或环境变量关了)⇒ 股票腿与黄金腿的目标是 0,那一份回到现金;加密腿的权重不变。"""
@@ -141,19 +167,22 @@ CAPITAL_FALLBACK_USD = T25_CAPITAL_USD
 
 
 def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
-             weights: Optional[dict] = None) -> list[dict[str, Any]]:
+             weights: Optional[dict] = None, hold: Optional[bool] = None) -> list[dict[str, Any]]:
     """纯函数。一天的目标表行:四条 T25 腿(权重)+ R-v2(名义上限)。`flow_event` = 前一天有出入金 ⇒ 当天再平衡。
-    weights = 当期权重(`flex_weights` 给;None = 推荐比例)。"""
+    weights = 当期权重(`flex_weights` 给;None = 推荐比例)。hold = 被动腿这天不动(None = `passive_legs_hold(d)`)。"""
     nxt = d if flow_event else next_rebalance(OPEN_DATE, d)
+    hold = passive_legs_hold(d) if hold is None else hold
     rows = []
     for sleeve, w in t25_weights(weights).items():
         s = SLEEVES[sleeve]
-        why = s["why"]
+        why, executable = s["why"], s["executable"]
         if sleeve in PASSIVE_LEGS and w == 0.0 and not passive_legs_live():
             why = "Jazz 11-13:被动腿移出实盘、只留纸面(S-854;环境变量 T25_PASSIVE_LEGS_LIVE 关)—— 目标 0"
+        elif sleeve in PASSIVE_LEGS and hold:
+            why, executable = PASSIVE_HOLD_WHY, False
         rows.append({"d": d, "book": BOOK, "sleeve": sleeve, "kind": "weight", "target_w": w,
                      "target_usd": round(w * capital, 2), "capital_usd": capital, "instrument": s["instrument"],
-                     "venue": s["venue"], "executable": s["executable"], "why": why,
+                     "venue": s["venue"], "executable": executable, "why": why,
                      "next_rebalance_d": nxt, "rule": RULE})
     rows.append({"d": d, "book": BOOK, "sleeve": "rv2", "kind": "gross_cap", "target_w": RV2_GROSS_CAP_FRAC,
                  "target_usd": None, "capital_usd": capital,
@@ -166,17 +195,22 @@ def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
 
 def plan_fields(d: Optional[str] = None, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
                 capital_source: str = "起始资本 600(还没有真钱快照)", weights: Optional[dict] = None,
-                weights_source: str = "推荐比例") -> dict[str, Any]:
-    """纯函数。随执行器计划下发的那几个数(与表同一个函数)。资本与出入金事件由 `resolve_capital` 给,权重由 `flex_weights` 给。"""
+                weights_source: str = "推荐比例", hold: Optional[bool] = None) -> dict[str, Any]:
+    """纯函数。随执行器计划下发的那几个数(与表同一个函数)。资本与出入金事件由 `resolve_capital` 给,权重由 `flex_weights` 给。
+    hold(S-905)= 被动腿这天不动:`t25.legs` 给空(主机 `leg_orders` 没有腿可算 ⇒ 0 笔订单),参考目标放在 `t25.legs_hold` 里。"""
     d = d or dt.datetime.now(dt.timezone.utc).date().isoformat()
-    rows = {r["sleeve"]: r for r in t25_rows(d, capital, flow_event, weights)}
+    hold = passive_legs_hold(d) if hold is None else hold
+    rows = {r["sleeve"]: r for r in t25_rows(d, capital, flow_event, weights, hold)}
     nxt = rows["crypto_x1v"]["next_rebalance_d"]
+    leg_targets = {LEG_SYMBOLS[k]: {"target_usd": rows[k]["target_usd"], "sleeve": k} for k in LEG_SYMBOLS}
+    held_note = ({"legs_hold": {"until": PASSIVE_HOLD[1], "why": PASSIVE_HOLD_WHY,
+                                "reference_targets": {k: v["target_usd"] for k, v in leg_targets.items()}}} if hold else {})
     return {"book": BOOK, "d": d, "t25_capital_usd": capital, "capital_source": capital_source,
             "x1v_nav_budget_usd": rows["crypto_x1v"]["target_usd"],
             "rv2_gross_cap_frac": RV2_GROSS_CAP_FRAC, "next_rebalance_d": nxt,
             # 黄金 / 股票腿(主机 `exec_host/legs.py`):再平衡日回到目标,其余日子只纠偏离 > 带宽 × 资本的腿
             "t25": {"capital_usd": capital, "band": DRIFT_BAND, "rebalance_today": nxt == d, "flow_event": flow_event,
-                    "legs": {LEG_SYMBOLS[k]: {"target_usd": rows[k]["target_usd"], "sleeve": k} for k in LEG_SYMBOLS}},
+                    "legs": {} if hold else leg_targets, **held_note},
             "weights": {k: rows[k]["target_w"] for k in ("crypto_x1v", "equity", "gold", "cash")}, "weights_source": weights_source,
             "rule": RULE}
 
@@ -263,6 +297,9 @@ async def plan_fields_live(d: Optional[str] = None) -> dict[str, Any]:
         act, events = await overlays.load(d)
     except Exception as e:                                   # noqa: BLE001
         return {**fields, "overlays": {"ids": [], "why": f"偏离读不到({type(e).__name__})—— 按基线"}}
+    if "legs_hold" in fields["t25"] and any(o.get(k) not in (None, "", 0, 0.0) for o in act for k in ("gold_pp", "equity_pp")):
+        # S-905:一条生效的、带编号的偏离要动这两条腿 = 明确的动作,压过缺省的「不动」
+        fields = plan_fields(d, cap, flow, src, wts, wsrc, hold=False)
     return overlays.apply(fields, act, events)
 
 

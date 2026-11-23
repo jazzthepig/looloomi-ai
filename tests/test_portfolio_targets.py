@@ -178,7 +178,8 @@ def test_t25_is_flexible_within_bands_rbv2_on_rebalance_days_carried_between(mon
     assert w is None and "推荐比例" in why
     rows = {r["sleeve"]: r for r in pl.t25_rows("2026-12-29", 1000.0, False, {"crypto": 0.22, "equity": 0.38, "gold": 0.27})}
     assert rows["crypto_x1v"]["target_usd"] == 220.0 and abs(rows["cash"]["target_w"] - 0.13) < 1e-9
-    f = pl.plan_fields("2026-12-29", 1000.0, False, "x", {"crypto": 0.22, "equity": 0.38, "gold": 0.27}, "RBv2")
+    # hold=False:这条测的是 RBv2 权重怎么进计划;12-29 落在 S-905 的「被动腿不动」窗口里,那件事另有测试
+    f = pl.plan_fields("2026-12-29", 1000.0, False, "x", {"crypto": 0.22, "equity": 0.38, "gold": 0.27}, "RBv2", hold=False)
     assert f["x1v_nav_budget_usd"] == 220.0 and f["weights_source"] == "RBv2" and f["t25"]["legs"]["SPYX"]["target_usd"] == 380.0
 
 
@@ -214,3 +215,85 @@ def test_host_sells_a_leg_whose_target_is_zero_but_not_on_a_weekend():
     assert [(o["symbol"], o["side"], o["notional_usd"]) for o in mon["orders"]] == [("SPYX", "sell", 175.96), ("XAUT0", "sell", 116.1)]
     sat = legs.leg_orders(t25, held, dt.date(2026, 11, 14))
     assert sat["orders"] == [] and all("周末" in x["why"] for x in sat["skipped"])
+
+
+# ── S-905(11-23):被动腿暂停机械再平衡 —— 窗口内持有不动,到期回到原规则 ─────────────────────────────
+
+def test_passive_legs_are_held_inside_the_window_and_the_rule_comes_back_after_it(monkeypatch):
+    """Jazz 11-23:「这个rule的确不可以太死,现在全市场一起跌,rebalance失效了」。11-20 机器按偏离带卖了 28.86 美元 SPYX,
+    那次「偏离」是净值被别的仓位压低造成的。窗口内:计划里不下发这两条腿 ⇒ 主机 0 笔;到期自动回到原规则。"""
+    import datetime as dt
+    from src.exec_host import legs
+    monkeypatch.delenv(pl.PASSIVE_REBALANCE_ENV, raising=False)
+    monkeypatch.delenv(pl.PASSIVE_LEGS_ENV, raising=False)
+    assert not pl.passive_legs_hold("2026-11-22") and pl.passive_legs_hold("2026-11-23") and pl.passive_legs_hold("2026-12-31")
+    assert not pl.passive_legs_hold("2027-01-01"), "到期回到原规则 —— 临时措施不许悄悄变成常态"
+    # 11-30 是再平衡日:原规则会卖约 16 美元黄金(持有 107.14,目标 91.31)。窗口内 ⇒ 没有腿可算
+    f = pl.plan_fields("2026-11-30", 456.53)
+    assert f["t25"]["rebalance_today"] is True and f["t25"]["legs"] == {}
+    assert f["t25"]["legs_hold"]["until"] == "2026-12-31" and f["t25"]["legs_hold"]["reference_targets"] == {"XAUT0": 91.31, "SPYX": 136.96}
+    held = {"SPYX": 134.32, "XAUT0": 107.14}
+    lo = legs.leg_orders(f["t25"], held, dt.date(2026, 11, 30))
+    assert lo["orders"] == [] and lo["skipped"] == [], "主机拿到这份计划:一笔腿订单都没有"
+    # 对照:同一天按原规则(hold=False)会卖黄金 —— 这条测试钉的就是这个差别
+    old = legs.leg_orders(pl.plan_fields("2026-11-30", 456.53, hold=False)["t25"], held, dt.date(2026, 11, 30))
+    assert [(o["symbol"], o["side"], o["notional_usd"]) for o in old["orders"]] == [("XAUT0", "sell", 15.83)]
+    # 别的不碰:加密腿额度、R-v2 上限、权重照旧
+    base = pl.plan_fields("2026-11-30", 456.53, hold=False)
+    assert f["x1v_nav_budget_usd"] == base["x1v_nav_budget_usd"] and f["rv2_gross_cap_frac"] == base["rv2_gross_cap_frac"]
+    assert f["weights"] == base["weights"] and "legs_hold" not in base["t25"], "窗口外 / 关掉时计划与原来一个键不差"
+    rows = {r["sleeve"]: r for r in pl.t25_rows("2026-11-30", 456.53)}
+    for k in ("equity", "gold"):
+        assert rows[k]["executable"] is False and "S-905" in rows[k]["why"] and rows[k]["target_usd"] > 0, "目标表照常写,标明不执行"
+    assert rows["crypto_x1v"]["executable"] is True and "S-905" not in rows["crypto_x1v"]["why"]
+    after = pl.plan_fields("2027-01-04", 456.53)
+    assert set(after["t25"]["legs"]) == {"SPYX", "XAUT0"} and "legs_hold" not in after["t25"]
+
+
+def test_an_explicit_action_beats_the_default_hold(monkeypatch):
+    monkeypatch.delenv(pl.PASSIVE_LEGS_ENV, raising=False)
+    monkeypatch.setenv(pl.PASSIVE_REBALANCE_ENV, "on")
+    assert not pl.passive_legs_hold("2026-11-30"), "明确恢复 ⇒ 立刻回到原规则"
+    assert set(pl.plan_fields("2026-11-30", 456.53)["t25"]["legs"]) == {"SPYX", "XAUT0"}
+    monkeypatch.setenv(pl.PASSIVE_REBALANCE_ENV, "hold")
+    assert pl.passive_legs_hold("2027-06-01"), "明确要一直不动"
+    monkeypatch.delenv(pl.PASSIVE_REBALANCE_ENV, raising=False)
+    monkeypatch.setenv(pl.PASSIVE_LEGS_ENV, "0")                # 11-13 的开关:Jazz 明确要清掉这两条腿
+    assert not pl.passive_legs_hold("2026-11-30")
+    f = pl.plan_fields("2026-11-30", 456.53)
+    assert f["t25"]["legs"]["SPYX"]["target_usd"] == 0.0 and f["t25"]["legs"]["XAUT0"]["target_usd"] == 0.0, "清仓的开关照旧生效"
+    for typo in ("", "o", "yes please", "0"):
+        assert pl.passive_legs_hold("2026-11-30", {pl.PASSIVE_REBALANCE_ENV: typo}) is True, "写错了不等于恢复交易"
+
+
+def test_a_numbered_overlay_on_a_passive_leg_is_carried_out_during_the_hold(monkeypatch):
+    import asyncio
+    from src.data.execution import overlays
+    monkeypatch.delenv(pl.PASSIVE_REBALANCE_ENV, raising=False)
+    monkeypatch.delenv(pl.PASSIVE_LEGS_ENV, raising=False)
+
+    async def cap(d):
+        return 456.53, False, "测试"
+
+    async def wts(d, reb, read=None, leg_returns=None):
+        return None, "推荐比例"
+    monkeypatch.setattr(pl, "resolve_capital", cap)
+    monkeypatch.setattr(pl, "flex_weights", wts)
+
+    async def none(d):
+        return [], []
+    monkeypatch.setattr(overlays, "load", none)
+    f = asyncio.run(pl.plan_fields_live("2026-11-30"))
+    assert f["t25"]["legs"] == {} and "legs_hold" in f["t25"]
+
+    async def crypto_only(d):
+        return [{"id": "OV-1", "crypto_mult": 0.5, "gold_pp": None, "equity_pp": None}], []
+    monkeypatch.setattr(overlays, "load", crypto_only)
+    f = asyncio.run(pl.plan_fields_live("2026-11-30"))
+    assert f["t25"]["legs"] == {} and f["x1v_nav_budget_usd"] == round(0.5 * 0.3 * 456.53, 2), "只动加密腿的偏离不解开被动腿"
+
+    async def gold(d):
+        return [{"id": "OV-2", "crypto_mult": None, "gold_pp": 5.0, "equity_pp": None}], ["OV-2"]
+    monkeypatch.setattr(overlays, "load", gold)
+    f = asyncio.run(pl.plan_fields_live("2026-11-30"))
+    assert f["t25"]["legs"]["XAUT0"]["target_usd"] == round(91.31 + 0.05 * 456.53, 2) and "legs_hold" not in f["t25"]
