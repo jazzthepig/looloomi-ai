@@ -1,0 +1,95 @@
+{
+  "author": "seth:high-dim",
+  "entries": [
+    {
+      "id": "HD-2026-11-23-1",
+      "scenario": "S2 第二段",
+      "statement": "2026-12-21 BTC 收盘低于 55,144(比 11-22 的 61,271 再跌 10% 以上;11-20 收盘低点 58,952)",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 55144,
+      "prob": 0.25,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-2",
+      "scenario": "S3 反抽",
+      "statement": "2026-12-21 BTC 收盘高于 67,398(比 11-22 涨 10% 以上;仍在 200 日线 72,385 之下)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 67398,
+      "prob": 0.3,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-3",
+      "scenario": "S2 第二段",
+      "statement": "2026-12-21 ETH 收盘低于 1,552(比 11-22 的 1,724 再跌 10% 以上)",
+      "variable": "close:ETH",
+      "op": "lt",
+      "hi": 1552,
+      "prob": 0.3,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-4",
+      "scenario": "S1 低位磨 / 吸筹",
+      "statement": "2026-12-21 Binance 7 日年化资金费仍为负(11-21 −0.6%、11-22 +0.03%;HL 面板 −2.3%)",
+      "variable": "state:funding_7d_ann_binance",
+      "op": "lt",
+      "hi": 0.0,
+      "prob": 0.3,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-5",
+      "scenario": "跨资产冲击退潮",
+      "statement": "2026-12-21 前后 VIX 低于 25(11-20 是 35.9,且高于 VIX3M 27.0 —— 期限结构倒挂)",
+      "variable": "macro:vix",
+      "op": "lt",
+      "hi": 25.0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-6",
+      "scenario": "信用事件",
+      "statement": "2026-12-21 前后高收益债利差高于 3.80(11-13 是 3.20,11-20 是 3.52)",
+      "variable": "macro:hy_oas",
+      "op": "gt",
+      "lo": 3.8,
+      "prob": 0.25,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-7",
+      "scenario": "S2 第二段",
+      "statement": "2026-12-21 前后 BTC 的 MVRV 低于 1.00(11-21 是 1.13;前两次周期底 0.69 / 0.78)",
+      "variable": "macro:btc_mvrv",
+      "op": "lt",
+      "hi": 1.0,
+      "prob": 0.15,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-8",
+      "scenario": "S1 低位磨 / 吸筹",
+      "statement": "2026-12-21 恐惧贪婪高于 25(11-23 是 11;一周前 10)",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 25,
+      "prob": 0.4,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "HD-2026-11-23-9",
+      "scenario": "S3 反抽",
+      "statement": "2026-12-21 面板离 200 日线高于 −5%(11-22 是 −16.0%)",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": -0.05,
+      "prob": 0.15,
+      "horizon_d": "2026-12-21"
+    }
+  ]
+}
