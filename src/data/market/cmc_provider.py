@@ -368,12 +368,16 @@ async def cmc_global_metrics() -> dict:
         return {}
     quote = data.get("quote") or {}
     usd = quote.get("USD") or {}
+    # 字段名按对方的真实回包(11-23 对过官方文档 + 免 key 的同一端点):S-894 那版有三个名字是照 CoinGecko 的
+    # 叫法猜的(`total_volume` / `total_market_cap_change_percentage_24h_usd` / `btc_dominance_change_percentage_24h`),
+    # 对方没有这些键 ⇒ 三个值从上线起一直是 None(宏观脉搏的「总市值 24h 变化」因此一直是空的),而测试的假回包
+    # 用的是同一组猜出来的名字,所以一直是绿的。第一批快照落表时 `_GLOBAL` 行的量和涨跌是空的,才看见。
     return {
         "total_market_cap_usd": usd.get("total_market_cap"),
-        "total_volume_24h_usd": usd.get("total_volume"),
-        "total_market_cap_change_24h_pct": usd.get("total_market_cap_change_percentage_24h_usd"),
+        "total_volume_24h_usd": usd.get("total_volume_24h"),
+        "total_market_cap_change_24h_pct": usd.get("total_market_cap_yesterday_percentage_change"),
         "btc_dominance_pct": data.get("btc_dominance"),
-        "btc_dominance_change_24h_pp": data.get("btc_dominance_change_percentage_24h"),
+        "btc_dominance_change_24h_pp": data.get("btc_dominance_24h_percentage_change"),
         "active_cryptocurrencies": data.get("active_cryptocurrencies"),
         "markets": data.get("markets"),
         "source": "coinmarketcap",

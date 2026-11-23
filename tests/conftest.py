@@ -27,6 +27,24 @@ import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.fixture(autouse=True)
+def _no_live_market_snapshot(request, monkeypatch):
+    """S-908(11-23):带着库凭证跑预检的那台机器上,`market_snapshot.latest()` 读到的是**线上真实的快照**。
+    测「CoinGecko 失败 → CMC 兜底」的测试于是拿到线上的数、不是自己的假回包 —— 表里还没有行的时候是绿的,
+    第一批行落表(14:56 UTC)之后预检红在 `test_cmc_provider`(15:11)。沙盒里没有凭证,所以看不见。
+    测试不读生产:默认把它关掉;测它本身的那一份(`tests/test_market_snapshot.py`)自己接假读,不走这里。"""
+    if request.module.__name__.rsplit(".", 1)[-1] == "test_market_snapshot":
+        yield
+        return
+    import src.data.market.market_snapshot as _ms
+
+    async def _none(*a, **k):
+        return None
+
+    monkeypatch.setattr(_ms, "latest", _none)
+    yield
+
+
 @pytest.fixture
 def client():
     """Create a test client for the FastAPI app."""

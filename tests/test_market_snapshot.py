@@ -405,3 +405,19 @@ def test_the_loop_never_says_skipped_and_its_refusal_has_a_rule():
     spec.loader.exec_module(oc)
     pol = oc.REFUSAL_POLICY[ms.LOOP_NAME]
     assert "S-908" in pol["reason"] and pol["stale_after_days"] == 1 and pol["escalate_after_n_refusals"] <= 18
+
+
+def test_the_market_wide_row_gets_its_volume_and_change_from_the_real_keys(monkeypatch):
+    """第一批快照(11-23 14:56 UTC)`_GLOBAL` 行的量和 24h 变化是空的:`cmc_global_metrics` 读的键名是猜的。
+    这里从对方真实形状的回包一路走到要落的行。"""
+    import httpx
+
+    def handler(request):
+        return httpx.Response(200, json={"data": {"btc_dominance": 58.8, "eth_dominance": 10.1, "quote": {"USD": {
+            "total_market_cap": 2.15e12, "total_volume_24h": 6.9e10, "total_market_cap_yesterday_percentage_change": 0.82}}}})
+
+    cmc = _cmc_mock(monkeypatch, handler)
+    glob = asyncio.run(cmc.cmc_global_metrics())
+    rows, _ = ms.cmc_rows({}, glob, NOW, {}, {})
+    g = rows[0]
+    assert g["symbol"] == ms.GLOBAL and g["volume_24h"] == 6.9e10 and g["pct_24h"] == 0.82 and g["btc_dominance"] == 58.8

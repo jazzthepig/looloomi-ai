@@ -231,11 +231,14 @@ def test_quotes按symbol解析_并标来源(monkeypatch):
 
 def test_global_metrics用CMC自己的字段名(monkeypatch):
     """不给 CMC 套一个「看起来一样」的适配器 —— 那会把两家的口径差藏起来。"""
-    body = {"data": {"btc_dominance": 61.2, "active_cryptocurrencies": 17000,
-                     "markets": 1200,
+    # 假回包用对方的**真实键名**(官方文档 + 2026-11-23 实际回包)。S-908:原来这里放的是照 CoinGecko 叫法猜的
+    # `total_volume` / `total_market_cap_change_percentage_24h_usd`,代码读的也是这两个 ⇒ 测试自己跟自己对上,
+    # 线上这两个值从上线起一直是 None。所以下面两个值必须断言,不能只断言市值和占比。
+    body = {"data": {"btc_dominance": 61.2, "eth_dominance": 10.1, "active_cryptocurrencies": 17000,
+                     "btc_dominance_24h_percentage_change": 0.09,
                      "quote": {"USD": {"total_market_cap": 3.8e12,
-                                       "total_volume": 1.2e11,
-                                       "total_market_cap_change_percentage_24h_usd": -0.8}}}}
+                                       "total_volume_24h": 1.2e11,
+                                       "total_market_cap_yesterday_percentage_change": -0.8}}}}
     _mock(monkeypatch, lambda req: httpx.Response(200, json=body))
 
     async def scenario():
@@ -244,6 +247,9 @@ def test_global_metrics用CMC自己的字段名(monkeypatch):
     m = asyncio.run(scenario())
     assert m["btc_dominance_pct"] == 61.2
     assert m["total_market_cap_usd"] == 3.8e12
+    assert m["total_volume_24h_usd"] == 1.2e11, "量读不到 = 键名又猜错了"
+    assert m["total_market_cap_change_24h_pct"] == -0.8, "24h 变化读不到 = 键名又猜错了"
+    assert m["btc_dominance_change_24h_pp"] == 0.09
     assert m["source"] == "coinmarketcap"
 
 
@@ -415,3 +421,21 @@ def test_没有行情行时用一次markets_缺价不写成0():
         "price_change_percentage_7d_in_currency": -2.5,
     })
     assert quote == {"usd": 64000.5, "usd_24h_change": None, "usd_7d_change": -2.5}
+
+
+def test_这些测试不读线上的行情快照(monkeypatch):
+    """S-908:机器人那台机器带着库凭证跑预检。上面两条「CG 失败 → CMC 兜底」的测试曾经读到线上 `market_snapshot`
+    的真实行(BTC 占比 58.8,不是假回包的 61.2)而红。`tests/conftest.py` 默认把快照读关掉 —— 这里钉住它确实关着:
+    就算读库的函数能读到行,这个文件里拿到的也必须是空。"""
+    import src.data.market.market_snapshot as ms
+    import src.data.vector.market_state_writer as msw
+
+    class _R:
+        ok, rows, reason = True, [{"ts": "2099-01-01T00:00:00+00:00"}], "ok"
+
+    async def live_table(*a, **k):
+        return _R()
+
+    monkeypatch.setattr(msw, "_sb_get", live_table)
+    assert asyncio.run(ms.latest()) is None
+    assert asyncio.run(ms.cmc_latest_shaped()) == {"global": {}, "quotes": {}, "as_of": None}
