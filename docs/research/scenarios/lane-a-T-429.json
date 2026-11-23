@@ -1,0 +1,102 @@
+{
+ "author": "lane-a",
+ "entries": [
+  {
+   "id": "T429-1",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "BTC 在 2026-12-21 的收盘落在 (0, 100000000) 内 —— 这条是变量/结算通路自检(不是行情判断),机器结算一次",
+   "variable": "close:BTC",
+   "op": "between",
+   "lo": 0,
+   "hi": 100000000,
+   "prob": 0.99,
+   "horizon_d": "2026-12-21",
+   "check": "scenario_ledger 按 close:BTC 结算:x > 0 且 x < 1e8 ⇒ 成立",
+   "falsifier": "结算日 BTC 收盘价取不到(变量解析失败)"
+  },
+  {
+   "id": "T429-2",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "稳定币轴:DeFiLlama 口径(USDT+USDC 流通量 30 日变化)与官方(CG 市值口径)在全部重叠日(含 CG 12-01 恢复后新增的 2026-11-19 → 2026-12-21 那些天)上的符号同号率 ≥ 95%(本轮实测 2485 个重叠日 96.54%)",
+   "variable": "manual",
+   "op": "gt",
+   "lo": 0,
+   "prob": 0.85,
+   "horizon_d": "2026-12-21",
+   "check": "重跑 docs/research/t429_cg_free_axes.py 的 A 部分:sign_agreement.rate ≥ 0.95 ⇒ 成立(历史日不会变,新增日要等官方轴回填后才有)",
+   "falsifier": "重跑后 sign_agreement.rate < 0.95"
+  },
+  {
+   "id": "T429-3",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "形态轴:真实停供(冻结点 2026-11-19,成员与权重取 11-18)续到第 12 天(2026-11-30)的影子值与官方回填值之差 ≤ 2.5pp —— 历史 35 次月初重演里停供第 12 天的 |差| 中位 1.65pp、p95 5.89、最大 6.99",
+   "variable": "manual",
+   "op": "gt",
+   "lo": 0,
+   "prob": 0.65,
+   "horizon_d": "2026-12-21",
+   "check": "CG 12-01 恢复、官方 style_rel_majors_30d 回填到 11-19 之后,重跑 t429_cg_free_axes.py 并加一个冻结点 2026-11-19(成员取 style_index_pit_daily 的 11-18 行、权重取 asset_mcap_daily 的 11-18 行,之后只用 ohlcv_daily/binance_hist 收盘续 30 天),读该冻结点 k=12 的 abs_diff_pp_vs_official ≤ 2.5 ⇒ 成立",
+   "falsifier": "回填后重算该冻结点 k=12 的 |影子 − 官方| > 2.5pp"
+  },
+  {
+   "id": "T429-4",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "形态轴:真实停供(冻结点 2026-11-19)续到第 30 天(2026-12-18),「谁在领」的判定(值 > 严格更早全部官方值的均值)与官方同侧率 ≥ 90%(历史重演:第 1 天 97.1%、第 12 天 97.1%、第 30 天 94.1%)",
+   "variable": "manual",
+   "op": "gt",
+   "lo": 0,
+   "prob": 0.6,
+   "horizon_d": "2026-12-21",
+   "check": "回填后重跑(加冻结点 2026-11-19),读该冻结点 k=30 的 gate_agreement ≥ 0.90 ⇒ 成立",
+   "falsifier": "回填后重算该冻结点 k=30 的闸门同侧率 < 0.90"
+  },
+  {
+   "id": "T429-5",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "官方形态轴 state_daily.style_rel_majors_30d 在 2026-12-21 有值且 > −0.10(CG 12-01 恢复后官方轴重新有读数;历史 2485 天里该值 > −0.10 的占 79.2%)",
+   "variable": "state:style_rel_majors_30d",
+   "op": "gt",
+   "lo": -0.1,
+   "prob": 0.75,
+   "horizon_d": "2026-12-21",
+   "check": "scenario_ledger 按 state:style_rel_majors_30d 取 2026-12-21 的 state_daily 值(entity=panel);有值且 > −0.10 ⇒ 成立",
+   "falsifier": "该日官方轴仍为空(读不到值)或值 ≤ −0.10"
+  },
+  {
+   "id": "T429-6",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "形态轴:真实停供(冻结点 2026-11-19,成员与权重取 11-18)续 30 天,影子值与官方回填值的差 ≤ 2.5pp —— 历史 35 次重演里停供第 30 天的 |差| 中位 2.38pp、p95 10.46、最大 18.67",
+   "variable": "manual",
+   "op": "gt",
+   "lo": 0,
+   "prob": 0.5,
+   "horizon_d": "2026-12-21",
+   "check": "CG 12-01 恢复、官方 style_rel_majors_30d 回填到 11-19 之后,重跑 t429_cg_free_axes.py 并加一个冻结点 2026-11-19(成员取 style_index_pit_daily 的 11-18 行、权重取 asset_mcap_daily 的 11-18 行,之后只用 ohlcv_daily/binance_hist 收盘续 30 天),读该案例 k=30 的 abs_diff_pp_vs_official ≤ 2.5 ⇒ 成立",
+   "falsifier": "回填后重算该案例 k=30 的 |影子 − 官方| > 2.5pp"
+  },
+  {
+   "id": "T429-7",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "稳定币轴:CG 恢复、官方 stable_supply_30d 回填到 11-19 之后,DeFiLlama 口径与官方口径在新增重叠日(2026-11-19 → 2026-12-21)上的符号同号率 ≥ 95%(历史 2485 个重叠日 96.54%,真正判错边 12 天 = 0.48%)",
+   "variable": "manual",
+   "op": "gt",
+   "lo": 0,
+   "prob": 0.85,
+   "horizon_d": "2026-12-21",
+   "check": "重跑 docs/research/t429_cg_free_axes.py 的 A 部分,只取 d > 2026-11-19 的新增重叠日:sign_agreement.rate ≥ 0.95 ⇒ 成立",
+   "falsifier": "重跑后新增重叠日的 sign_agreement.rate < 0.95"
+  },
+  {
+   "id": "T429-8",
+   "scenario": "T-429 无 CG 时两条轴的续读精度",
+   "statement": "官方稳定币轴 state_daily.stable_supply_30d 在 2026-12-21 有值且 > −0.10(CG 12-01 恢复后官方轴重新有读数;历史 2485 天该值最小只到 −0.0496,从未破 −0.10)",
+   "variable": "state:stable_supply_30d",
+   "op": "gt",
+   "lo": -0.1,
+   "prob": 0.65,
+   "horizon_d": "2026-12-21",
+   "check": "scenario_ledger 按 state:stable_supply_30d 取 2026-12-21 的 state_daily 值(entity=panel);有值且 > −0.10 ⇒ 成立",
+   "falsifier": "该日官方轴仍为空(读不到值)或值 ≤ −0.10"
+  }
+ ]
+}
