@@ -507,8 +507,8 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
         fundamentals.setdefault(r["symbol"], []).append(r)
     data = {"crypto": crypto, "tradfi": tradfi, "tvl": tvl, "macro": macro_s, "funding": funding, "static": static,
             "static_tf": static_tf, "fundamentals": fundamentals, "github": github, "migration_eff": migration_eff}
-    # T-422:CG-less 兜底。**默认关** —— 开关关时本行不改变 data 的任何一个字节(输出逐字节相同);
-    # 开关开时只在「CG 那条路取不到」的那一维接管(价 / 市值 / 成交 / 总量),并如实标缺。
+    # T-422 / S-900:CG-less 兜底。开关关时本行不改变 data 的任何一个字节;登记的停供窗内默认开(`cg_less_fallback.enabled`),
+    # 只在「CG 那条路取不到」的那一维、且只对停供起的日子接管(价 / 市值 / 成交 / 总量),并如实标缺、标来源。
     from src.data.cis.cg_less_fallback import apply_if_enabled
     data, _fb_report = await apply_if_enabled(assets, data, end)
     return assets, data

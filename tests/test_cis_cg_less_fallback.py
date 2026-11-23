@@ -108,7 +108,7 @@ def _digest(rows: list[dict]) -> str:
 # ── ① 开关关 ⇒ 逐字节相同 ────────────────────────────────────────────────
 
 def test_switch_off_touches_nothing(monkeypatch):
-    monkeypatch.delenv(fb.ENABLE_ENV, raising=False)
+    monkeypatch.setenv(fb.ENABLE_ENV, "0")          # S-900:没设 ≠ 关(停供窗内默认开)⇒ 显式关
     assets, data, raw, sym2cg = _fixture()
     before = copy.deepcopy(data)
     out, report = _run_apply_if_enabled(assets, data)
@@ -344,10 +344,11 @@ def _real_data():
     return assets, data, {"px": raw_px, "vol": raw_vol, "supply": supply}, sym2cg
 
 
-def test_real_data_switch_off_is_byte_identical():
+def test_real_data_switch_off_is_byte_identical(monkeypatch):
     """真实 2026-11-19 数据:开关关 ⇒ data 与 score_day 的输出一个字节都不变。"""
     if not (os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_KEY")):
         pytest.skip("没有凭证")
+    monkeypatch.setenv(fb.ENABLE_ENV, "0")          # S-900:没设 ≠ 关
     assets, data, raw, sym2cg = _real_data()
     before = copy.deepcopy(data)
     rows_before = _rows(assets, data)

@@ -94,7 +94,14 @@ def test_annotate_tolerates_rows_without_inputs():
     rep, _days = _applied()
     rows = [{"symbol": "BTC", "d": "2026-11-19", "missing": []}]
     out = fb.annotate_rows(rows, rep)
-    assert out[0]["missing"] == ["max_supply"]
+    # S-900:夹具里 CG 的 static 带着上限 ⇒ 不该标缺(原来无条件标 max_supply —— CG 回来后每一行仍被说成缺上限)
+    assert out[0]["missing"] == []
+    assets, data, raw, sym2cg, _ = _fixture()
+    for st in data["static"].values():
+        st["max_supply"] = None                                   # CG live 空(停供时的样子)⇒ 如实标缺
+    rep2 = fb.apply(copy.deepcopy(data), assets, raw, sym2cg, end=D, force=False)
+    out2 = fb.annotate_rows([{"symbol": "BTC", "d": "2026-11-19", "missing": []}], rep2)
+    assert out2[0]["missing"] == ["max_supply"]
 
 
 # ── ③ 没有兜底接管 ⇒ 一个字节都不动 ──────────────────────────────────────
