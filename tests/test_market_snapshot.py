@@ -322,8 +322,9 @@ def test_wiring():
     main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
     assert "async def _market_snapshot_loop" in main and "_start_market_snapshot_loop" in main
     mig = (ROOT / "migrations/2026-11-23_market_snapshot.sql").read_text(encoding="utf-8")
+    mig2 = (ROOT / "migrations/2026-11-23_market_snapshot_close_of.sql").read_text(encoding="utf-8")
     for col in ms.WRITES_COLUMNS[ms.TABLE]:
-        assert col in mig, col
+        assert col in mig + mig2, col
     assert "enable row level security" in mig and "revoke all" in mig and "market_snapshot_guard" in mig
     assert "create policy lane_read" in mig and "for select to anon" in mig, "研究要读得到(这张表就是为了不再打 API)"
     assert "insert" not in mig.split("revoke all")[1].lower(), "写只有服务端 key"
@@ -421,3 +422,105 @@ def test_the_market_wide_row_gets_its_volume_and_change_from_the_real_keys(monke
     rows, _ = ms.cmc_rows({}, glob, NOW, {}, {})
     g = rows[0]
     assert g["symbol"] == ms.GLOBAL and g["volume_24h"] == 6.9e10 and g["pct_24h"] == 0.82 and g["btc_dominance"] == 58.8
+
+
+# ── 收盘批次(S-909 / T-432)──────────────────────────────────────────────────
+
+MIDNIGHT = dt.datetime(2026, 11, 24, 0, 0, 17, tzinfo=dt.timezone.utc)
+
+
+def test_close_day_is_yesterday_only_inside_the_window():
+    assert ms.close_day(MIDNIGHT) == "2026-11-23"
+    assert ms.close_day(MIDNIGHT.replace(minute=29, second=59)) == "2026-11-23"
+    assert ms.close_day(MIDNIGHT.replace(minute=30, second=0)) is None, "过了 00:30 取到的不是收盘"
+    assert ms.close_day(NOW) is None
+    jst = dt.timezone(dt.timedelta(hours=9))
+    assert ms.close_day(dt.datetime(2026, 11, 24, 9, 0, 17, tzinfo=jst)) == "2026-11-23", "按 UTC 算,不按机器所在的时区"
+
+
+def test_the_loop_lines_its_wake_up_with_utc_midnight():
+    at = lambda h, m, s: dt.datetime(2026, 11, 23, h, m, s, tzinfo=dt.timezone.utc)
+    assert ms.next_wake_s(at(13, 0, 0)) == ms.WAKE_S
+    assert ms.next_wake_s(at(23, 55, 0)) == 300 + ms.CLOSE_ALIGN_S, "离零点不到一轮 ⇒ 睡到零点后 15 秒"
+    assert ms.next_wake_s(at(23, 59, 50)) == 10 + ms.CLOSE_ALIGN_S
+    assert ms.next_wake_s(at(0, 0, 20)) == ms.WAKE_S
+    assert ms.next_wake_s(at(23, 49, 59)) == ms.WAKE_S
+
+
+def _wire_close(monkeypatch, last_ts, close_exists=False, close_read_ok=True):
+    calls = _wire(monkeypatch, last_ts=last_ts)
+    import src.data.vector.market_state_writer as msw
+    asked = []
+
+    async def sb_get(table, params):
+        asked.append(dict(params))
+        if "close_of" in params:
+            if not close_read_ok:
+                return _Read(None, "HTTP 503: down")
+            return _Read([{"ts": "x"}] if close_exists else [])
+        return _Read([{"ts": last_ts}] if last_ts else [])
+
+    monkeypatch.setattr(msw, "_sb_get", sb_get)
+    calls["asked"] = asked
+    return calls
+
+
+def test_the_close_batch_is_taken_even_when_the_last_snapshot_is_fresh(monkeypatch):
+    calls = _wire_close(monkeypatch, last_ts=(MIDNIGHT - dt.timedelta(minutes=5)).isoformat())
+    r = asyncio.run(ms.run_once(MIDNIGHT))
+    assert r["ok"] and r["close_of"] == "2026-11-23" and calls["cmc"] == 2
+    assert all(x["close_of"] == "2026-11-23" for x in calls["rows"]), "同一批的每一行都带同一天"
+    assert any(a.get("close_of") == "eq.2026-11-23" for a in calls["asked"])
+
+
+def test_the_close_is_taken_once(monkeypatch):
+    calls = _wire_close(monkeypatch, last_ts=(MIDNIGHT - dt.timedelta(seconds=10)).isoformat(), close_exists=True)
+    r = asyncio.run(ms.run_once(MIDNIGHT + dt.timedelta(minutes=10)))
+    assert r["status"] == "already_done" and calls["cmc"] == 0 and "close_of" not in r
+
+
+def test_outside_the_window_rows_carry_no_close(monkeypatch):
+    calls = _wire_close(monkeypatch, last_ts=None)
+    r = asyncio.run(ms.run_once(NOW))
+    assert r["ok"] and "close_of" not in r and all(x["close_of"] is None for x in calls["rows"])
+    assert not any("close_of" in a for a in calls["asked"]), "窗外不问收盘批次"
+
+
+def test_unreadable_close_check_is_a_fault_not_a_reason_to_fetch(monkeypatch):
+    calls = _wire_close(monkeypatch, last_ts=(MIDNIGHT - dt.timedelta(minutes=5)).isoformat(), close_read_ok=False)
+    r = asyncio.run(ms.run_once(MIDNIGHT))
+    assert not r["ok"] and "503" in r["why"] and calls["cmc"] == 0
+
+
+def test_close_batches_are_grouped_by_the_day_they_close(monkeypatch):
+    import src.data.style.header as header
+    seen = {}
+
+    async def read_all(table, params):
+        seen.update(params)
+        mk = lambda d, sym, px: {"close_of": d, "symbol": sym, "price": px, "ts": f"{d}T00:00:17+00:00"}
+        return [mk("2026-11-23", "BTC", 1.0), mk("2026-11-23", "HYPE", 2.0), mk("2026-11-23", ms.GLOBAL, None),
+                mk("2026-11-24", "BTC", 3.0)]
+
+    monkeypatch.setattr(header, "_read_all", read_all)
+    out = asyncio.run(ms.close_batches("2026-11-20", "2026-11-24"))
+    assert sorted(out) == ["2026-11-23", "2026-11-24"] and set(out["2026-11-23"]["rows"]) == {"BTC", "HYPE"}
+    assert out["2026-11-23"]["global"]["symbol"] == ms.GLOBAL and out["2026-11-24"]["global"] is None
+    assert seen["close_of"] == "gte.2026-11-20" and seen["source"] == "eq.coinmarketcap"
+    assert sorted(asyncio.run(ms.close_batches("2026-11-20", "2026-11-23"))) == ["2026-11-23"], "打分日之后的批次不给"
+
+    async def boom(table, params):
+        raise RuntimeError("HTTP 500")
+
+    monkeypatch.setattr(header, "_read_all", boom)
+    with pytest.raises(RuntimeError):
+        asyncio.run(ms.close_batches("2026-11-20"))          # 读不到 ≠ 没有收盘批次
+
+
+def test_the_database_enforces_the_close_window_and_one_close_per_day():
+    mig = (ROOT / "migrations/2026-11-23_market_snapshot_close_of.sql").read_text(encoding="utf-8")
+    assert "close_of = ((ts at time zone 'utc')::date - 1)" in mig and "< time '00:30'" in mig
+    assert "unique index" in mig and "(source, symbol, close_of)" in mig
+    main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    seg = main[main.index("async def _market_snapshot_loop"):main.index("async def _start_market_snapshot_loop")]
+    assert "next_wake_s" in seg, "循环要对齐到零点"

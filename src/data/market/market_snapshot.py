@@ -21,6 +21,11 @@ Jazz 11-23:「读取后是否落表」「研究时候是否直接走了 api 而�
 `identity_of`:名字对得上,且与库里的参考价差在 0.5–2 倍内;或名字对不上、但与币安最近收盘差 ≤ 15%。
 两条都不满足 ⇒ **不落**,在循环的记录里点名(宁缺,不把另一个币的价写进我们的名字下)。
 
+## 收盘批次(S-909 / T-432)
+
+正式 CIS 只认收盘口径。循环在快到 UTC 00:00 时把下一次醒来对齐到零点后 15 秒,那一轮取的一批带 `close_of` = 前一天;
+只在 00:00–00:30 窗内算数(库里有约束),一天一批(唯一索引)。`close_batches()` 给 `cis/cg_less_fallback` 的第二层用。
+
 ## 三样(规则 5b)
 
 调度:`_market_snapshot_loop`(每 10 分钟醒一次,`run_once` 自己按 30 分钟节流 —— 部署重启不会多取一轮)。
@@ -39,7 +44,7 @@ LOOP_NAME = "_market_snapshot_loop"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("ts", "d", "source", "symbol", "vendor_id", "name", "price", "market_cap", "volume_24h",
                           "circulating_supply", "total_supply", "max_supply", "pct_24h", "pct_7d", "btc_dominance",
-                          "source_ts", "identity")}
+                          "source_ts", "identity", "close_of")}
 SOURCE_CMC = "coinmarketcap"
 SOURCE_CG = "coingecko_markets"
 GLOBAL = "_GLOBAL"
@@ -47,6 +52,11 @@ GLOBAL = "_GLOBAL"
 INTERVAL_S = 1800
 #: 读的人把多旧的快照当作「新」。两轮间隔 + 一轮失败的余量。
 FRESH_S = 5400
+#: 收盘批次(S-909 / T-432):UTC 00:00 之后这么多秒内取的那一批才算「前一天的收盘」。过窗取到的不是收盘 ⇒ 那天没有收盘批次。
+CLOSE_WINDOW_S = 1800
+#: 循环平时每隔这么久醒一次;快到 UTC 00:00 时改成对齐到零点后 `CLOSE_ALIGN_S` 秒(收盘批次离零点越近越好)。
+WAKE_S = 600
+CLOSE_ALIGN_S = 15
 #: 身份核对的两个口子(见模块说明)。
 REF_LOOSE = (0.5, 2.0)
 REF_TIGHT = 0.15
@@ -81,6 +91,21 @@ def _iso(v: Any) -> Optional[str]:
         return None
 
 
+def close_day(now: datetime) -> Optional[str]:
+    """纯函数。`now` 落在收盘窗(UTC 00:00 起 `CLOSE_WINDOW_S` 秒)里 ⇒ 它是哪一天的收盘(前一天,ISO);否则 None。"""
+    n = now.astimezone(timezone.utc)
+    if n.hour * 3600 + n.minute * 60 + n.second >= CLOSE_WINDOW_S:
+        return None
+    return (n.date() - timedelta(days=1)).isoformat()
+
+
+def next_wake_s(now: Optional[datetime] = None) -> float:
+    """纯函数。循环下一次该睡多久:平时 `WAKE_S`;离 UTC 零点不到 `WAKE_S` 时,睡到零点后 `CLOSE_ALIGN_S` 秒。"""
+    n = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    to_midnight = 86400 - (n.hour * 3600 + n.minute * 60 + n.second + n.microsecond / 1e6)
+    return float(min(WAKE_S, to_midnight + CLOSE_ALIGN_S))
+
+
 def identity_of(our_name: str, vendor_name: Any, price: Any, ref_px: Any, ref_is_venue: bool) -> Optional[str]:
     """纯函数。CMC 按代码回来的这个币是不是我们的那个:'name' / 'price' / None(不是,或没法确认)。
 
@@ -100,8 +125,10 @@ def identity_of(our_name: str, vendor_name: Any, price: Any, ref_px: Any, ref_is
 
 
 def cmc_rows(quotes: Mapping[str, Mapping[str, Any]], glob: Mapping[str, Any], now: datetime,
-             names: Mapping[str, str], refs: Mapping[str, tuple[float, bool]]) -> tuple[list[dict], list[str]]:
-    """纯函数。CMC 的两个回包 → (要落的行, 被拒的名字及原因)。没有的字段是 None,不是 0。"""
+             names: Mapping[str, str], refs: Mapping[str, tuple[float, bool]],
+             close_of: Optional[str] = None) -> tuple[list[dict], list[str]]:
+    """纯函数。CMC 的两个回包 → (要落的行, 被拒的名字及原因)。没有的字段是 None,不是 0。
+    `close_of`:这一批是哪一天的收盘(调用方只在收盘窗里给);每一行都带同一个值。"""
     ts = now.astimezone(timezone.utc).isoformat()
     rows: list[dict] = []
     rejected: list[str] = []
@@ -110,7 +137,7 @@ def cmc_rows(quotes: Mapping[str, Mapping[str, Any]], glob: Mapping[str, Any], n
         return {"ts": ts, "d": ts[:10], "source": SOURCE_CMC, "symbol": sym, "vendor_id": None, "name": None,
                 "price": None, "market_cap": None, "volume_24h": None, "circulating_supply": None,
                 "total_supply": None, "max_supply": None, "pct_24h": None, "pct_7d": None, "btc_dominance": None,
-                "source_ts": None, "identity": None}
+                "source_ts": None, "identity": None, "close_of": close_of}
 
     for sym in sorted(names):
         q = (quotes or {}).get(sym)
@@ -160,7 +187,7 @@ def cg_rows(markets: Mapping[str, Mapping[str, Any]], now: datetime, cg2sym: Map
                     "pct_24h": _f(m.get("change_24h") if m.get("change_24h") is not None
                                   else m.get("price_change_percentage_24h")),
                     "pct_7d": _f(m.get("change_7d")), "btc_dominance": None,
-                    "source_ts": _iso(m.get("last_updated")), "identity": "id"})
+                    "source_ts": _iso(m.get("last_updated")), "identity": "id", "close_of": None})
     return out
 
 
@@ -210,7 +237,15 @@ async def run_once(now: Optional[datetime] = None, force: bool = False) -> dict[
     if not last.ok:
         return {"ok": False, "written": 0, "why": f"{TABLE} 读不到:{last.reason}"}      # 读不到 ≠ 没有上一份
     prev = _parse_ts(last.rows[0]["ts"]) if last.rows else None
-    if prev is not None and not force and (now - prev).total_seconds() < INTERVAL_S - 60:
+    # 收盘批次(S-909):在收盘窗里、前一天的收盘还没取过 ⇒ 这一轮就是它,不管上一份新不新。
+    close_of = close_day(now)
+    if close_of is not None:
+        got = await _sb_get(TABLE, {"select": "ts", "source": f"eq.{SOURCE_CMC}", "close_of": f"eq.{close_of}", "limit": "1"})
+        if not got.ok:
+            return {"ok": False, "written": 0, "why": f"{TABLE} 读不到(查收盘批次):{got.reason}"}
+        if got.rows:
+            close_of = None                                 # 已经有了:这一轮照平常的节奏走
+    if close_of is None and prev is not None and not force and (now - prev).total_seconds() < INTERVAL_S - 60:
         return {"ok": True, "status": "already_done", "written": 0, "last_ts": prev.isoformat(), "why": "上一份还新"}
     allowed, why = await cmc.admit()
     if not allowed:
@@ -230,7 +265,7 @@ async def run_once(now: Optional[datetime] = None, force: bool = False) -> dict[
         ref_note = f"参考价读不到({type(e).__name__}),只按名字核对"
     else:
         ref_note = None
-    rows, rejected = cmc_rows(quotes, glob, now, names, refs)
+    rows, rejected = cmc_rows(quotes, glob, now, names, refs, close_of=close_of)
     if not rows:
         return {"ok": False, "refused": True, "written": 0, "why": "没有一行过得了核对:" + ";".join(rejected)[:300]}
     res = await supabase_insert_table(TABLE, rows)
@@ -241,6 +276,8 @@ async def run_once(now: Optional[datetime] = None, force: bool = False) -> dict[
     out = {"ok": True, "written": len(rows), "ts": rows[0]["ts"], "source": SOURCE_CMC,
            "btc_dominance": g.get("btc_dominance") if g else None, "rejected": rejected,
            "by_identity": {k: sum(1 for r in rows if r["identity"] == k) for k in ("name", "price", "global")}}
+    if close_of:
+        out["close_of"] = close_of                          # 这一批是这一天的收盘
     if ref_note:
         out["note"] = ref_note
     if rejected:                                            # 有名字没落:这一轮照样算成(落了的是对的),没落的点名进 loop_attempt
@@ -275,6 +312,25 @@ async def latest(source: str = SOURCE_CMC, max_age_s: float = FRESH_S, now: Opti
     if age is None or age > max_age_s:
         return None
     return {**val, "age_s": int(age)}
+
+
+async def close_batches(since: str, until: Optional[str] = None, source: str = SOURCE_CMC) -> dict[str, dict[str, Any]]:
+    """收盘批次(S-909):`{"YYYY-MM-DD": {"ts", "global": 行或 None, "rows": {代码: 行}}}`,键 = 那一批是哪一天的收盘。
+    **读不到抛异常**(读不到 ≠ 那天没有收盘批次);没有批次的日子就是不在返回里。"""
+    from src.data.style.header import _read_all
+    params = {"select": "*", "source": f"eq.{source}", "close_of": f"gte.{since}", "order": "close_of.asc,symbol.asc"}
+    rows = await _read_all(TABLE, params)
+    out: dict[str, dict[str, Any]] = {}
+    for r in rows or []:
+        day = str(r.get("close_of") or "")[:10]
+        if not day or (until and day > until):              # 上界在这边裁(一天 26 行,不值得为它拼第二个过滤条件)
+            continue
+        b = out.setdefault(day, {"ts": r.get("ts"), "global": None, "rows": {}})
+        if r.get("symbol") == GLOBAL:
+            b["global"] = r
+        else:
+            b["rows"][r["symbol"]] = r
+    return out
 
 
 def cmc_shaped(snap: Optional[Mapping[str, Any]]) -> dict[str, Any]:

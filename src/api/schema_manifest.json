@@ -898,6 +898,7 @@
     "market_snapshot": [
       "btc_dominance",
       "circulating_supply",
+      "close_of",
       "d",
       "identity",
       "market_cap",
