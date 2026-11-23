@@ -1331,38 +1331,11 @@ async def cometcloud_get_macro_pulse() -> str:
     """
     try:
         data = await _get("/api/v1/market/macro-pulse")
-
-        # Flat fields (present after data_layer.py v2 — added 2026-04-02)
-        # Fall back to parsing nested structure for older deployments
-        _fng_nested  = data.get("fng", {})
-        _cg_nested   = data.get("data", {})
-        _btc_nested  = data.get("btc", {})
-
-        fg  = data.get("fear_greed_index",
-                       int(_fng_nested.get("value", 0) or 0))
-        fg_label = data.get("fear_greed_label",
-                            _fng_nested.get("value_classification", "—"))
-        dom = data.get("btc_dominance",
-                       round(_cg_nested.get("market_cap_percentage", {}).get("btc", 0), 2))
-        mc  = data.get("total_market_cap_usd", 0)
-        tvl = data.get("defi_tvl_usd", 0)
-        btc_px = data.get("btc_price",
-                          _btc_nested.get("usd", 0))
-        regime = data.get("macro_regime", "—")
-
-        lines = [
-            "# Macro Pulse",
-            "",
-            f"**Regime**: {regime}",
-            f"**Fear & Greed**: {fg} — {fg_label}",
-            f"**BTC Dominance**: {dom:.1f}%",
-            f"**BTC Price**: ${btc_px:,.0f}",
-        ]
-        if mc:
-            lines.append(f"**Total Crypto Market Cap**: ${mc/1e9:.1f}B")
-        if tvl:
-            lines.append(f"**DeFi TVL**: ${tvl/1e9:.1f}B")
-        return "\n".join(lines)
+        try:
+            from src.mcp.pulse_format import macro_pulse_markdown
+        except ImportError:                                 # 独立运行时(同 yield_filters 的回落)
+            from pulse_format import macro_pulse_markdown   # type: ignore
+        return macro_pulse_markdown(data)
 
     except Exception as e:
         return _err(e)
