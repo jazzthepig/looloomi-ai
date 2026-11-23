@@ -1,0 +1,40 @@
+{
+  "author": "lane-a",
+  "task": "T-428",
+  "registered_at": "2026-11-23",
+  "note": "T-428 的前向预期。起点固定(S642_FROM=2025-01-01)后的逐日收益 vs 研究族曲线(t348_r3_families.csv 的 S642,起点 2020-03-01)的差;以及分片并发读的时间。字段名按 scenario_ledger 的 author+entries 写;若扫描器要别的键,下一轮补。",
+  "entries": [
+    {
+      "id": "T428-S1",
+      "statement": "把 S-642 空头臂的起点从研究族的 2020-03-01 改成 2025-01-01 后,2025-01 → 2026-10 的逐日收益与研究族曲线不再逐日相同(中位绝对差 > 1e-6)。",
+      "probability": 0.95,
+      "resolve_by": "2027-02-15",
+      "measure": "docs/research/t428_s642_compare.csv 的 median_abs_diff 列 > 1e-6",
+      "basis": "每票 0.5% 净值风险 + 同时最多 10 张 ⇒ 单位数按当时净值定;起点变了,同一张票的单位数就变了(卡 T-428 的 acceptance ① 原话)。"
+    },
+    {
+      "id": "T428-S2",
+      "statement": "两条曲线(S642_FROM=2025-01-01 起算 vs 研究族 2020-03-01 起算)的逐日收益相关系数 > 0.9(方向一致、幅度不同)。",
+      "probability": 0.7,
+      "resolve_by": "2027-02-15",
+      "measure": "docs/research/t428_s642_compare.csv 的 corr 列 > 0.9",
+      "basis": "同一套信号与出场规则;只有仓位规模随净值路径变 ⇒ 日收益方向应当一致。"
+    },
+    {
+      "id": "T428-S3",
+      "statement": "起点改动后两条曲线的累计收益差(2025-01-01 → 2026-10-19)绝对值 > 0.5 个百分点。",
+      "probability": 0.6,
+      "resolve_by": "2027-02-15",
+      "measure": "docs/research/t428_s642_compare.csv 的 cum_diff_pct 列绝对值 > 0.5",
+      "basis": "研究族曲线含 2025-01 之前开的票(最多 10 张的仓位上限会把早期收益摊到后面),新起点不含 ⇒ 复利路径不同。"
+    },
+    {
+      "id": "T428-S4",
+      "statement": "把 ohlcv_daily(binance_hist,182,097 行)按日历日分 16 片并发读(同一个 `_get_all`),比单流读快 ≥ 5 倍:109.1 s → ≤ 22 s。",
+      "probability": 0.8,
+      "resolve_by": "2026-11-30",
+      "measure": "docs/research/t428_s642_measure.json 的 read_s_concurrent ≤ 22",
+      "basis": "单页 1000 行实测 0.39–0.81 s;并发 8 页实测 0.59–0.80 s(≈ 8× 并行效率),16 片时每片 ≈ 12 页。"
+    }
+  ]
+}
