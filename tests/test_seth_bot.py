@@ -191,6 +191,8 @@ def test_a_batch_runs_preflight_once_commits_each_job_and_pushes_once() -> None:
             return 0, ""
         if a[0] == "rev-parse":
             return 0, f"sha{calls['commit']}\n"
+        if a[:2] == ("rev-list", "--count"):          # 11-23:提交前先看本地 main 有没有领先 origin(unpushed_on_main)—— 这条用例里没有
+            return 0, "0\n"
         if a[0] == "push":
             calls["push"] += 1
             return 0, ""
