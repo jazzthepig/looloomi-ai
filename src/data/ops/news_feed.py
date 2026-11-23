@@ -9,8 +9,9 @@ UNDERPERFORM / UNDERWEIGHT;模型吐出买卖词整条丢掉(`llm_narrator._BANN
 
 ## 管道(每 20 分钟一轮,`_news_feed_loop`)
 
-1. 取:RSS(`backend.macro_events_scraper._RSS_FEEDS` + 本文件的补充:CoinDesk / Decrypt / 美联储 / SEC)+ **一笔** EODHD
-   `/api/news`(我们盯的币和轨道股,符号标签映射成 `vendor_hits`)。CoinGecko `/news` 与 `/insights` 默认不打
+1. 取:RSS(`backend.macro_events_scraper._RSS_FEEDS` + 本文件的补充:CoinDesk / Decrypt / 美联储 / SEC)+ EODHD
+   `/api/news`(我们盯的币和轨道股,符号标签映射成 `vendor_hits`;先一笔多代号,不行就逐个代号取几个 —— S-901,
+   每轮的结果记 `loop_attempt` 的 `_news_feed_eodhd`)。CoinGecko `/news` 与 `/insights` 默认不打
    (2026-11-20 订阅已停);只有 `CG_NEWS_LIVE=1` 才打。取不到的源跳过、记名。
 2. 去重:链接 sha1 为主键(`feed_items`);同一故事多家报(标题词集 Jaccard ≥ 0.6、48 小时内)只留第一家。
 3. 相关:标题 + 摘要里点到我们的名字(CIS 宇宙的币 + 轨道公司 + 宏观关键词)⇒ `hits`;打分 = 名字数 × 2 + 宏观词 + 源权重;
@@ -269,6 +270,53 @@ EODHD_NEWS_SYMBOLS = (
     "COIN.US", "MSTR.US", "HOOD.US", "PYPL.US", "CRCL.US",
 )
 _eodhd_news_cache: Optional[tuple[float, list[dict]]] = None
+#: S-901(11-23):上线 22 小时 0 行,而失败的原因哪里都没记(`fetch_eodhd` 只回「这个源失败」)。
+#: 最近一次取数的结果放这里,`run_once` 带出去,循环记成 `_news_feed_eodhd` 一行 —— 原因 = 状态码 + 响应正文头一段(去掉 token)。
+EODHD_LAST: dict = {}
+#: 一笔多代号不行(非 200 / 空列表)⇒ 这么久之内改成逐个代号取;到点再试一次一笔的。
+EODHD_BATCH_RETRY_S = 6 * 3600
+#: 授权类失败(401 / 402 / 403:key 不对、套餐不含新闻、额度用完)换参数没用 ⇒ 这么久之内整个源不打。
+EODHD_AUTH_RETRY_S = 6 * 3600
+#: 逐个代号时每轮取几个:前两个固定,其余轮换(每笔按 EODHD 的计价算 10 次调用;4 笔 × 72 轮 ≈ 2,900 次 / 天)。
+EODHD_SINGLE_ALWAYS = ("BTC-USD.CC", "ETH-USD.CC")
+EODHD_SINGLE_ROTATE = 2
+EODHD_SINGLE_LIMIT = 20
+_eodhd_state: dict = {"batch_bad_until": 0.0, "off_until": 0.0, "turn": 0}
+
+
+def eodhd_single_picks(turn: int) -> list[str]:
+    """纯函数。逐个代号那条路这一轮取谁:固定的两个 + 其余按轮次轮换。"""
+    rest = [x for x in EODHD_NEWS_SYMBOLS if x not in EODHD_SINGLE_ALWAYS]
+    k = min(EODHD_SINGLE_ROTATE, len(rest))
+    start = (turn * k) % len(rest) if rest else 0
+    return list(EODHD_SINGLE_ALWAYS) + [rest[(start + i) % len(rest)] for i in range(k)]
+
+
+def _scrub(text: Any, key: str) -> str:
+    """响应正文的头一段,去掉 token、压成一行。原因要能进 loop_attempt,所以绝不能带 key。"""
+    t = re.sub(r"\s+", " ", str(text or "")).strip()
+    if key:
+        t = t.replace(key, "***")
+    t = re.sub(r"api_token=[^&\s\"']+", "api_token=***", t)
+    return t[:160]
+
+
+async def _eodhd_get(client: Any, base: str, key: str, params: dict) -> tuple[Optional[list], Optional[int], str]:
+    """一笔 `/api/news` → (行 或 None, 状态码, 原因)。原因里没有 URL、没有 token。"""
+    try:
+        r = await client.get(f"{base}/news", params={**params, "fmt": "json", "api_token": key}, timeout=30)
+    except Exception as e:                                                # noqa: BLE001 —— 异常文本里可能带 URL(含 token)⇒ 只留类型名
+        return None, None, type(e).__name__
+    code = int(getattr(r, "status_code", 200) or 200)
+    if code != 200:
+        return None, code, f"HTTP {code}:{_scrub(getattr(r, 'text', ''), key)}"
+    try:
+        payload = r.json()
+    except Exception:                                                     # noqa: BLE001
+        return None, code, f"HTTP 200,正文不是 JSON:{_scrub(getattr(r, 'text', ''), key)}"
+    if not isinstance(payload, list):
+        return None, code, f"HTTP 200,不是列表:{_scrub(payload, key)}"
+    return payload, code, f"HTTP 200,{len(payload)} 行"
 
 
 def _symbol_list(raw: Any) -> list[str]:
@@ -307,28 +355,58 @@ def eodhd_news_items(rows: Any, now: dt.datetime) -> list[dict]:
 
 
 async def fetch_eodhd(now: dt.datetime) -> tuple[list[dict], list[str]]:
-    """一笔 `/api/news`。没 key、HTTP 失败、或空正文 ⇒ 记这个源失败,不把异常(里面可能有 token)往外传。
-    10 分钟内的成功结果复用,避免同一轮被调用两次。"""
+    """EODHD `/api/news`。先一笔多代号;不行(非 200 / 空)就逐个代号取几个,并在 6 小时内不再试一笔的。
+    每次的结果(哪条路、状态码、原因、行数)记进 `EODHD_LAST` —— 原因不含 URL / token。10 分钟内的成功结果复用。"""
     global _eodhd_news_cache
     from src.data.market.data_layer import EODHD_BASE, EODHD_KEY, _get_misc_client
+    at = now.isoformat()
     if not EODHD_KEY:
+        EODHD_LAST.clear()
+        EODHD_LAST.update({"at": at, "ok": False, "refused": True, "mode": None, "n": 0, "why": "没有 EODHD_API_KEY"})
         return [], [EODHD_NEWS_SOURCE]
-    if _eodhd_news_cache is not None and time.time() - _eodhd_news_cache[0] < _EODHD_NEWS_TTL_S:
+    t = time.time()
+    if _eodhd_news_cache is not None and t - _eodhd_news_cache[0] < _EODHD_NEWS_TTL_S:
         return list(_eodhd_news_cache[1]), []
+    if t < _eodhd_state["off_until"]:
+        EODHD_LAST.update({"at": at, "ok": False, "refused": True, "n": 0,
+                           "why": f"授权类失败后暂停({EODHD_LAST.get('first_why') or EODHD_LAST.get('why')})"})
+        return [], [EODHD_NEWS_SOURCE]
     client = _get_misc_client()
     frm = (now - dt.timedelta(days=2)).date().isoformat()
-    try:
-        r = await client.get(
-            f"{EODHD_BASE}/news",
-            params={"s": ",".join(EODHD_NEWS_SYMBOLS), "from": frm, "limit": str(EODHD_NEWS_LIMIT),
-                    "offset": "0", "fmt": "json", "api_token": EODHD_KEY},
-            timeout=30,
-        )
-        r.raise_for_status()
-        payload = r.json()
-    except Exception:                                                     # noqa: BLE001 —— 不记录异常文本,URL 里带着 key
-        return [], [EODHD_NEWS_SOURCE]
-    items = eodhd_news_items(payload, now)
+    rows: list = []
+    notes: list[str] = []
+    mode = None
+    if t >= _eodhd_state["batch_bad_until"]:
+        got, code, why = await _eodhd_get(client, EODHD_BASE, EODHD_KEY,
+                                          {"s": ",".join(EODHD_NEWS_SYMBOLS), "from": frm,
+                                           "limit": str(EODHD_NEWS_LIMIT), "offset": "0"})
+        notes.append(f"一笔多代号 → {why}")
+        if got:
+            rows, mode = got, "batch"
+        elif code in (401, 402, 403):
+            _eodhd_state["off_until"] = t + EODHD_AUTH_RETRY_S
+            EODHD_LAST.clear()
+            EODHD_LAST.update({"at": at, "ok": False, "refused": True, "mode": "batch", "n": 0, "why": notes[0],
+                               "first_why": notes[0]})
+            return [], [EODHD_NEWS_SOURCE]
+        else:
+            _eodhd_state["batch_bad_until"] = t + EODHD_BATCH_RETRY_S
+    if not rows:
+        mode = "single"
+        picks = eodhd_single_picks(int(_eodhd_state["turn"]))
+        _eodhd_state["turn"] = int(_eodhd_state["turn"]) + 1
+        for sym in picks:
+            got, code, why = await _eodhd_get(client, EODHD_BASE, EODHD_KEY,
+                                              {"s": sym, "from": frm, "limit": str(EODHD_SINGLE_LIMIT), "offset": "0"})
+            notes.append(f"{sym} → {why}")
+            if code in (401, 402, 403):
+                _eodhd_state["off_until"] = t + EODHD_AUTH_RETRY_S
+                break
+            rows += got or []
+    items = list({it["id"]: it for it in eodhd_news_items(rows, now)}.values())
+    EODHD_LAST.clear()
+    EODHD_LAST.update({"at": at, "ok": bool(items), "refused": not items, "mode": mode, "n": len(items),
+                       "why": ";".join(notes)[:380]})
     if not items:
         return [], [EODHD_NEWS_SOURCE]
     _eodhd_news_cache = (time.time(), items)
@@ -396,14 +474,15 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     from src.data.style.header import _read_all
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     items, failed = await fetch_items(now)
+    eodhd = dict(EODHD_LAST) if EODHD_LAST.get("at") == now.isoformat() else None     # 这一轮真打了 EODHD 才带(缓存命中不重复记)
     if not items:
-        return {"ok": False, "why": f"所有源都取不到:{failed}"}
+        return {"ok": False, "why": f"所有源都取不到:{failed}", "eodhd": eodhd}
     since = (now - dt.timedelta(hours=DUP_WINDOW_H)).isoformat()
     recent = await _read_all(TABLE, {"select": "id,title,posted_at", "fetched_at": f"gte.{since}"})
     have = {r["id"] for r in recent}
     new = [it for it in {it["id"]: it for it in items}.values() if it["id"] not in have]
     if not new:
-        return {"ok": True, "status": "skipped", "new": 0, "failed_sources": failed, "why": "没有新条目"}
+        return {"ok": True, "status": "skipped", "new": 0, "failed_sources": failed, "why": "没有新条目", "eodhd": eodhd}
     new = dedupe(new, recent)
     skipped = 0
     for it in new:
@@ -435,12 +514,16 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
     from src.data.narrative.llm_narrator import LAST_ERROR as _llm_err, configured as _llm_on
+    by_source: dict[str, int] = {}
+    for it in new:
+        by_source[it["source"]] = by_source.get(it["source"], 0) + 1
     LAST["run"] = {"at": now.isoformat(), "new": len(new), "candidates": len(cand), "posted": posted, "chat": chat_why,
+                   "by_source": by_source, "eodhd": eodhd,
                    "llm_configured": _llm_on(), "llm_last_error": dict(_llm_err), "llm_drop": LAST.get("llm_drop"),
                    "failed_sources": failed}
     llm_bad = bool(cand) and _llm_on() and (_llm_err.get("why") or LAST.get("llm_drop"))   # 配了模型却没用上 ⇒ 降级,原因进 loop_attempt
     return {"ok": not llm_bad, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat, "chat": chat_why,
-            "unpostable": skipped, "llm": _llm_on(), "failed_sources": failed,
+            "unpostable": skipped, "llm": _llm_on(), "failed_sources": failed, "by_source": by_source, "eodhd": eodhd,
             **({"status": "degraded", "degraded": True,
                 "reason": f"模型没用上,回落模板:{_llm_err.get('why') or LAST.get('llm_drop')}"} if llm_bad else {}),
             "why": f"新 {len(new)} 条,候选 {len(cand)},发 {posted}" + (f"(干跑:{chat_why})" if not chat else f"(→ {chat_why})")}

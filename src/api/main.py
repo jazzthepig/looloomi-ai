@@ -2461,16 +2461,19 @@ async def _dead_host_guard_loop():
 
 
 async def _news_feed_loop():
-    """新闻流(`src/data/ops/news_feed.py`):每 20 分钟取 RSS + 一笔 EODHD `/api/news` → 入 feed_items → 相关的发 TELEGRAM_FEED_CHAT_ID(没配 ⇒ 干跑)。CoinGecko 新闻默认不打。"""
+    """新闻流(`src/data/ops/news_feed.py`):每 20 分钟取 RSS + EODHD `/api/news`(一笔多代号,不行就逐个代号)→ 入 feed_items → 相关的发 TELEGRAM_FEED_CHAT_ID(没配 ⇒ 干跑)。CoinGecko 新闻默认不打。"""
     await _asyncio.sleep(_boot_delay(420))
     while True:
         try:
             from src.data.ops.news_feed import run_once as _nf_run
             r = await _nf_run()
             await _iteration_result("_news_feed_loop", r)
+            if r.get("eodhd"):                                    # S-901:EODHD 这个源单独记一行 —— 失败带原因(状态码 + 正文头一段)
+                await _iteration_result("_news_feed_eodhd", r["eodhd"])
             await _beat("_news_feed_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
                         detail={"new": r.get("new"), "posted": r.get("posted"), "dry": r.get("dry"), "llm": r.get("llm"),
-                                "unpostable": r.get("unpostable"), "chat": r.get("chat"), "failed_sources": r.get("failed_sources")})
+                                "unpostable": r.get("unpostable"), "chat": r.get("chat"), "failed_sources": r.get("failed_sources"),
+                                "by_source": r.get("by_source"), "eodhd": r.get("eodhd")})
         except Exception as _e:
             print(f"[NEWSFEED] ⚠️  pass FAILED: {_e}")
             await _beat("_news_feed_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")

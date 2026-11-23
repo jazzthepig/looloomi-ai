@@ -285,3 +285,105 @@ def test_fetch_eodhd_without_a_key_fails_the_source_only(monkeypatch):
     monkeypatch.setattr(dl, "EODHD_KEY", "")
     items, failed = asyncio.run(nf.fetch_eodhd(dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)))
     assert items == [] and failed == [nf.EODHD_NEWS_SOURCE]
+
+
+# ── S-901(11-23):EODHD 新闻上线 22 小时 0 行,失败原因哪里都没记 ──────────────────────────────
+
+class _Resp:
+    def __init__(self, code=200, payload=None, text=""):
+        self.status_code, self._payload, self.text = code, payload, text
+
+    def json(self):
+        if isinstance(self._payload, Exception):
+            raise self._payload
+        return self._payload
+
+
+def _eodhd_env(monkeypatch, answer):
+    """answer(params) → _Resp 或抛异常。返回记录调用的列表。"""
+    import src.data.market.data_layer as dl
+    nf._eodhd_news_cache = None
+    nf._eodhd_state.update({"batch_bad_until": 0.0, "off_until": 0.0, "turn": 0})
+    nf.EODHD_LAST.clear()
+    monkeypatch.setattr(dl, "EODHD_KEY", "secret-token-value")
+    monkeypatch.setattr(dl, "EODHD_BASE", "https://eodhd.example/api")
+    calls = []
+
+    class Client:
+        async def get(self, url, params=None, timeout=None):
+            calls.append(dict(params or {}))
+            return answer(dict(params or {}))
+
+    monkeypatch.setattr(dl, "_get_misc_client", lambda: Client())
+    return calls
+
+
+def _row(n, sym="BTC-USD.CC"):
+    return {"date": "2026-11-23T00:00:00+00:00", "title": f"Bitcoin story {n}", "content": "x", "link": f"https://n/{n}",
+            "symbols": [sym]}
+
+
+def test_eodhd_batch_rejected_falls_back_to_single_symbols_and_records_why(monkeypatch):
+    def answer(p):
+        if "," in p["s"]:
+            return _Resp(422, text='{"message":"Unprocessable"} https://eodhd.example/api/news?api_token=secret-token-value&s=x')
+        return _Resp(200, [_row(p["s"], p["s"])])
+    calls = _eodhd_env(monkeypatch, answer)
+    now = dt.datetime(2026, 11, 23, 8, tzinfo=dt.timezone.utc)
+    items, failed = asyncio.run(nf.fetch_eodhd(now))
+    picks = nf.eodhd_single_picks(0)
+    assert failed == [] and len(items) == len(picks) == 4
+    assert [c["s"] for c in calls] == [",".join(nf.EODHD_NEWS_SYMBOLS)] + picks
+    assert nf.EODHD_LAST["ok"] and nf.EODHD_LAST["mode"] == "single" and nf.EODHD_LAST["n"] == 4
+    assert "HTTP 422" in nf.EODHD_LAST["why"] and "secret-token-value" not in str(nf.EODHD_LAST)
+    # 6 小时内不再试一笔多代号;轮换往前走
+    nf._eodhd_news_cache = None
+    calls.clear()
+    asyncio.run(nf.fetch_eodhd(now + dt.timedelta(minutes=20)))
+    assert [c["s"] for c in calls] == nf.eodhd_single_picks(1) and all("," not in c["s"] for c in calls)
+    assert calls[0]["limit"] == str(nf.EODHD_SINGLE_LIMIT) and calls[0]["api_token"] == "secret-token-value"
+
+
+def test_eodhd_empty_batch_also_falls_back(monkeypatch):
+    calls = _eodhd_env(monkeypatch, lambda p: _Resp(200, [] if "," in p["s"] else [_row(p["s"])]))
+    items, failed = asyncio.run(nf.fetch_eodhd(dt.datetime(2026, 11, 23, 8, tzinfo=dt.timezone.utc)))
+    assert failed == [] and len(items) == 4 and len(calls) == 5
+    assert "一笔多代号 → HTTP 200,0 行" in nf.EODHD_LAST["why"]
+
+
+def test_eodhd_auth_failure_stops_the_source_and_says_so(monkeypatch):
+    calls = _eodhd_env(monkeypatch, lambda p: _Resp(403, text="Forbidden. Please contact support@eodhd.com"))
+    now = dt.datetime(2026, 11, 23, 8, tzinfo=dt.timezone.utc)
+    items, failed = asyncio.run(nf.fetch_eodhd(now))
+    assert items == [] and failed == [nf.EODHD_NEWS_SOURCE] and len(calls) == 1, "授权类失败换参数没用 —— 不再逐个代号去撞"
+    assert nf.EODHD_LAST["refused"] and "HTTP 403" in nf.EODHD_LAST["why"] and "Forbidden" in nf.EODHD_LAST["why"]
+    items, failed = asyncio.run(nf.fetch_eodhd(now + dt.timedelta(minutes=20)))
+    assert len(calls) == 1 and failed == [nf.EODHD_NEWS_SOURCE] and "HTTP 403" in nf.EODHD_LAST["why"], "暂停期间不打,但原因还在"
+    assert nf.EODHD_LAST["at"] == (now + dt.timedelta(minutes=20)).isoformat()
+
+
+def test_eodhd_exception_text_never_reaches_the_reason(monkeypatch):
+    def answer(p):
+        raise RuntimeError("GET https://eodhd.example/api/news?api_token=secret-token-value failed")
+    _eodhd_env(monkeypatch, answer)
+    items, failed = asyncio.run(nf.fetch_eodhd(dt.datetime(2026, 11, 23, 8, tzinfo=dt.timezone.utc)))
+    assert items == [] and failed == [nf.EODHD_NEWS_SOURCE]
+    assert "secret-token-value" not in str(nf.EODHD_LAST) and "RuntimeError" in nf.EODHD_LAST["why"]
+    assert nf._scrub("x api_token=abc123&y", "") == "x api_token=***&y"
+
+
+def test_eodhd_single_picks_rotate_through_every_symbol():
+    seen = set()
+    for turn in range(len(nf.EODHD_NEWS_SYMBOLS)):
+        p = nf.eodhd_single_picks(turn)
+        assert p[:2] == list(nf.EODHD_SINGLE_ALWAYS) and len(p) == 2 + nf.EODHD_SINGLE_ROTATE and len(set(p)) == len(p)
+        seen.update(p)
+    assert seen == set(nf.EODHD_NEWS_SYMBOLS)
+
+
+def test_eodhd_result_is_recorded_as_its_own_loop_row():
+    src = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    seg = src[src.index("async def _news_feed_loop"):src.index("async def _start_news_feed_loop")]
+    assert 'await _iteration_result("_news_feed_eodhd", r["eodhd"])' in seg
+    nf_src = (ROOT / "src/data/ops/news_feed.py").read_text(encoding="utf-8")
+    assert nf_src.count('"eodhd": eodhd') >= 3, "run_once 的三个出口都要带这一轮 EODHD 的结果"
