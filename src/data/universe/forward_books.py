@@ -514,6 +514,7 @@ async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) 
     rows_n: list[dict] = []
     rows_h: list[dict] = []
     notes: list[str] = []
+    waiting: list[str] = []
     start, cut = pd.Timestamp(STATE_ARMS_START), pd.Timestamp(cutoff)
 
     def _hold(arm: str, as_of: str, key: str, weight: float, note: str) -> None:
@@ -571,9 +572,14 @@ async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) 
         fnd = basket_funding({k: v for k, v in (("BTC", fund.get("BTC")), ("ETH", fund.get("ETH"))) if v is not None})
         gcal = gate_calendar(basket, fnd, gate, start=str((start - pd.Timedelta(days=10)).date()),
                              end=cutoff)
+        # S-898:价缺不许变成 0。gate_calendar 把「资金费有、价格没有」的日子按篮子收益 0 记(研究里是对齐周末用的);
+        # CG 停订后 11-20 → 11-22 两条臂因此各写了三行只有资金费的假零。只写到 BTC、ETH 收盘都有、且前一天闸门有值的最后一天。
+        known_to = min(btc.index.max(), eth.index.max(), gate.index.max() + pd.Timedelta(days=1))
+        if known_to < cut:
+            waiting.append(f"GATE: 价格 / 闸门只到 {known_to.date()},等源(不把缺的价记成 0)")
         for arm, s in GATE_S.items():
             sr, closed = gate_short_returns(gcal[0], gcal[1], gcal[2], s)
-            w = sr[(sr.index > start) & (sr.index <= cut)]
+            w = sr[(sr.index > start) & (sr.index <= min(cut, known_to))]
             nav, done = _seed(arm)
             if not done:
                 cw = closed[closed.index <= start]
@@ -598,7 +604,7 @@ async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) 
             if not ok:
                 return {"ok": False, "why": f"写 {t} 失败:{str(why)[:160]}"}
     return {"ok": not notes, "nav_written": len(rows_n), "holdings_written": len(rows_h),
-            **({"notes": notes} if notes else {})}
+            **({"notes": notes} if notes else {}), **({"waiting": waiting} if waiting else {})}
 
 
 # ── 一轮 ────────────────────────────────────────────────────────────────────

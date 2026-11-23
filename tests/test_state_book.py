@@ -93,6 +93,9 @@ def test_rosters_are_the_frozen_november_ones_and_every_member_is_accounted_for(
             assert set(names) <= set(sb.PANEL), (arm, c)
     assert set(sb.SOURCES) | set(sb.UNAVAILABLE) | set(sb.EXCLUDED) == set(sb.PANEL)
     assert not (set(sb.SOURCES) & set(sb.UNAVAILABLE)) and "carry_b_top_rc" in sb.EXCLUDED
+    assert {"s823_r6", "s819_short_s015", "s819_short_s030"} <= set(sb.SOURCES), "S-898:T-406 的三条已接"
+    assert sb.SOURCES["s823_r6"][1] is True and sb.SOURCES["s819_short_s015"][1] is False, "R6 占本金扣现金;闸门空不扣"
+    assert "S642" in sb.UNAVAILABLE
 
 
 def test_excess_and_weekend_legs() -> None:
@@ -108,7 +111,7 @@ def test_excess_and_weekend_legs() -> None:
     assert known == dt.date(2026, 11, 11)
 
 
-def _inputs(cutoff: dt.date, late: dict | None = None):
+def _inputs(cutoff: dt.date, late: dict | None = None, lead_majors: bool = True):
     days = [dt.date(2026, 5, 1) + dt.timedelta(days=i) for i in range((cutoff - dt.date(2026, 5, 1)).days + 1)]
     rng = np.random.default_rng(7)
     rets, known = {}, {}
@@ -118,11 +121,12 @@ def _inputs(cutoff: dt.date, late: dict | None = None):
         known[k] = last
     t = {d: (-0.1 if d >= dt.date(2026, 11, 10) else 0.05) for d in days}           # 11-10 起线下
     l = {d: -0.04 for d in days}
-    lead = {d: True for d in days}
+    lead = {d: lead_majors for d in days}
     return {"t": t, "l": l, "lead": lead, "rets": rets, "known": known, "missing": {}}
 
 
-def test_plan_opens_once_names_what_cannot_be_held_and_waits_for_late_sources() -> None:
+def test_plan_opens_once_names_what_cannot_be_held_and_waits_for_late_sources(monkeypatch) -> None:
+    monkeypatch.setattr(sb, "SOURCE_OUTAGES", ())           # 这里考平常的晚到规则;停供窗口另有一条测试
     cut = dt.date(2026, 11, 20)
     p = sb.plan_rows(_inputs(cut), {}, cut.isoformat())
     by = {}
@@ -131,14 +135,22 @@ def test_plan_opens_once_names_what_cannot_be_held_and_waits_for_late_sources() 
     assert set(by) == set(sb.ARMS)
     assert all(v[0]["d"] == sb.START and v[0]["nav"] == 1.0 and v[0]["ret"] is None for v in by.values())
     assert all(v[-1]["d"] == cut.isoformat() for v in by.values())
-    lead = [r for r in by["TxLEAD"] if r["ret"] is not None]
-    assert all(r["ret"] == 0.0 for r in lead), "线下 · 主流领 = R6,拿不到 ⇒ 现金"
     st = [h for h in p["holdings"] if h["arm"] == "TxLEAD" and h["key"] == "_state"]
-    assert st and all("线下·主流领" in h["note"] and "拿不到 s823_r6" in h["note"] for h in st)
+    assert st and all("线下·主流领;持有 1 / 名单 1" in h["note"] for h in st), "S-898:R6 接上之后这一格有东西可拿"
+    r6 = [h for h in p["holdings"] if h["arm"] == "TxLEAD" and h["key"] == "s823_r6"]
+    assert len(r6) == len(st) and all(0 < h["weight"] <= sb.MAX_SCALE for h in r6)
+    assert any(r["ret"] not in (None, 0.0) for r in by["TxLEAD"])
     assert all(h["as_of"] < "2026-11-20" for h in p["holdings"]), "持仓行记在决定那天(d − 1)"
     t_only = [h for h in p["holdings"] if h["arm"] == "T_ONLY" and h["key"] == "XAUUSD"]
     assert t_only and all(0 < h["weight"] <= sb.MAX_SCALE for h in t_only), "线下 ⇒ 只拿金"
-    assert p["now"]["TxLEAD"]["cell"] == "线下·主流领" and "s823_r6" in p["now"]["TxLEAD"]["cannot_hold"]
+    assert p["now"]["TxLEAD"]["cell"] == "线下·主流领" and p["now"]["TxLEAD"]["cannot_hold"] == {}
+
+    # 二线领那一格:S642 / S736 拿不到要写明,闸门空两档拿得到
+    q = sb.plan_rows(_inputs(cut, lead_majors=False), {}, cut.isoformat())
+    st = [h for h in q["holdings"] if h["arm"] == "TxLEAD" and h["key"] == "_state"]
+    assert st and all("线下·二线领;持有 2 / 名单 4;拿不到 S642,S736_published" in h["note"] for h in st), st[0]["note"]
+    assert {h["key"] for h in q["holdings"] if h["arm"] == "TxLEAD"} == {"_state", "s819_short_s015", "s819_short_s030"}
+    assert set(q["now"]["TxLEAD"]["cannot_hold"]) == {"S642", "S736_published"}
 
     # 金晚到一天:T_ONLY 停在前一天等它;HOLD_ALL 也等;TxLEAD 不拿金,照写
     p2 = sb.plan_rows(_inputs(cut, late={"XAUUSD": cut - dt.timedelta(days=1)}), {}, cut.isoformat())
@@ -150,7 +162,50 @@ def test_plan_opens_once_names_what_cannot_be_held_and_waits_for_late_sources() 
     assert any("XAUUSD" in n and "晚到" in n for n in p3["notes"])
 
 
-def test_state_missing_waits_then_is_recorded_as_cash() -> None:
+def test_a_known_outage_waits_instead_of_writing_cash_into_the_record() -> None:
+    """S-898:CoinGecko 11-20 起停供,「谁在领」「稳定币」两条轴和风格 / Tom / R6 的源都断了。照原规则 3 天后会把
+    「状态缺 = 现金」「成员晚到 = 不可持有」永久写进账里。已知停供窗口里的日子一直等;恢复后按同一条规则顺序写出。"""
+    assert sb.SOURCE_OUTAGES == (("2026-11-19", "2026-12-01", "CoinGecko 订阅停(Jazz 11-21;12-01 恢复)"),), "加一行 = 改规则,先记台账"
+    assert sb.outage_reason(dt.date(2026, 11, 18), dt.date(2026, 11, 19), dt.date(2026, 11, 27))
+    assert sb.outage_reason(dt.date(2026, 11, 17), dt.date(2026, 11, 18), dt.date(2026, 11, 27)) is None, "窗口之前的日子照原规则"
+    assert sb.outage_reason(dt.date(2026, 12, 1), dt.date(2026, 12, 2), dt.date(2026, 12, 8))
+    assert sb.outage_reason(dt.date(2026, 11, 20), dt.date(2026, 11, 21), dt.date(2026, 12, 9)) is None, "回填宽限过了不再等"
+    assert sb.outage_reason(dt.date(2026, 12, 2), dt.date(2026, 12, 3), dt.date(2026, 12, 5)) is None
+
+    cg = [k for k in sb.SOURCES if k.startswith(("style_", "tom_pd13", "s823", "s819"))]
+    stop = dt.date(2026, 11, 19)                            # CG 的最后一天
+
+    def outage_inputs(cut):
+        x = _inputs(cut, late={k: stop for k in cg})
+        x["lead"] = {d: v for d, v in x["lead"].items() if d <= stop}
+        x["l"] = {d: v for d, v in x["l"].items() if d < stop}
+        return x
+    cut = dt.date(2026, 11, 27)
+    p = sb.plan_rows(outage_inputs(cut), {}, cut.isoformat())
+    last = {a: max(r["d"] for r in p["nav"] if r["arm"] == a) for a in sb.ARMS}
+    assert last == {"TxLEAD": "2026-11-19", "TxL": "2026-11-19", "T_ONLY": "2026-11-27", "HOLD_ALL": "2026-11-19"}, last
+    assert not p["notes"] and not any(h["note"].startswith("状态缺") for h in p["holdings"]), "停供期间一行「状态缺 / 晚到」都不许落"
+    assert set(p["waiting"]) == {"TxLEAD", "TxL", "HOLD_ALL"} and all("CoinGecko" in w for w in p["waiting"].values())
+    assert "s823_r6" in p["waiting"]["TxLEAD"] and "状态" in p["waiting"]["TxL"]
+
+    # 恢复、回填之后:等着的那些天按顺序写出,主臂在「线下 · 主流领」拿 R6
+    cut2 = dt.date(2026, 12, 3)
+    have = {a: (dt.date.fromisoformat(d), next(r["nav"] for r in p["nav"] if r["arm"] == a and r["d"] == d)) for a, d in last.items()}
+    p2 = sb.plan_rows(_inputs(cut2), have, cut2.isoformat())
+    days = sorted(r["d"] for r in p2["nav"] if r["arm"] == "TxLEAD")
+    assert days[0] == "2026-11-20" and days[-1] == "2026-12-03" and len(days) == 14 and not p2["waiting"]
+    assert all(h["weight"] > 0 for h in p2["holdings"] if h["arm"] == "TxLEAD" and h["key"] == "s823_r6")
+
+    # 恢复了却一直没回填:宽限(停供结束 + 7 天)过了才按原规则落账,并写明
+    cut3 = dt.date(2026, 12, 9)
+    p3 = sb.plan_rows(outage_inputs(cut3), have, cut3.isoformat())
+    txl = [h for h in p3["holdings"] if h["arm"] == "TxL" and h["key"] == "_state"]
+    assert txl and txl[0]["as_of"] == "2026-11-19" and txl[0]["note"].startswith("状态缺")
+    assert any("晚到" in n for n in p3["notes"])
+
+
+def test_state_missing_waits_then_is_recorded_as_cash(monkeypatch) -> None:
+    monkeypatch.setattr(sb, "SOURCE_OUTAGES", ())
     cut = dt.date(2026, 11, 20)
     x = _inputs(cut)
     x["l"] = {d: v for d, v in x["l"].items() if d != cut - dt.timedelta(days=1)}
@@ -253,10 +308,23 @@ def test_load_inputs_reads_every_source_and_says_which_it_could_not(monkeypatch)
         if name == "state_daily" and "style_rel_majors_30d" in tail:
             return lead_rows
         return [dict(r) for r in tables.get(name, [])]
+    gate = pd.Series(np.arange(len(days)) % 50 < 20, index=days)          # 开 20 天、关 30 天地轮
+    daily_fund = {k: pd.Series(0.0001, index=days) for k in ("BTC", "ETH")}
+
+    async def state_arms_inputs(end):
+        return {k: closes[k] for k in ("BTC", "ETH")}, daily_fund, gate
     monkeypatch.setattr(fb, "tom_inputs", tom_inputs)
+    monkeypatch.setattr(fb, "state_arms_inputs", state_arms_inputs)
     monkeypatch.setattr(sb, "_get_all", get_all)
     x = asyncio.run(sb.load_inputs("2026-11-14"))
     assert set(x["rets"]) == set(sb.SOURCES) - {"style_meme"} and x["missing"] == {"style_meme": "style_index_pit_daily meme 读不到"}
+    assert x["known"]["s823_r6"] == dt.date(2026, 11, 14) and x["known"]["s819_short_s015"] == dt.date(2026, 11, 14)
+    r6 = x["rets"]["s823_r6"]
+    assert abs(r6[d := dt.date(2026, 11, 10)] - (sb._state_arm_members({k: closes[k] for k in ("BTC", "ETH")}, daily_fund, gate)[0]["s823_r6"][d]
+                                                 - 4.0 / 100 / 365)) < 1e-12, "R6 占本金 ⇒ 扣现金"
+    s15, s30 = x["rets"]["s819_short_s015"], x["rets"]["s819_short_s030"]
+    live = [k for k in s15 if abs(s15[k]) > 1e-9 and k in s30]
+    assert live and all(abs(s30[k] / s15[k] - 2.0) < 1e-9 for k in live), "闸门空不扣现金;s = 0.30 是 0.15 的两倍"
     assert x["known"]["X1V"] == dt.date(2026, 11, 14) and x["known"]["ACWI"] == dt.date(2026, 11, 15), "11-14 是周六;周五收盘 ⇒ 周末已知"
     assert x["lead"] and x["t"][dt.date(2026, 11, 14)] == -0.1
     cash = 4.0 / 100 / 365
@@ -271,3 +339,23 @@ def test_the_daily_loops_run_off_the_event_loop() -> None:
     """S-862:每小时循环里的逐日 Python 循环要进线程,不然会卡住整个应用的事件循环。"""
     src = (ROOT / "src/data/universe/state_book.py").read_text(encoding="utf-8")
     assert "asyncio.to_thread(_kernel_members" in src and "asyncio.to_thread(plan_rows" in src
+
+
+def test_state_arm_members_never_turn_a_missing_price_into_a_zero_return() -> None:
+    """S-898 / I1:价格停在某一天、资金费与闸门照常往后走 ⇒ 闸门空与 R6 都只给到价格的最后一天(之后 = 等源,不是 0);
+    闸门停得更早 ⇒ 闸门空只到「闸门最后一天 + 1」(用前一天的闸门),R6 不受影响。"""
+    import pandas as pd
+    days = pd.date_range("2024-01-01", "2026-11-22", freq="D")
+    rng = np.random.default_rng(5)
+    px = pd.Series(100 * np.exp(np.cumsum(rng.normal(0, 0.02, len(days)))), index=days)
+    fund = {k: pd.Series(0.0001, index=days) for k in ("BTC", "ETH")}
+    gate = pd.Series(False, index=days)                                   # 闸门一直关 ⇒ 每天都有空头收益
+    stop = pd.Timestamp("2026-11-19")
+    closes = {"BTC": px[px.index <= stop], "ETH": (px * 1.3)[px.index <= stop]}
+    raw, missing = sb._state_arm_members(closes, fund, gate)
+    assert not missing and {k: max(v) for k, v in raw.items()} == {k: stop.date() for k in ("s823_r6", "s819_short_s015", "s819_short_s030")}
+    assert abs(raw["s819_short_s015"][stop.date()]) > 1e-6, "最后一个有价的日子是真收益"
+    raw2, _ = sb._state_arm_members({"BTC": px, "ETH": px * 1.3}, fund, gate[gate.index <= pd.Timestamp("2026-11-15")])
+    assert max(raw2["s819_short_s015"]) == dt.date(2026, 11, 16) and max(raw2["s823_r6"]) == dt.date(2026, 11, 22)
+    _, miss = sb._state_arm_members({"BTC": px}, fund, gate)
+    assert set(miss) == {"s819_short_s015", "s819_short_s030"} and "s823_r6" not in miss, "缺 ETH ⇒ 闸门空写进 missing,不是 0"

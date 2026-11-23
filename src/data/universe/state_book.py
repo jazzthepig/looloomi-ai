@@ -13,6 +13,8 @@ Jazz 11-15:「策略不需要全局高效,在特定矢量下 2–3 个月适用�
   - 口径 = 对现金的超额:占本金的成员扣 `stable_lend_apy_7d` / 100 / 365(按日历日,向前沿用);R-v2 / 闸门空不扣。
 四条臂:TxLEAD(主臂)、TxL、T_ONLY、HOLD_ALL(全拿等风险)。各成员的前向来源见 `SOURCES`;拿不到的写在 `UNAVAILABLE`,
 当天按不可持有处理(同研究里「不足 60 个观测」),每天在持仓行里写明缺谁。成员的源晚到最多等 `LAG_GRACE_DAYS` 天。
+**例外(S-898):已知的外部停供(`SOURCE_OUTAGES`,现在只有 CoinGecko 11-19 → 12-01)期间一直等、不落账** ——
+一次停供不该被永久写成这本账的策略记录;恢复并回填之后,等着的那些天按同一条规则顺序写出。
 
 写什么:`forward_book_nav`(book = state_strength_v2;开账日 NAV = 1,之后每天一行,写一次不再改)与
 `forward_book_holdings`(as_of = 决定那天 = d − 1;每个持有成员一行 + `_state` 一行写格子与缺谁)。
@@ -34,6 +36,12 @@ ROSTER_MONTH = "2026-11-01"
 LEAD_FROM, LEAD_MIN_PRIOR = "2019-01-01", 365
 VOL_WIN, VOL_MIN_OBS, TARGET_VOL, MAX_SCALE, ANN = 90, 60, 0.10, 3.0, 365
 LAG_GRACE_DAYS = 3
+#: S-898:已知的外部停供。输入日(状态看 d − 1、成员收益看 d)落在窗口里的那些天不触发「晚到 / 状态缺」,一直等;
+#: 停供结束后再给 OUTAGE_BACKFILL_DAYS 天回填,过了仍没有才按原规则落账并写明。往这张表里加一行 = 改规则,先记台账。
+SOURCE_OUTAGES: tuple[tuple[str, str, str], ...] = (
+    ("2026-11-19", "2026-12-01", "CoinGecko 订阅停(Jazz 11-21;12-01 恢复)"),
+)
+OUTAGE_BACKFILL_DAYS = 7
 HISTORY_DAYS = 200                   # σ 要 90 个日历日;多读一些
 RULE = ("state_strength_v2:S-890(名单冻结 2026-11-01、26 条面板、判据 v2;d−1 收盘的状态;等权平均缩放后收益,"
         "缩放 min(3, 10%/σ90);对现金的超额)")
@@ -79,13 +87,16 @@ SOURCES: dict[str, tuple[str, bool]] = {
     "tom_pd13_btc": ("tom.tom_gross + trade_returns 作用于 asset_mcap_daily BTC(生产核)", True),
     "tom_pd13_eth": ("tom.tom_gross + trade_returns 作用于 asset_mcap_daily ETH(生产核)", True),
     **{f"style_{s}": (f"style_index_pit_daily {s} / cap 的 ret", True) for s in STYLES},
+    # S-898(T-406 的纯函数,在生产数据上整段重算;11-23 接,晚于 S-890 写的「合入那天」7 天 —— 已写的行不改)
+    "s823_r6": ("state_arms.r6_exposure + r6_returns 作用于 asset_mcap_daily BTC、币安永续资金费按天求和", True),
+    "s819_short_s015": ("state_arms.gate_short_returns(s = 0.15):BTC / ETH 等权篮子、majors 闸门前一天关着才空", False),
+    "s819_short_s030": ("state_arms.gate_short_returns(s = 0.30)", False),
 }
-#: 该拿、拿不到(S-890)。T-406 合入后 R6 / 闸门空改成它的纯函数整段重算,从合入那天起可持有。
+GATE_SHORTS = {"s819_short_s015": 0.15, "s819_short_s030": 0.30}
+#: 该拿、拿不到(S-890)。S642 的生产核在 T-412,接线另开卡。
 UNAVAILABLE: dict[str, str] = {
-    "s823_r6": "等 T-406(三态敞口 R6 的生产内核)",
-    "s819_short_s015": "等 T-406(闸门关时空大盘 s = 0.15 的生产内核)",
-    "s819_short_s030": "等 T-406(闸门关时空大盘 s = 0.30 的生产内核)",
-    **{k: "只有研究回测" for k in ("S642", "S736_published", "S736_fixed", "S808", "S810", "S681_H2", "S681_H3", "S681_H4")},
+    "S642": "生产核已有(T-412),还没接进来",
+    **{k: "只有研究回测" for k in ("S736_published", "S736_fixed", "S808", "S810", "S681_H2", "S681_H3", "S681_H4")},
 }
 EXCLUDED: dict[str, str] = {"carry_b_top_rc": "套息不进(S-835 没过准入)"}
 assert set(SOURCES) | set(UNAVAILABLE) | set(EXCLUDED) == set(PANEL), "每个面板成员都要有来源、或写明为什么拿不到"
@@ -137,6 +148,15 @@ def cell_of(arm: str, t: Optional[float], l: Optional[float], lead: Optional[boo
     if arm == "TxLEAD":
         return None if lead is None else f"{tt}·{'主流领' if lead else '二线领'}"
     raise ValueError(arm)
+
+
+def outage_reason(prev: dt.date, d: dt.date, cut: dt.date) -> Optional[str]:
+    """S-898:d 这一天要的输入(状态看 prev、成员收益看 d)落在已知停供窗口里、且还在回填宽限内 ⇒ 返回停供的名字(等);否则 None。"""
+    for a, b, why in SOURCE_OUTAGES:
+        lo, hi = D(a), D(b)
+        if (lo <= prev <= hi or lo <= d <= hi) and cut <= hi + dt.timedelta(days=OUTAGE_BACKFILL_DAYS):
+            return why
+    return None
 
 
 def scaled(rets: dict) -> dict:
@@ -199,6 +219,7 @@ def plan_rows(inputs: dict, have: dict, cutoff: str) -> dict:
     known = inputs.get("known", {})
     missing = {**UNAVAILABLE, **inputs.get("missing", {})}
     rows_n, rows_h, notes, now = [], [], [], {}
+    waiting: dict[str, str] = {}
     for arm in ARMS:
         last, nav = have.get(arm, (None, None))
         if last is None:
@@ -207,15 +228,20 @@ def plan_rows(inputs: dict, have: dict, cutoff: str) -> dict:
         d = last + dt.timedelta(days=1)
         while d <= cut:
             prev = d - dt.timedelta(days=1)
-            late = (cut - d).days >= LAG_GRACE_DAYS
+            held_by = outage_reason(prev, d, cut)
+            late = (cut - d).days >= LAG_GRACE_DAYS and held_by is None    # 停供窗口里的日子不算晚到:等源,不落账(S-898)
             c = cell_of(arm, inputs["t"].get(prev), inputs["l"].get(prev), inputs["lead"].get(prev))
             if c is None and not late:
+                if held_by:
+                    waiting[arm] = f"{d} 等 {prev} 的状态:{held_by}"
                 break                                            # 前一天的状态还没出:等
             roster = list(ROSTERS[arm].get(c, ())) if c else []
             members = [k for k in roster if k not in EXCLUDED and k not in missing]
             wait = [k for k in members if (known.get(k) is None or known[k] < d)
                     and sum(1 for x in inputs["rets"].get(k, {}) if x < d) >= VOL_MIN_OBS]
             if wait and not late:
+                if held_by:
+                    waiting[arm] = f"{d} 等成员 {','.join(wait)}:{held_by}"
                 break                                            # 名单里有成员的源还没到 d:等(最多 LAG_GRACE_DAYS 天)
             usable = [k for k in members if k not in wait]
             r, w = step(usable, sc, d)
@@ -236,7 +262,7 @@ def plan_rows(inputs: dict, have: dict, cutoff: str) -> dict:
         roster = list(ROSTERS[arm].get(c, ())) if c else []
         now[arm] = {"cell": c, "roster": roster,
                     "cannot_hold": {k: (missing.get(k) or EXCLUDED.get(k)) for k in roster if k in missing or k in EXCLUDED}}
-    return {"nav": rows_n, "holdings": rows_h, "notes": notes, "now": now}
+    return {"nav": rows_n, "holdings": rows_h, "notes": notes, "now": now, "waiting": waiting}
 
 
 # ── 读库 ────────────────────────────────────────────────────────────────────────
@@ -275,6 +301,35 @@ def _kernel_members(closes: dict, fund: dict, missing: dict) -> dict:
     return raw
 
 
+def _state_arm_members(closes: dict, fund: dict, gate: Any) -> tuple[dict, dict]:
+    """R6 与闸门空两档的逐日收益(同步;调用方放进线程)。返回 (收益, 读不到的原因)。
+
+    **价缺不许变成 0**(S-898):研究脚本的闸门日历把篮子缺的日子按 0 计,那是给周末对齐用的;生产里价格缺 = 没测到。
+    所以闸门空只算到「BTC、ETH 收盘都有、且前一天的闸门有值」的最后一天,之后的日子不给(等源)。"""
+    import pandas as pd
+    from src.data.signals.state_arms import (basket_funding, basket_returns, gate_calendar, gate_short_returns,
+                                             r6_exposure, r6_returns)
+    raw: dict[str, dict] = {}
+    missing: dict[str, str] = {}
+    btc, eth = closes.get("BTC"), closes.get("ETH")
+    fb, fe = fund.get("BTC"), fund.get("ETH")
+    if btc is None or len(btc) < 260 or fb is None or not len(fb):
+        missing["s823_r6"] = "BTC 收盘不足 260 天或资金费读不到"
+    else:
+        ret, _, _ = r6_returns(btc, r6_exposure(btc), fb)
+        raw["s823_r6"] = _series_to_dict(ret.iloc[1:])
+    if btc is None or eth is None or fb is None or fe is None or gate is None or not len(gate) or len(gate) < 200:
+        missing.update({k: "BTC / ETH 收盘、资金费或 majors 闸门读不到(闸门要 ≥ 200 天)" for k in GATE_SHORTS})
+    else:
+        known_to = min(btc.index.max(), eth.index.max(), gate.index.max() + pd.Timedelta(days=1))
+        cal = gate_calendar(basket_returns({"BTC": btc, "ETH": eth}), basket_funding({"BTC": fb, "ETH": fe}), gate,
+                            end=str(known_to.date()))
+        for k, s in GATE_SHORTS.items():
+            sr, _ = gate_short_returns(cal[0], cal[1], cal[2], s)
+            raw[k] = _series_to_dict(sr[sr.index <= known_to].iloc[1:])
+    return raw, missing
+
+
 async def load_inputs(cutoff: str) -> dict:
     """各成员对现金的超额日收益 + 三条状态轴。读不到的成员写进 missing(读不到 ≠ 收益为 0)。"""
     from src.data.universe.forward_books import tom_inputs
@@ -296,6 +351,14 @@ async def load_inputs(cutoff: str) -> dict:
 
     closes, fund = await tom_inputs(cutoff)
     raw.update(await asyncio.to_thread(_kernel_members, closes, fund, missing))     # 逐日循环的核不占事件循环(S-862)
+    try:                                   # S-898:R6 / 闸门空 = T-406 的纯函数在生产数据上整段重算(与 state_arms 那本账同一来路)
+        from src.data.universe.forward_books import state_arms_inputs
+        sa_closes, sa_fund, sa_gate = await state_arms_inputs(cutoff)
+        got, miss = await asyncio.to_thread(_state_arm_members, sa_closes, sa_fund, sa_gate)
+        raw.update(got)
+        missing.update(miss)
+    except Exception as e:  # noqa: BLE001 —— 读不到 ≠ 收益为 0:写进 missing,当天按不可持有
+        missing.update({k: f"state_arms 输入读不到:{type(e).__name__}" for k in ("s823_r6", *GATE_SHORTS)})
     rv = await _get_all(f"r_money_daily?select=d,nav&d=lte.{cutoff}&order=d")
     if rv:
         raw["R-v2"] = daily_from_nav({D(r["d"]): float(r["nav"]) for r in rv if r.get("nav") is not None})
@@ -366,4 +429,5 @@ async def run_state_book(cutoff: str, now: Optional[dt.datetime] = None) -> dict
     for r in plan["nav"]:
         last[r["arm"]] = max(last.get(r["arm"], ""), r["d"])
     return {"ok": True, "nav_written": len(plan["nav"]), "last_d": last, "now": plan["now"],
+            **({"waiting": plan["waiting"]} if plan.get("waiting") else {}),
             "read_missing": inputs["missing"], **({"notes": plan["notes"][:6]} if plan["notes"] else {})}

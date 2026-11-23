@@ -258,6 +258,30 @@ def test_run_state_arms_warmup_shortfall_is_named() -> None:
     assert not written.get("forward_book_nav")
 
 
+def test_gate_arms_never_turn_a_missing_price_into_a_zero_return() -> None:
+    """S-898:CG 停订后价格停在 11-19、资金费照常到 11-22 ⇒ 两条闸门臂 11-20 → 11-22 各写了三行只有资金费的假零
+    (那三天篮子实际 −6.3% / +3.0% / +2.0%)。价缺 = 没测到:只写到 BTC、ETH 收盘都有、且前一天闸门有值的最后一天。"""
+    closes, fund, gate = _fake_inputs()
+    last_px = pd.Timestamp("2026-11-19")
+    cut_closes = {k: v[v.index <= last_px] for k, v in closes.items()}
+
+    async def loader(cutoff):
+        return cut_closes, fund, gate                       # 资金费、闸门都到 11-22,价格只到 11-19
+
+    r, written = _run("2026-11-22", loader=loader)
+    nav_rows = written["forward_book_nav"]
+    for arm in ("GATE_S15", "GATE_S30", "R6"):
+        assert max(x["d"] for x in nav_rows if x["arm"] == arm) == "2026-11-19", arm
+    assert any("等源" in w for w in r.get("waiting", [])), r
+    assert r["ok"], "等源不是失败"
+    # 闸门缺也一样:闸门只到 11-18 ⇒ 最多写到 11-19(用前一天的闸门)
+    async def loader_gate_short(cutoff):
+        return closes, fund, gate[gate.index <= pd.Timestamp("2026-11-18")]
+    r2, w2 = _run("2026-11-22", loader=loader_gate_short)
+    assert max(x["d"] for x in w2["forward_book_nav"] if x["arm"] == "GATE_S15") == "2026-11-19"
+    assert max(x["d"] for x in w2["forward_book_nav"] if x["arm"] == "R6") == "2026-11-22", "R6 不看闸门"
+
+
 # ── (d) 不进真钱路径,但挂在 ③ 的每小时循环上 ───────────────────────────────
 
 def test_wired_into_the_hourly_loop_and_never_into_a_real_money_path() -> None:
