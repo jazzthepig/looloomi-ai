@@ -108,7 +108,7 @@ EXEMPT = {
 }
 
 #: 非测试文件 —— 不参与统计。
-NOT_A_TEST = {"__init__", "conftest", "_source", "_private_docs"}
+NOT_A_TEST = {"__init__", "conftest", "_source", "_private_docs", "_git_env"}   # _git_env:S-903 的环境清理函数,由 conftest 与起临时仓库的测试调用;它自己的测试是 test_git_env_is_scrubbed
 
 
 def _registered() -> set[str]:

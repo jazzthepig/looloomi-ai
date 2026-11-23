@@ -123,6 +123,13 @@ python3 -m tests.test_verdicts_carry_their_question
 python3 -m pytest tests/test_pr_scope.py -q
 # S-500 Mac 侧执行器(替 Jazz 粘贴交接块,推的是生产):只收显式路径、只合 lane 分支、不执行任意命令。
 python3 -m pytest tests/test_seth_bot.py -q
+# S-903(2026-11-23):带着 GIT_DIR / GIT_WORK_TREE 跑测试 ⇒ 测试里在临时目录起的 git 全打在真仓库上
+# (那天 test_deploy_paths 在本地 main 上落了一个 99 个文件的提交,.git/config 被写了 core.worktree)。
+# 这条钉:危险是真的、清理之后靶子回到临时目录、每个起临时仓库的测试文件都先清环境。
+python3 -m pytest tests/test_git_env_is_scrubbed.py -q || {
+    echo "✗ preflight stage: S-903 —— 测试进程带着会把 git 指到别处的环境变量,或有起临时仓库的测试没清环境" >&2
+    exit 1
+}
 # S-501 仓库是 public:台账 / 策略手册 / DECISIONS 不许被 git 跟踪(看索引,不看忽略规则)。
 python3 -m tests.test_private_docs_untracked
 # S-502 被跟踪的文件里不许有任何 key(HEAD 上曾有一把 CoinGecko key 当默认值,公开五个月)。只报路径与类型。
@@ -748,6 +755,20 @@ python3 -m pytest tests/test_cis_cg_less_fallback.py -q || {
 #                     ⇒ 不标出来,下游会把口径断读成真实变动。
 python3 -m pytest tests/test_cis_cg_less_fallback_provenance.py -q || {
     echo "✗ preflight stage: T-422 补 —— 兜底接管的来源标记(口径断点)红" >&2
+    exit 1
+}
+# 3a-vicesima-ter. S-900(2026-11-23):CG 停供期间正式 CIS 恢复按日发布。
+#                     兜底在登记的停供窗内默认开(原来「默认关、要有人去配变量」⇒ 装上两天没人开,正式档停了四天);
+#                     只接停供起的日子(否则开关一开就拿 Binance 去补历史上 CG 缺的日子 = 改写历史);
+#                     成交量按币校准并把来源与比值写进行里;没有兜底价的名字照样补总量
+#                     (CG live 一空,重建档 1,419 天的 F 支柱被写低约 30 分,循环一直报 ok)。
+python3 -m pytest tests/test_cis_cg_less_outage_default.py -q || {
+    echo "✗ preflight stage: S-900 —— CG 停供窗内的兜底(默认开 / 不改历史 / 成交量校准 / 总量)红" >&2
+    exit 1
+}
+# 3a-vicesima-quater. 2026-11-23:MCP 的宏观脉搏在上游缺值时对所有 agent 报 TypeError(None 进了格式化)。缺就写 n/a。
+python3 -m pytest tests/test_mcp_macro_pulse_missing_inputs.py -q || {
+    echo "✗ preflight stage: MCP 宏观脉搏 —— 上游缺值时报错或把缺写成 0" >&2
     exit 1
 }
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组

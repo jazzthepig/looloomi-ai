@@ -53,6 +53,10 @@ def test_every_repo_path_the_running_service_reads_is_on_the_list():
 
 
 def _git(cwd, *a):
+    # S-903:带着 GIT_DIR / GIT_WORK_TREE 时 cwd 不起作用 —— 下面的 init / add -A / commit 会打在真仓库上
+    # (11-23 就是这个函数在本地 main 上落了提交)。被测的 deploy_paths 也起 git 子进程 ⇒ 就地删变量,不只是传 env。
+    from tests._git_env import scrub_git_env
+    scrub_git_env()
     return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
 
 

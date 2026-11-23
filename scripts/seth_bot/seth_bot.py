@@ -680,6 +680,32 @@ def stash_is_main(msg: str) -> bool:
     return m.startswith("WIP on main:") or m.startswith("On main:")
 
 
+def worktree_override(root: Path = ROOT) -> str:
+    """主仓库 .git/config 里 core.worktree 的值(没设 = 空串)。
+
+    S-903(11-23 08:05):一条带着 `GIT_DIR` / `GIT_WORK_TREE` 的测试命令把 `core.worktree = /tmp/wt2` 写进了主仓库 ——
+    之后主目录里每一条 git 都打在一个 Mac 上不存在的工作区上,`add` 失败、`commit` 用的是别处的树。
+    有值 = 本轮什么都不做;执行器不自己改 .git/config(修:`git config --unset core.worktree`)。
+
+    **直接读文件,不问 git**:那个路径的上级目录都不存在时,连 `git config --get` 自己都以 `fatal: Invalid path` 退出
+    (11-23 在临时仓库里实测)—— 用 git 去问「git 是不是坏了」,坏的时候问不出来。"""
+    try:
+        text = (root / ".git" / "config").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    section = ""
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line.startswith("["):
+            section = line.strip("[]").split()[0].lower() if line.strip("[]").split() else ""
+            continue
+        if section == "core" and "=" in line:
+            k, v = line.split("=", 1)
+            if k.strip().lower() == "worktree":
+                return v.strip().strip('"')
+    return ""
+
+
 def main_dir_guard() -> bool:
     """主目录必须在 main;有人在主目录 stash 了,立刻留下恢复指令。返回 False = 本轮不执行任务。
 
@@ -688,6 +714,13 @@ def main_dir_guard() -> bool:
     执行器当时没看 HEAD 在哪 —— 如果那几分钟里有任务,提交会落在 lane 的分支上。"""
     code, br = git("symbolic-ref", "--short", "-q", "HEAD")
     ok = code == 0 and br.strip() == "main"
+    wt_cfg = worktree_override()
+    if wt_cfg:                                             # S-903:git 命令没打在主目录上 ⇒ 全停
+        line = (f"✗ 主仓库 .git/config 里 core.worktree = {wt_cfg} —— git 命令没打在主目录上;本轮不执行任何任务"
+                "(修:git config --unset core.worktree)")
+        log(line)
+        notify("seth_bot", line)
+        return False
     if not ok:
         line = f"✗ 主目录 HEAD 在 {br.strip() or '(detached)'},不在 main —— 有人在主目录切了分支;本轮不执行任何任务"
         log(line)

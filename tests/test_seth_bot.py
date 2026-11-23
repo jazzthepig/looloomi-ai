@@ -306,6 +306,38 @@ def test_preflight_runs_a_snapshot_of_the_script(tmp_path, monkeypatch):
     assert ok and str(tmp_path.resolve()) in out, out
 
 
+def test_a_core_worktree_override_stops_every_job() -> None:
+    """S-903(11-23):一条带着 GIT_DIR / GIT_WORK_TREE 的测试命令把 `core.worktree` 写进了主仓库的 .git/config ——
+    之后主目录里的 git 全打在别处。执行器每轮先看这个值:有值就什么都不做。在临时仓库里验证,不碰真仓库。"""
+    import os
+    import subprocess as sp
+    import tempfile
+    from unittest import mock
+    import scripts.seth_bot.seth_bot as sb
+    clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    src = BOT.read_text(encoding="utf-8")
+    i = src.index("def main_dir_guard")
+    j = src.find("\ndef ", i + 1)
+    guard = src[i:j if j > 0 else len(src)]
+    assert "worktree_override()" in guard and guard.index("worktree_override()") < guard.index("refs/stash"), "先看 core.worktree,再看别的"
+    assert "return False" in guard[guard.index("worktree_override()"):guard.index("refs/stash")], "有值 ⇒ 本轮不执行任何任务"
+    with tempfile.TemporaryDirectory() as td, mock.patch.dict(os.environ, clean, clear=True):
+        repo = Path(td) / "m"
+        repo.mkdir()
+        assert sp.run(["git", "init", "-q", "-b", "main"], cwd=repo).returncode == 0
+        assert repo.resolve() != sb.ROOT.resolve()
+        assert sb.worktree_override(root=repo) == ""
+        sp.run(["git", "config", "core.worktree", "/nonexistent/wt2"], cwd=repo, check=True)
+        assert sb.worktree_override(root=repo) == "/nonexistent/wt2", "指向不存在的目录时也要读得出来(那天就是这样)"
+        asked = sp.run(["git", "config", "--local", "--get", "core.worktree"], cwd=repo, capture_output=True, text=True)
+        assert asked.returncode != 0 or asked.stdout.strip() == "/nonexistent/wt2"     # 上级目录都不在时 git 自己读不出来 ⇒ 所以直接读文件
+        cfg = repo / ".git" / "config"
+        cfg.write_text("\n".join(l for l in cfg.read_text().splitlines() if "worktree" not in l) + "\n")
+        assert sb.worktree_override(root=repo) == ""
+        cfg.write_text(cfg.read_text() + '[branch "x"]\n\tworktree = /not/core\n')
+        assert sb.worktree_override(root=repo) == "", "只认 [core] 节里的那一个"
+
+
 if __name__ == "__main__":
     import inspect as _inspect
     print("── S-500 seth_bot ──")

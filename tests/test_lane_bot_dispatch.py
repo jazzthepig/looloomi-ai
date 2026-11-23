@@ -35,6 +35,8 @@ CARD = "T-366"
 
 
 def _git(repo: Path, *args: str, date: str | None = None) -> str:
+    from tests._git_env import scrub_git_env
+    scrub_git_env()                    # S-903:`-C repo` 挡不住 GIT_DIR —— 带着它,下面的 init / commit 打在真仓库上
     env = dict(os.environ)
     if date:
         env["GIT_AUTHOR_DATE"] = date
