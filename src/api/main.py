@@ -2468,8 +2468,14 @@ async def _news_feed_loop():
             from src.data.ops.news_feed import run_once as _nf_run
             r = await _nf_run()
             await _iteration_result("_news_feed_loop", r)
-            if r.get("eodhd"):                                    # S-901:EODHD 这个源单独记一行 —— 失败带原因(状态码 + 正文头一段)
-                await _iteration_result("_news_feed_eodhd", r["eodhd"])
+            _eo = r.get("eodhd")                                  # S-901:EODHD 这个源单独记一行 —— 失败带原因(状态码 + 正文头一段)
+            if _eo and _eo.get("ok"):
+                # 成了也记是哪条路成的(一笔多代号 / 逐个代号)和每一笔的状态:11-23 第一轮 ok 了,却读不出原来那种写法到底错在哪
+                await _record_loop_attempt("_news_feed_eodhd", "ok", reason=str(_eo.get("why") or "")[:400] or None,
+                                           detail={"mode": _eo.get("mode"), "n": _eo.get("n")},
+                                           writer="src.api.main._news_feed_loop")
+            elif _eo:
+                await _iteration_result("_news_feed_eodhd", _eo)
             await _beat("_news_feed_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
                         detail={"new": r.get("new"), "posted": r.get("posted"), "dry": r.get("dry"), "llm": r.get("llm"),
                                 "unpostable": r.get("unpostable"), "chat": r.get("chat"), "failed_sources": r.get("failed_sources"),

@@ -384,6 +384,8 @@ def test_eodhd_single_picks_rotate_through_every_symbol():
 def test_eodhd_result_is_recorded_as_its_own_loop_row():
     src = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
     seg = src[src.index("async def _news_feed_loop"):src.index("async def _start_news_feed_loop")]
-    assert 'await _iteration_result("_news_feed_eodhd", r["eodhd"])' in seg
+    assert 'await _iteration_result("_news_feed_eodhd", _eo)' in seg, "失败:带原因记 refused / error"
+    assert 'await _record_loop_attempt("_news_feed_eodhd", "ok", reason=' in seg and '"mode": _eo.get("mode")' in seg, \
+        "成了也要记是哪条路成的 —— 否则读不出原来那种写法错在哪"
     nf_src = (ROOT / "src/data/ops/news_feed.py").read_text(encoding="utf-8")
     assert nf_src.count('"eodhd": eodhd') >= 3, "run_once 的三个出口都要带这一轮 EODHD 的结果"
