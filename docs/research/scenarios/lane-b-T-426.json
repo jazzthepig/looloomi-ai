@@ -1,0 +1,55 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-426-1",
+      "scenario": "T-426 兜底接管日之后 · BTC 收盘",
+      "statement": "BTC 收盘(ohlcv_daily / binance_hist)在 2026-12-05 高于 61271.1 —— 兜底接管日 2026-11-22 的收盘读数(last_close,兜底价)。T-426 实测:X1V 的目标敞口自 2026-10-14 起连续 40 天为 0(趋势规则给出不在场),11-19(CG 最后一天)到 11-22 价格下行 ⇒ 方向先验偏弱,概率略低于五成。这条只约束 BTC 本身的位置,不预测任何收益。",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 61271.1,
+      "prob": 0.45,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-426-2",
+      "scenario": "T-426 兜底接管日之后 · ETH 收盘",
+      "statement": "ETH 收盘(ohlcv_daily / binance_hist)在 2026-12-05 高于 1724.33 —— 兜底接管日 2026-11-22 的收盘读数(last_close,兜底价)。与 T-426-1 同口径同方向;ETH 波动更大 ⇒ 概率再低一档。",
+      "variable": "close:ETH",
+      "op": "gt",
+      "lo": 1724.33,
+      "prob": 0.42,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-426-3",
+      "scenario": "T-426 · CG 恢复后两源仍同口径",
+      "statement": "CoinGecko 订阅恢复(2026-12-01)后,asset_mcap_daily 的 BTC 日行在 2026-12-02 之前重新出现,且恢复后首个共同日与 ohlcv_daily(binance_hist)同日 close 的绝对差 < 50 bp。T-426 在两源都在的 365 天(2025-11-20 → 2026-11-19)测得绝对差中位 6.94 bp、p99 48.98 bp、max 362.37 bp(BTC,2026-02-22)⇒ 单日差 < 50 bp 的历史占比约 99%,恢复首日落在异常日的概率小。人工结算,脚本 /Volumes/CometCloudAI/cometcloud-local/research/t426_probe.py 的 step diff(把窗口末尾改到恢复后),evidence 写 SQL + 数。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.85,
+      "horizon_d": "2026-12-20"
+    },
+    {
+      "id": "T-426-4",
+      "scenario": "T-426 · CG 恢复后兜底自动交回",
+      "statement": "CG 恢复后,在 EXEC_PRICE_FALLBACK=1 的运行里,forward_books.tom_inputs 对某个 asof 不再接管 —— 即 Series.attrs['price_source_by_date'] 里没有来源为 binance_hist 的日期(接管条件是主源最后一天 < end)。这是代码行为的机器可核断言,不是市场判断。人工结算,脚本同上(step live),evidence 写 attrs 打印。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.9,
+      "horizon_d": "2026-12-20"
+    },
+    {
+      "id": "T-426-5",
+      "scenario": "T-426 · 一个多月后的 BTC 位置",
+      "statement": "BTC 收盘(ohlcv_daily / binance_hist)在 2026-12-31 低于 61271.1(兜底接管日 2026-11-22 的收盘)。与 T-426-1 同一条价格线、更长的窗口:11-01 起 X1V 目标敞口连续为 0、恐惧贪婪 11、MVRV 1.13(卡上 11-14 情境)⇒ 先验偏弱;但窗口长,上行也可能发生 ⇒ 概率略高于五成。",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 61271.1,
+      "prob": 0.55,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}

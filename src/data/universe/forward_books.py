@@ -16,6 +16,7 @@ FORWARD_START 之前:不写,只在循环 detail 里放「如果今天调仓,龙�
 from __future__ import annotations
 
 import math
+import os
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -201,10 +202,26 @@ async def prices(keys: list[str], start: str, end: str) -> dict[str, list[tuple[
 
 async def tom_inputs(end: str) -> tuple[dict, dict]:
     """收盘:BTC / ETH = asset_mcap_daily;CORE = ① cap_a1_u 的回放 NAV(multiplier_daily core_u_replay)。
-    资金费:funding_history 币安永续按天求和 × 365(CORE 用 BTC 的)。"""
+    资金费:funding_history 币安永续按天求和 × 365(CORE 用 BTC 的)。
+
+    T-426:CG 订阅停了(2026-11-21 → 12-01)⇒ `asset_mcap_daily` 从 11-20 起 0 行 ⇒ 计划一直 refused。
+    兜底(`src/data/execution/price_fallback.py`)只在 `EXEC_PRICE_FALLBACK=1` 时接管,**默认关时本函数的
+    返回与 11-23 之前逐位相同**(连一次额外查询都不发)。接管时每个日期的来源标在
+    `Series.attrs["price_source_by_date"]` 里。开关由 Seth 定。"""
     import pandas as pd
     px = await prices(["BTC", "ETH"], TOM_WARM_FROM, end)
-    closes = {k: pd.Series([v for _, v in pts], index=pd.to_datetime([d for d, _ in pts])) for k, pts in px.items() if pts}
+    prov: dict[str, dict[str, str]] = {}
+    if os.environ.get("EXEC_PRICE_FALLBACK") == "1":
+        from src.data.execution.price_fallback import apply_fallback
+        px, prov = await apply_fallback(px, ["BTC", "ETH"], TOM_WARM_FROM, end)
+    closes = {}
+    for k, pts in px.items():
+        if not pts:
+            continue
+        s = pd.Series([v for _, v in pts], index=pd.to_datetime([d for d, _ in pts]))
+        if prov.get(k):
+            s.attrs["price_source_by_date"] = prov[k]
+        closes[k] = s
     core = await _get_all(f"multiplier_daily?select=d,nav&arm=eq.core_u_replay&d=gte.{TOM_WARM_FROM}&d=lte.{end}&order=d")
     if core:
         closes["CORE"] = pd.Series([float(r["nav"]) for r in core], index=pd.to_datetime([r["d"] for r in core]))
