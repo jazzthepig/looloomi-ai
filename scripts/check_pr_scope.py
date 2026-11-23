@@ -41,6 +41,7 @@ GLOBAL_FORBIDDEN = (
     "REFUTATION_LEDGER.md",
     "STRATEGY_PLAYBOOK.md",
     "docs/strategy_sources/",  # S-902:台账快照 / 策略报告曾从这里进了公开仓库(T-056)—— 整个目录 lane 不碰
+    "docs/research/scenarios/voids/",  # §Seth-1123x:作废记录只由 Seth / Jazz 写;lane 放一个 json 就能拿掉自己的失败样本
     ".env",
 )
 

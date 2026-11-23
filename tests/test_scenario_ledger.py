@@ -261,7 +261,9 @@ def test_nobody_voids_their_own_and_no_lane_can_void_anybody():
     assert r["status"] == "rejected" and "不认" in r["why"], "lane 不能作废任何人的条目(否则能把自己的失败样本拿掉)"
     assert sl.void_marker(_voided(), entry, False, "seth")["status"] == "ok"
     assert sl.void_marker(_voided(), entry, False, "jazz")["status"] == "ok"
-    assert sl.void_marker(_voided(), entry, False, "ai:MiniMax-M3")["status"] == "ok"
+    for who in ("ai:MiniMax-M3", "ai:lane-b-T-999"):
+        r = sl.void_marker(_voided(), entry, False, who)
+        assert r["status"] == "rejected" and "不认" in r["why"], f"{who}:lane 能自称 ai:,不能靠它作废(§Seth-1123x)"
 
 
 def test_a_settled_entry_cannot_be_voided_and_a_missing_one_is_only_named():

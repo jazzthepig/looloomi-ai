@@ -90,7 +90,7 @@ VOID_REASONS = ("defective_threshold",           # 阈值取错对象(如 BO20 �
                 "not_machine_checkable",          # 量不出一个数
                 "duplicate_id",                   # 与别的 id 重复
                 "superseded")                     # 被新 id 接替(必须写 superseded_by)
-_VOIDER = re.compile(r"^(?:seth(?:[:-][\w.-]+)?|jazz|ai:[\w.-]+)$")   # 作废只能由 seth / jazz / ai:* 写
+_VOIDER = re.compile(r"^(?:seth(?:[:-][\w.-]+)?|jazz)$")   # 作废只能由 seth / jazz 写(ai:* 不认 —— lane 能自称 ai:,§Seth-1123x)
 
 
 def _f(x: Any) -> Optional[float]:
@@ -257,7 +257,7 @@ def void_marker(v: dict, entry: Optional[dict], settled: bool, voided_by: str) -
         return {"status": "rejected", "row": None, "why": "evidence 要写出怎么核的(脚本路径 / SQL + 数)"}
     if not _VOIDER.match(str(voided_by or "")):
         return {"status": "rejected", "row": None,
-                "why": f"voided_by {voided_by!r} 不认 —— 作废是登记错误的更正,只能由 seth / jazz / ai:* 写"
+                "why": f"voided_by {voided_by!r} 不认 —— 作废是登记错误的更正,只能由 seth / jazz 写"
                        f"(lane 不能作废任何人的条目,否则就能把自己的失败样本从校准里拿掉)"}
     sup = str(v.get("superseded_by") or "").strip()
     if reason == "superseded" and not sup:
