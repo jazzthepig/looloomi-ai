@@ -1,0 +1,24 @@
+{
+  "voided_by": "seth",
+  "note": "第一批作废(T-427 机制)。2026-11-23 Seth 写;入库前用 SQL 核过:这 9 个 id 都在 scenario_ledger、scenario_scores 里都没有 outcome。T-382-1 / T-382-3 不作废:观测值按 1/0 与 HTTP 状态码填即可机器判,登记本身没错,拿掉会把有效样本从 lane-b 的校准里删掉。lane-a-T-420 P1–P5、lane-b-T-062 T062-1–4、lane-c-T-412 P1–P4 从未入账(旧格式),不在结算池里,不写。",
+  "voids": [
+    {"id": "T-417-1", "reason": "defective_base_rate",
+     "evidence": "写于 2026-11-20、到期 2026-12-01(11 天),prob 0.24 搬自 T-416-P1 的 31 天基率;窗口与到期日不对齐(§Seth-1119a 1)", "superseded_by": null},
+    {"id": "T-417-2", "reason": "defective_base_rate",
+     "evidence": "prob 0.76 = 1 − 0.24(T-417-1 的 31 天基率取补),到期 2026-12-15 是 25 天窗口,本条没有自己的基率(§Seth-1119a 1)", "superseded_by": null},
+    {"id": "T-417-3", "reason": "defective_threshold",
+     "evidence": "81,200 ± 8% 的 81,200 是 BO20 触发价,不是现价(11-18 收盘 63,068);0.48 是 T-416-P3「现价 ±8%」的基率,换了量没换数(§Seth-1119a 1)", "superseded_by": null},
+    {"id": "T-382-2", "reason": "defective_threshold",
+     "evidence": "statement 判据是「返回 200 且点数 >= 600」,台账 op=gt lo=0 ⇒ 1 个点也判真;应为 gt 599(§Seth-1120a 1,分支未改就合入)", "superseded_by": null},
+    {"id": "T-382-4", "reason": "defective_threshold",
+     "evidence": "statement 判据「非 BTC-USDT 合约数 >= 5」,台账 op=gt lo=5 ⇒ 恰好 5 个时 statement 真、台账判假;应为 gt 4(§Seth-1120a 1)", "superseded_by": null},
+    {"id": "T-382-5", "reason": "defective_base_rate",
+     "evidence": "prob 0.65 无出处(无样本、无窗口),且写入时 11-14 收盘尚未收出;与数据源可行性无关(§Seth-1120a 1:应移进 dropped,分支未改就合入)", "superseded_by": null},
+    {"id": "T-375-1", "reason": "superseded",
+     "evidence": "窗口按 +22 行算,到期日实为 +32 自然日 ⇒ 0.18 是错窗口上的基率;T-381-1 同 variable/op/阈值、32 自然日重算 0.24", "superseded_by": "T-381-1"},
+    {"id": "T-375-4", "reason": "superseded",
+     "evidence": "同 T-375-1 的窗口错误(+22 行 vs +32 自然日);0.60 改为 T-381-2 的 0.78(样本 356、命中 277)", "superseded_by": "T-381-2"},
+    {"id": "T-375-5", "reason": "superseded",
+     "evidence": "起点间隔中位数写成 119 天(实为 104,n=14),基率未测;T-381-3 补测空闲日 n=1983 ⇒ 0.83", "superseded_by": "T-381-3"}
+  ]
+}
