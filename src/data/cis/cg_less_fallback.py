@@ -153,6 +153,37 @@ async def load_raw(sym2cg: Mapping[str, str]) -> dict[str, Any]:
     return await asyncio.to_thread(_shape_raw, ohl, sup)
 
 
+#: 盘中引擎(T2)找供给量快照时往回看多少天 —— 比这更旧的流通量不拿来算今天的市值。
+SUPPLY_SNAPSHOT_MAX_AGE_D = 45
+
+
+def mcap_from_supply(price: Any, snap: Optional[Mapping[str, Any]]) -> Optional[float]:
+    """纯函数。价 × 快照里的流通量;价或流通量缺 / 非正 ⇒ None(**不从别的量推一个出来**)。"""
+    p, c = _f(price), _f((snap or {}).get("circ"))
+    if p is None or c is None or p <= 0 or c <= 0:
+        return None
+    return p * c
+
+
+async def latest_supply(sym2cg: Optional[Mapping[str, str]] = None, today: Optional[date] = None) -> dict[str, dict]:
+    """每个名字最近一份供给量快照:`{sym: {"circ", "total", "d"}}`(S-906)。读本库,不外呼;没有快照的名字不出现。"""
+    from src.data.style.header import _read_all
+    sym2cg = dict(sym2cg) if sym2cg is not None else sym2cg_map()
+    ids = sorted({c for c in sym2cg.values() if c})
+    if not ids:
+        return {}
+    lo = ((today or datetime.now(timezone.utc).date()) - timedelta(days=SUPPLY_SNAPSHOT_MAX_AGE_D)).isoformat()
+    rows = await _read_all(SUPPLY_TABLE, {"select": "coin_id,d,circulating_supply,total_supply",
+                                           "coin_id": f"in.({','.join(ids)})", "d": f"gte.{lo}",
+                                           "order": "coin_id.asc,d.asc"})
+    last: dict[str, dict] = {}
+    for r in rows or []:
+        circ = _f(r.get("circulating_supply"))
+        if r.get("coin_id") and circ is not None and circ > 0:
+            last[r["coin_id"]] = {"circ": circ, "total": _f(r.get("total_supply")), "d": str(r.get("d"))[:10]}
+    return {sym: last[cg] for sym, cg in sym2cg.items() if cg in last}
+
+
 def _shape_raw(ohl: list[dict], sup: list[dict]) -> dict[str, Any]:
     """同步:读到的行 → {"px", "vol", "supply"}。"""
     raw: dict[str, Any] = {"px": {}, "vol": {}, "supply": {}}

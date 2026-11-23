@@ -2539,6 +2539,20 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         if _slow:
             _branch_ms["slowest_branch"] = max(_slow, key=_slow.get)
 
+    # S-906(2026-11-23):CoinGecko 取不到市值的名字,市值 = 价 × 本库最近一份流通量(`coin_supply_daily`);
+    # 连快照都没有就留 0(这里 0 = 缺)。原来这两处是 `volume * 20` —— 为个别改名币写的兜底,CG 一停它成了
+    # 全体加密名字的市值来源:公开接口上 ETH 的「市值」是 77 亿、每个名字的量 / 市值恰好都是 5%(硬规则 9)。
+    # 只在确实有名字需要时读一次;CG 正常时没有额外开销。
+    if not isinstance(cg_markets, dict):      # 这一支超时 / 出错时的缺省值是 [] —— 下面全按 dict 用,不归一就整轮构建抛 AttributeError
+        cg_markets = {}
+    _need_supply = [a for a in ASSETS_CONFIG if a in binance_prices and ASSETS_CONFIG[a].get("coingecko")
+                    and not ((cg_markets.get(ASSETS_CONFIG[a]["coingecko"], {}) or {}).get("market_cap") or 0)]
+    _supply_snap: dict = {}
+    if _need_supply:
+        from src.data.cis.cg_less_fallback import latest_supply, mcap_from_supply
+        _supply_snap = await _bounded("supply_snapshot", latest_supply(
+            {a: ASSETS_CONFIG[a]["coingecko"] for a in _need_supply}), {})
+
     # Merge: Binance as primary (speed), CoinGecko enriches missing fields
     # Binance has: price, change_24h, volume, high/low
     # CoinGecko has: market_cap, change_7d, change_30d, circ_supply, ATH distance
@@ -2561,7 +2575,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 cg_supply = cg_data.get("circulating_supply", 0) or 0
                 cg_total_supply = cg_data.get("total_supply", 0) or 0
                 # CG sometimes returns market_cap=0 for rebranded tokens (e.g. MKR→SKY).
-                # Fallback chain: price×circ_supply → price×total_supply → FDV → volume×20
+                # Fallback chain: price×circ_supply → price×total_supply → FDV → price×本库流通量快照(S-906;不再有 volume×20)
                 if cg_mc == 0:
                     price = rec.get("price", 0) or cg_data.get("price", 0) or 0
                     if cg_supply > 0 and price > 0:
@@ -2572,19 +2586,26 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                     elif cg_fdv > 0:
                         cg_mc = cg_fdv
                     else:
-                        volume = rec.get("volume_24h", 0) or cg_data.get("volume_24h", 0) or 0
-                        if volume > 0:
-                            cg_mc = volume * 20  # vol ~5% of mcap → ×20 conservative
+                        _snap = _supply_snap.get(asset_id)
+                        _m = mcap_from_supply(price, _snap) if _snap else None
+                        if _m:
+                            cg_mc = _m
+                            rec["market_cap_source"] = f"coin_supply_daily@{_snap['d']} x price"
                 rec["market_cap"] = cg_mc
                 rec["fdv"] = cg_fdv
                 rec["circulating_supply"] = cg_supply
                 rec["total_supply"] = cg_total_supply
                 rec["ath_change_percentage"] = cg_data.get("ath_change_percentage", 0) or 0
             else:
-                # Fallback: estimate market_cap from volume when CoinGecko fails entirely
-                volume = rec.get("volume_24h", 0) or 0
-                if volume > 0 and rec.get("market_cap", 0) == 0:
-                    rec["market_cap"] = volume * 20  # Conservative estimate
+                # CoinGecko 整个取不到(S-906):市值 = 价 × 本库最近一份流通量;没有快照 ⇒ 留 0(= 缺),不从成交额推
+                _snap = _supply_snap.get(asset_id)
+                _m = mcap_from_supply(rec.get("price"), _snap) if _snap else None
+                if _m and not rec.get("market_cap"):
+                    rec["market_cap"] = _m
+                    rec["circulating_supply"] = _snap["circ"]
+                    if _snap.get("total"):
+                        rec["total_supply"] = _snap["total"]
+                    rec["market_cap_source"] = f"coin_supply_daily@{_snap['d']} x price"
             merged_markets[asset_id] = rec
         elif cg_data:
             merged_markets[asset_id] = cg_data

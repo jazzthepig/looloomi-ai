@@ -771,6 +771,13 @@ python3 -m pytest tests/test_mcp_macro_pulse_missing_inputs.py -q || {
     echo "✗ preflight stage: MCP 宏观脉搏 —— 上游缺值时报错或把缺写成 0" >&2
     exit 1
 }
+# 3a-vicesima-quinquies. S-906(2026-11-23):盘中引擎在 CoinGecko 取不到时把市值编成「成交额 × 20」,
+#                     公开接口上挂了四天(ETH「市值」77 亿;每个名字的量 / 市值恰好都是 5%)。硬规则 9:宁缺勿造。
+#                     现在 = 价 × 本库最近一份流通量;没有快照 ⇒ 0(= 缺)。这条钉住那个函数里不再有从成交额推市值的路。
+python3 -m pytest tests/test_t2_market_cap_is_not_invented.py -q || {
+    echo "✗ preflight stage: S-906 —— 盘中引擎又在从成交额推市值,或「价 × 流通量」那条路坏了" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
