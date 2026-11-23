@@ -221,3 +221,188 @@ def test_path_propositions_validate_and_settle_on_hourly_bars_after_they_were_wr
     up.clear()
     r = asyncio.run(sl.run_once(dt.datetime(2026, 11, 17, 1, 0, tzinfo=dt.timezone.utc)))
     assert r["scored"] == 0 and r["waiting"] == 1
+
+
+# ── 11-23 作废层(T-427):「这条登记本身是错的」—— 结算之外的第三类记录 ───────────────────────────────
+def _voided(sid="T-417-1", reason="defective_threshold", evidence="docs/research/t417_audit.py → 81,200 是 BO20 触发价",
+            sup=""):
+    v = {"id": sid, "reason": reason, "evidence": evidence}
+    if sup:
+        v["superseded_by"] = sup
+    return v
+
+
+def test_void_reason_is_a_closed_set_and_refutation_is_not_one_of_them():
+    """作废 ≠ 结算:闭集里没有一个 reason 能表达「命题被证伪」—— 那只能走结算。"""
+    assert sl.VOID_REASONS == ("defective_threshold", "defective_base_rate", "complement_pair",
+                               "not_machine_checkable", "duplicate_id", "superseded")
+    entry = {"id": "T-417-1", "author": "lane-c"}
+    r = sl.void_marker(_voided(reason="falsified"), entry, False, "seth")
+    assert r["status"] == "rejected" and "不在闭集" in r["why"] and "结算" in r["why"], "被证伪只能走结算"
+    r = sl.void_marker(_voided(reason="defective_threshold"), entry, False, "seth")
+    assert r["status"] == "ok", r["why"]
+    assert r["row"]["observed"] is None and r["row"]["outcome"] is None and r["row"]["brier"] is None, "作废行三列全空"
+    assert sl.is_void(r["row"]) and r["row"]["note"].startswith(sl.VOID_NOTE_PREFIX)
+
+
+def test_a_note_that_merely_mentions_a_void_is_not_a_void_row():
+    """负控制:不做自由文本匹配 —— 说明文字里出现「作废」两个字,不该把结算行变成作废行。"""
+    row = {"id": "x", "note": "结算日 2026-12-01 过了 7 天仍读不到 state:dist_200 —— 不当成假(登记错误待作废)"}
+    assert not sl.is_void(row)
+    assert sl.is_void({"id": "x", "note": sl.VOID_NOTE_PREFIX + "seth · duplicate_id · 证据"})
+    assert not sl.is_void(None) and not sl.is_void("作废 · seth")
+
+
+def test_nobody_voids_their_own_and_no_lane_can_void_anybody():
+    entry = {"id": "T-417-1", "author": "lane-c"}
+    r = sl.void_marker(_voided(), {"id": "T-1", "author": "seth:weekly"}, False, "seth:cycle-space")
+    assert r["status"] == "rejected" and "自己" in r["why"], "seth 不能作废 seth 自己写的"
+    r = sl.void_marker(_voided(), entry, False, "lane-c")
+    assert r["status"] == "rejected" and "不认" in r["why"], "lane 不能作废任何人的条目(否则能把自己的失败样本拿掉)"
+    assert sl.void_marker(_voided(), entry, False, "seth")["status"] == "ok"
+    assert sl.void_marker(_voided(), entry, False, "jazz")["status"] == "ok"
+    assert sl.void_marker(_voided(), entry, False, "ai:MiniMax-M3")["status"] == "ok"
+
+
+def test_a_settled_entry_cannot_be_voided_and_a_missing_one_is_only_named():
+    entry = {"id": "T-417-1", "author": "lane-c"}
+    r = sl.void_marker(_voided(), entry, True, "seth")
+    assert r["status"] == "rejected" and "已结" in r["why"], "结算是不可改的历史事实"
+    r = sl.void_marker(_voided(sid="T-420-P1"), None, False, "seth")
+    assert r["status"] == "not_in_ledger" and r["row"] is None and "只点名" in r["why"]
+
+
+def test_superseded_needs_the_new_id():
+    entry = {"id": "T-375-1", "author": "lane-a"}
+    r = sl.void_marker(_voided(reason="superseded"), entry, False, "seth")
+    assert r["status"] == "rejected" and "superseded_by" in r["why"]
+    r = sl.void_marker(_voided(reason="superseded", sup="T-381-1"), entry, False, "seth")
+    assert r["status"] == "ok" and "T-381-1" in r["row"]["note"]
+    assert sl.void_marker(_voided(sid="T-375-1", reason="superseded", sup="T-375-1"), entry, False, "seth")["status"] == "rejected"
+
+
+def test_void_files_live_in_their_own_folder_and_are_not_read_as_scenarios(tmp_path):
+    """目录隔离:`repo_files()` 是 `SCENARIO_DIR.glob("*.json")`(非递归)⇒ `voids/` 里的文件不会被当成情景文件读进来。"""
+    import json
+    for sub in (sl.SCENARIO_DIR, sl.VOID_DIR, sl.SETTLE_DIR):
+        (tmp_path / sub).mkdir(parents=True)
+    (tmp_path / sl.SCENARIO_DIR / "lane-a-T-1.json").write_text(json.dumps({"author": "lane-a", "entries": []}), encoding="utf-8")
+    (tmp_path / sl.VOID_DIR / "seth-2026-11-23.json").write_text(json.dumps(
+        {"voided_by": "seth", "voids": [{"id": "T-1-1", "reason": "superseded", "evidence": "e" * 20,
+                                        "superseded_by": "T-2-1"}]}), encoding="utf-8")
+    (tmp_path / sl.VOID_DIR / "bad.json").write_text("{not json", encoding="utf-8")
+    recs = sl.void_files(str(tmp_path))
+    assert [r["file"] for r in recs] == ["bad.json", "seth-2026-11-23.json"]
+    assert recs[0]["problems"] and recs[1]["voided_by"] == "seth" and recs[1]["voids"][0]["id"] == "T-1-1"
+    assert [r["file"] for r in sl.repo_files(str(tmp_path))] == ["lane-a-T-1.json"], "voids/ 不被当成情景文件"
+    assert sl.settlement_files(str(tmp_path)) == [], "voids/ 也不被当成结算记录"
+
+
+def test_apply_voids_writes_markers_names_the_missing_and_is_idempotent(monkeypatch, tmp_path):
+    import json
+    import src.api.store as store
+    import src.data.style.header as hdr
+    d = tmp_path / sl.VOID_DIR
+    d.mkdir(parents=True)
+    (d / "seth-2026-11-23.json").write_text(json.dumps({"voided_by": "seth", "voids": [
+        {"id": "T-417-1", "reason": "defective_threshold", "evidence": "x" * 30},
+        {"id": "T-420-P1", "reason": "not_machine_checkable", "evidence": "y" * 30},
+        {"id": "T-375-1", "reason": "superseded", "evidence": "z" * 30, "superseded_by": "T-381-1"}]}), encoding="utf-8")
+    state: dict[str, dict] = {}
+    up = []
+
+    async def read_all(t, params):
+        if t == sl.TABLE:
+            return [{"id": "T-417-1", "author": "lane-c"}, {"id": "T-375-1", "author": "lane-a"}]
+        if t == sl.SCORES:
+            return list(state.values())
+        raise AssertionError(t)
+
+    async def ups(t, rows, on_conflict):
+        assert t == sl.SCORES, "台账一行都不许动"
+        for x in rows:
+            state[x["id"]] = x
+        up.extend(rows)
+        return True
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    r = asyncio.run(sl.apply_voids(dt.date(2026, 11, 23), root=str(tmp_path)))
+    assert sorted(r["written"]) == ["T-375-1", "T-417-1"], r
+    assert [m["id"] for m in r["not_in_ledger"]] == ["T-420-P1"], "不在台账的只点名,不写行"
+    assert "外键" in r["not_in_ledger"][0]["why"], "点名要说清为什么不能进库"
+    assert r["rejected"] == [] and r["voided"] == 2
+    assert [x["id"] for x in up] == ["T-417-1", "T-375-1"]
+    assert all(x["outcome"] is None and x["brier"] is None and x["observed"] is None for x in up)
+    assert "T-381-1" in up[1]["note"] and sl.is_void(up[1])
+    up.clear()
+    r2 = asyncio.run(sl.apply_voids(dt.date(2026, 11, 23), root=str(tmp_path)))
+    assert up == [], "同一条记录跑两次不重写"
+    assert r2["written"] == [] and r2["already"] == ["T-375-1", "T-417-1"] and r2["voided"] == 2, "幂等:结果一样"
+
+
+def test_a_voided_entry_is_never_settled_never_calibrated_and_never_open(monkeypatch, tmp_path):
+    """三个消费点的负控制:造一行作废标记 ⇒ 不被结算、不进校准、不进「该结了」。"""
+    import json
+    import src.api.store as store
+    import src.data.style.header as hdr
+    void_row = {"id": "T-1-4", "observed": None, "outcome": None, "brier": None,
+                "note": sl.VOID_NOTE_PREFIX + "seth · defective_threshold · 登记时把触发价当现价",
+                "code_ref": sl.CODE_REF_VOID}
+    entry = {"id": "T-1-4", "author": "lane-c", "variable": "manual", "op": "gt", "lo": 1.0, "hi": None,
+             "prob": 0.8, "horizon_d": "2026-11-21"}
+    today = dt.date(2026, 11, 25)
+    assert sl.open_manual([entry], {"T-1-4": void_row}, today) == {}, "作废的条目不进「该结了」"
+    assert sl.calibration([entry], {"T-1-4": void_row}) == {}, "作废的条目不进校准(n / hit_rate / buckets)"
+
+    # (1) 人工结算不覆盖作废行
+    sd = tmp_path / sl.SETTLE_DIR
+    sd.mkdir(parents=True)
+    (sd / "lane-b-2026-11-25.json").write_text(json.dumps(
+        {"settled_by": "lane-b", "settlements": [{"id": "T-1-4", "observed": 1.2, "evidence": "x" * 20}]}), encoding="utf-8")
+    score_rows = [void_row]
+    up = []
+
+    async def read_all(t, params):
+        if t == sl.TABLE:
+            return [dict(entry)]
+        if t == sl.SCORES:
+            if params.get("outcome") == "not.is.null":
+                return [{"id": r["id"]} for r in score_rows if r.get("outcome") is not None]
+            return list(score_rows)
+        raise AssertionError(t)
+
+    async def ups(t, rows, on_conflict):
+        up.extend(rows)
+        return True
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    r = asyncio.run(sl.apply_settlements(today, root=str(tmp_path)))
+    assert r["settled"] == 0 and up == [], "作废的条目不被人工结算"
+    assert r["skipped_void"] == ["T-1-4"]
+
+    # (2) 自动结算不覆盖作废行(到期那天也不会)
+    up.clear()
+    ledger = [{"id": "T-9-1", "variable": "close:BTC", "op": "gt", "lo": 1, "hi": None, "prob": 0.7,
+               "horizon_d": "2026-11-09"}]
+    void_auto = {"id": "T-9-1", "observed": None, "outcome": None, "brier": None,
+                 "note": sl.VOID_NOTE_PREFIX + "seth · defective_threshold · 登记时把触发价当现价",
+                 "code_ref": sl.CODE_REF_VOID}
+
+    async def read_all2(t, params):
+        if t == sl.TABLE:
+            return ledger
+        if t == sl.SCORES:
+            if params.get("outcome") == "not.is.null":
+                return [{"id": r["id"]} for r in [void_auto] if r.get("outcome") is not None]
+            return [void_auto]
+        if t == "ohlcv_daily":
+            return [{"close": 80123.0}] if params["source"] == "eq.binance_hist" else []
+        raise AssertionError(t)
+
+    async def ins(t, rows):
+        return type("R", (), {"ok": False, "why": "测试里不写台账"})()
+    monkeypatch.setattr(hdr, "_read_all", read_all2)
+    monkeypatch.setattr(store, "supabase_insert_table", ins)
+    r = asyncio.run(sl.run_once(dt.datetime(2026, 11, 10, 1, 0, tzinfo=dt.timezone.utc)))
+    assert r["scored"] == 0 and up == [], "作废的条目不被自动结算覆盖"
+    assert r["voids"]["voided"] == 0

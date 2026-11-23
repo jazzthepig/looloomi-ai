@@ -41,6 +41,22 @@ A / B / C 交研究卡时,把对结果的前向预期写成 `docs/research/scena
 - 到期之后才能结;结过的不重结(要改 = 另立更正,不覆盖)。
 
 判活:`select count(*) from scenario_ledger` 只增不减;`loop_attempt` 里 `_scenario_ledger_loop` 每小时一条。
+
+## 作废:「这条登记本身是错的」(11-23,T-427)—— 结算之外的第三类记录
+
+台账只追加、不可改 —— 那是对的(事前写下的东西不能改),但对**登记错误**是错的:一条登记错了的命题进了池子就再也出不来,
+它会被自动结算成一个看起来很正常的 `outcome`,并被算进作者的命中率与 Brier ⇒ 校准(这套装置里唯一的自我纠错信号)被污染。
+所以加第三类记录:`docs/research/scenarios/voids/*.json`,形状 `{"voided_by": "<作者>", "voids": [{"id", "reason", "evidence", "superseded_by"}]}`,
+由 **Seth / Jazz / ai:** 写 —— 作废是**登记错误的更正**,作者本人不能给自己的命题判死刑(同 `settle_manual` 的 `party()` 规则)。
+
+**作废 ≠ 结算**:结算 = 命题为真/为假(记 `outcome` + `brier`);作废 = 这条登记**从来不是一条有效的前向命题**。
+所以作废行 `observed=null, outcome=null, brier=null`,只留一行标记 ⇒ 不进校准、不会被结算、不再被算成「该结了」。
+台账一行都不动(触发器本来就拒绝 UPDATE/DELETE);**不需要 DDL**(`scenario_scores` 那三列可空)⇒ 不改 `migrations/`。
+- `reason` 是**闭集**(`VOID_REASONS`):闭集里没有「被证伪」—— 被证伪只能走结算。
+- 三条纪律:① 不能自己作废自己(`party()`);② **已结的不能作废**(结算是不可改的历史事实,作废擦不掉它);
+  ③ 台账行永不删改(只写 `scenario_scores` 的一行标记)。
+- 机器怎么认出作废行:唯一通道是 `note` 的**稳定前缀** + 纯函数 `is_void(row)`;所有消费点一律调它(不做自由文本匹配)。
+- 台账里没有的 id(`scenario_scores.id` 外键指向 `scenario_ledger.id`)**不写行,只点名** —— 补登记就是造一条事前的假记录。
 """
 from __future__ import annotations
 
@@ -63,8 +79,18 @@ _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")
 _AUTHOR = re.compile(r"^(?:lane-[abc]|seth(?:[:-][\w.-]+)?|jazz|ai:[\w.-]+)$")
 SCENARIO_DIR = "docs/research/scenarios"
 SETTLE_DIR = SCENARIO_DIR + "/settlements"
+VOID_DIR = SCENARIO_DIR + "/voids"
 CODE_REF_MANUAL = "scenario_ledger v1 manual (11-12)"
+CODE_REF_VOID = "scenario_ledger v1.2 void (11-23: 作废标记层,T-427)"
 MIN_EVIDENCE = 12
+VOID_NOTE_PREFIX = "作废 · "                     # 唯一通道:note 的稳定前缀 ⇒ is_void(row)
+VOID_REASONS = ("defective_threshold",           # 阈值取错对象(如 BO20 触发价当现价)
+                "defective_base_rate",           # 基率窗口与到期日不对齐
+                "complement_pair",               # 与另一条互为补集 ⇒ 有一半注定错
+                "not_machine_checkable",          # 量不出一个数
+                "duplicate_id",                   # 与别的 id 重复
+                "superseded")                     # 被新 id 接替(必须写 superseded_by)
+_VOIDER = re.compile(r"^(?:seth(?:[:-][\w.-]+)?|jazz|ai:[\w.-]+)$")   # 作废只能由 seth / jazz / ai:* 写
 
 
 def _f(x: Any) -> Optional[float]:
@@ -176,6 +202,16 @@ def party(author: Any) -> str:
     return "seth" if a.startswith("seth") else a.split(":", 1)[0]
 
 
+def is_void(row: Any) -> bool:
+    """纯函数。这一行是不是「作废标记」行。
+
+    唯一通道:`note` 的**稳定前缀**(`VOID_NOTE_PREFIX`)。不做自由文本 `in` 匹配 ——
+    一句结算说明里恰好写了「作废」两个字,不该把那条结算行变成作废行。所有消费点一律调这个函数。"""
+    if not isinstance(row, dict):
+        return False
+    return str(row.get("note") or "").startswith(VOID_NOTE_PREFIX)
+
+
 def settle_manual(entry: Optional[dict], s: dict, settled_by: str, today: dt.date) -> tuple[Optional[dict], Optional[str]]:
     """纯函数。一条 manual 命题 + 一条结算记录 → (打分行, None) 或 (None, 拒绝理由)。
     结算人只给观测值与证据;结果由登记时的 op / lo / hi 算。不结自己的;没到期不结。"""
@@ -202,11 +238,55 @@ def settle_manual(entry: Optional[dict], s: dict, settled_by: str, today: dt.dat
             "note": f"人工结算 · {settled_by} · {ev[:300]}", "code_ref": CODE_REF_MANUAL}, None
 
 
+def void_marker(v: dict, entry: Optional[dict], settled: bool, voided_by: str) -> dict[str, Any]:
+    """纯函数。一条作废记录 + 台账里那一条(没有 = `None`)+ 该 id 是否已结算 → {"status", "row", "why"}。
+
+    作废 = 这条登记**本身是错的**(它从来不是一条有效的前向命题)⇒ `outcome` / `brier` 留空,只留一行标记。
+    三条纪律:① 不能自己作废自己(`party()`);② 已结的不能作废(结算是不可改的历史事实);③ 台账行一行都不动。
+    `status`:`ok` / `rejected`(带 why)/ `not_in_ledger`(台账里没这条 ⇒ 没有行可挂,只点名)。"""
+    sid = str(v.get("id") or "")
+    if not _ID.match(sid):
+        return {"status": "rejected", "row": None, "why": "id 要 1–64 位字母数字(可含 _ . : -)"}
+    reason = str(v.get("reason") or "")
+    if reason not in VOID_REASONS:
+        return {"status": "rejected", "row": None,
+                "why": f"reason {reason!r} 不在闭集里(只能是 {', '.join(VOID_REASONS)})—— "
+                       f"命题被证伪是**结算**,不是作废"}
+    ev = str(v.get("evidence") or "").strip()
+    if len(ev) < MIN_EVIDENCE:
+        return {"status": "rejected", "row": None, "why": "evidence 要写出怎么核的(脚本路径 / SQL + 数)"}
+    if not _VOIDER.match(str(voided_by or "")):
+        return {"status": "rejected", "row": None,
+                "why": f"voided_by {voided_by!r} 不认 —— 作废是登记错误的更正,只能由 seth / jazz / ai:* 写"
+                       f"(lane 不能作废任何人的条目,否则就能把自己的失败样本从校准里拿掉)"}
+    sup = str(v.get("superseded_by") or "").strip()
+    if reason == "superseded" and not sup:
+        return {"status": "rejected", "row": None, "why": "reason=superseded ⇒ 要写 superseded_by(接替它的新 id)"}
+    if sup and (not _ID.match(sup) or sup == sid):
+        return {"status": "rejected", "row": None, "why": "superseded_by 要是另一个合法 id"}
+    if entry is None:
+        return {"status": "not_in_ledger", "row": None,
+                "why": "台账里没有这条 id ⇒ 没有行可挂(scenario_scores.id 外键指向 scenario_ledger.id);只点名,不写行"}
+    if party(voided_by) == party(entry.get("author")):
+        return {"status": "rejected", "row": None,
+                "why": f"{voided_by} 不能作废 {entry.get('author')} 自己写的条目"}
+    if settled:
+        return {"status": "rejected", "row": None,
+                "why": "已结的不能作废 —— 结算是不可改的历史事实,作废擦不掉它"}
+    note = f"{VOID_NOTE_PREFIX}{voided_by} · {reason} · {ev[:300]}"
+    if sup:
+        note += f" · 接替 {sup}"
+    return {"status": "ok", "why": None,
+            "row": {"id": sid, "observed": None, "outcome": None, "brier": None, "note": note, "code_ref": CODE_REF_VOID}}
+
+
 def open_manual(entries: list[dict], scores: dict[str, dict], today: dt.date) -> dict[str, Any]:
-    """纯函数。还没结的 manual 命题,按作者方:已到期几条(该结了)、30 天内到期几条。"""
+    """纯函数。还没结的 manual 命题,按作者方:已到期几条(该结了)、30 天内到期几条。
+    作废的条目(`is_void`)不算「该结了」—— 它从来不是一条有效的命题,结它只会把错误写进历史。"""
     out: dict[str, dict] = {}
     for e in entries:
-        if str(e.get("variable")) != "manual" or (scores.get(e["id"]) or {}).get("outcome") is not None:
+        s = scores.get(e["id"]) or {}
+        if str(e.get("variable")) != "manual" or s.get("outcome") is not None or is_void(s):
             continue
         h = dt.date.fromisoformat(str(e["horizon_d"])[:10])
         a = out.setdefault(party(e.get("author")), {"overdue": 0, "due_30d": 0, "later": 0})
@@ -333,22 +413,53 @@ def settlement_files(root: Optional[str] = None) -> list[dict]:
     return out
 
 
+def void_files(root: Optional[str] = None) -> list[dict]:
+    """纯读。`docs/research/scenarios/voids/*.json` → [{file, voided_by, voids, problems}];坏文件只报不抛。"""
+    import json
+    from pathlib import Path
+    base = Path(root) if root else Path(__file__).resolve().parents[3]
+    out = []
+    for f in sorted((base / VOID_DIR).glob("*.json")):
+        rec: dict[str, Any] = {"file": f.name, "voided_by": None, "voids": [], "problems": []}
+        try:
+            j = json.loads(f.read_text(encoding="utf-8"))
+            rec["voided_by"] = str((j or {}).get("voided_by") or "")
+            rec["voids"] = [x for x in (j.get("voids") or []) if isinstance(x, dict)]
+        except (OSError, ValueError, AttributeError) as e:
+            rec["problems"].append(f"读不了:{e}")
+        out.append(rec)
+    return out
+
+
+async def _voided_ids() -> set[str]:
+    """库里被作废的 id。唯一通道:`note` 的稳定前缀 ⇒ `is_void`(不做自由文本匹配)。
+    只读 `note` 非空的行(结算行也带 note,再由 `is_void` 挑出作废行)。"""
+    from src.data.style.header import _read_all
+    rows = await _read_all(SCORES, {"select": "id,note", "note": "not.is.null", "order": "id.asc"})
+    return {str(r["id"]) for r in rows if is_void(r)}
+
+
 async def apply_settlements(today: dt.date, root: Optional[str] = None) -> dict[str, Any]:
-    """仓库里的人工结算记录 → `scenario_scores`(只写还没结的;被拒的只报)。"""
+    """仓库里的人工结算记录 → `scenario_scores`(只写还没结的;被拒的只报)。
+    **作废的条目不结**(消费点之二):作废行的 `outcome` 是 null,不在 `done` 里 ⇒ 不显式跳过就会被这次结算整行覆盖掉。"""
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
     files = settlement_files(root)
     want = {str(x.get("id")) for rec in files for x in rec["settlements"] if x.get("id")}
     if not want:
-        return {"files": len(files), "settled": 0}
+        return {"files": len(files), "settled": 0, "skipped_void": []}
     entries = {r["id"]: r for r in await _read_all(TABLE, {"select": "id,author,variable,op,lo,hi,prob,horizon_d",
                                                          "variable": "eq.manual", "order": "id.asc"})}
     done = {r["id"] for r in await _read_all(SCORES, {"select": "id", "outcome": "not.is.null", "order": "id.asc"})}
-    rows, rejected = {}, []
+    voided = await _voided_ids()
+    rows, rejected, skipped = {}, [], []
     for rec in files:
         rejected += [f"{rec['file']}: {p}" for p in rec["problems"]]
         for x in rec["settlements"]:
             sid = str(x.get("id") or "")
+            if sid in voided:
+                skipped.append(sid)
+                continue
             if sid in done or sid in rows:
                 continue
             row, why = settle_manual(entries.get(sid), x, rec["settled_by"], today)
@@ -357,8 +468,50 @@ async def apply_settlements(today: dt.date, root: Optional[str] = None) -> dict[
             else:
                 rejected.append(f"{rec['file']}/{why}")
     if rows and not await supabase_upsert_table(SCORES, list(rows.values()), on_conflict="id"):
-        return {"files": len(files), "settled": 0, "rejected": rejected[:20], "why": f"写 {SCORES} 失败"}
-    return {"files": len(files), "settled": len(rows), "rejected": rejected[:20]}
+        return {"files": len(files), "settled": 0, "rejected": rejected[:20], "skipped_void": sorted(set(skipped)),
+                "why": f"写 {SCORES} 失败"}
+    return {"files": len(files), "settled": len(rows), "rejected": rejected[:20], "skipped_void": sorted(set(skipped))}
+
+
+async def apply_voids(today: dt.date, root: Optional[str] = None) -> dict[str, Any]:
+    """仓库里的作废记录 → `scenario_scores` 的**标记行**(只写台账里有的、还没结的)。
+
+    三类分开报:**已写标记行**(`written`)/ **被拒**(带理由,`rejected`)/ **不在台账**(只点名 + 为什么,`not_in_ledger`)。
+    台账一行都不动(触发器拒绝 UPDATE/DELETE);作废行的 `observed/outcome/brier` 全空 ⇒ 不进校准、不会再被结算。
+    幂等:同一条记录跑两次不报错、不重写(第二次进 `already`)。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.style.header import _read_all
+    files = void_files(root)
+    want = {str(x.get("id")) for rec in files for x in rec["voids"] if x.get("id")}
+    if not want:
+        return {"as_of": today.isoformat(), "files": len(files), "voided": 0, "written": [], "already": [],
+                "rejected": [], "not_in_ledger": []}
+    entries = {r["id"]: r for r in await _read_all(TABLE, {"select": "id,author", "order": "id.asc"})}
+    scores = {r["id"]: r for r in await _read_all(SCORES, {"select": "id,outcome,note", "order": "id.asc"})}
+    settled = {i for i, r in scores.items() if r.get("outcome") is not None}
+    already = {i for i, r in scores.items() if is_void(r)}
+    rows: dict[str, dict] = {}
+    written, rejected, missing = [], [], []
+    for rec in files:
+        rejected += [f"{rec['file']}: {p}" for p in rec["problems"]]
+        for v in rec["voids"]:
+            sid = str(v.get("id") or "")
+            if sid in rows or sid in already:
+                continue                                    # 幂等:已经作废过,不重写
+            res = void_marker(v, entries.get(sid), sid in settled, rec["voided_by"])
+            if res["status"] == "ok":
+                rows[sid] = res["row"]
+                written.append(sid)
+            elif res["status"] == "not_in_ledger":
+                if sid not in {m["id"] for m in missing}:
+                    missing.append({"id": sid, "why": res["why"]})
+            else:
+                rejected.append(f"{rec['file']}/{sid}: {res['why']}")
+    if rows and not await supabase_upsert_table(SCORES, list(rows.values()), on_conflict="id"):
+        return {"as_of": today.isoformat(), "files": len(files), "voided": 0, "written": [], "already": sorted(already & want),
+                "rejected": rejected[:20], "not_in_ledger": missing, "why": f"写 {SCORES} 失败"}
+    return {"as_of": today.isoformat(), "files": len(files), "voided": len(rows) + len(already & want),
+            "written": written, "already": sorted(already & want), "rejected": rejected[:20], "not_in_ledger": missing}
 
 
 async def ingest_repo(today: dt.date, root: Optional[str] = None) -> dict[str, Any]:
@@ -385,21 +538,27 @@ async def ingest_repo(today: dt.date, root: Optional[str] = None) -> dict[str, A
 
 
 async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
-    """① 仓库里的情景文件入账 ② 结算所有到期、还没结的自动命题。"""
+    """① 仓库里的情景文件入账 ② 应用作废记录 ③ 结算所有到期、还没结的自动命题。
+
+    **作废排在结算前面**:同一轮里既有作废记录又有结算记录时,作废先落 ⇒ 那条 id 这一轮不会被结掉。
+    **作废的行不会被自动结算覆盖**(消费点之一):作废行的 `outcome` 是 null,不在 `done` 里 ⇒ 必须显式跳过,
+    否则到期那天 `upsert(on_conflict="id")` 会把作废标记整行盖掉,登记错误又回到池子里。"""
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
     today = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc).date()
     ingested = await ingest_repo(today)
+    voids = await apply_voids(today)
     manual = await apply_settlements(today)
     due = await _read_all(TABLE, {"select": "id,variable,op,lo,hi,prob,horizon_d,written_at", "horizon_d": f"lt.{today.isoformat()}",
                                   "variable": "neq.manual", "order": "horizon_d.asc"})
     if not due:
         return {"ok": True, "status": "skipped" if not manual.get("settled") else "ok", "ingested": ingested, "manual": manual,
-                "why": f"没有到期的自动命题;人工结算 {manual.get('settled', 0)} 条"}
+                "voids": voids, "why": f"没有到期的自动命题;人工结算 {manual.get('settled', 0)} 条,作废 {voids.get('voided', 0)} 条"}
     done = {r["id"] for r in await _read_all(SCORES, {"select": "id", "outcome": "not.is.null"})}
+    voided = await _voided_ids()
     rows, waiting = [], 0
     for e in due:
-        if e["id"] in done:
+        if e["id"] in done or e["id"] in voided:
             continue
         kind, key = parse_variable(e["variable"])
         s = score(e, await _value(kind, key, str(e["horizon_d"])[:10], e.get("written_at")), today)
@@ -411,5 +570,6 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         w = await supabase_upsert_table(SCORES, rows, on_conflict="id")
         if not w:
             return {"ok": False, "why": f"写 {SCORES} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    return {"ok": True, "scored": len(rows), "waiting": waiting, "ingested": ingested, "manual": manual,
-            "why": f"结算 {len(rows)} 条,等值 {waiting} 条,入账 {ingested.get('written', 0)} 条,人工结算 {manual.get('settled', 0)} 条"}
+    return {"ok": True, "scored": len(rows), "waiting": waiting, "ingested": ingested, "manual": manual, "voids": voids,
+            "why": f"结算 {len(rows)} 条,等值 {waiting} 条,入账 {ingested.get('written', 0)} 条,"
+                   f"人工结算 {manual.get('settled', 0)} 条,作废 {voids.get('voided', 0)} 条"}
