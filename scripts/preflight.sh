@@ -778,6 +778,19 @@ python3 -m pytest tests/test_t2_market_cap_is_not_invented.py -q || {
     echo "✗ preflight stage: S-906 —— 盘中引擎又在从成交额推市值,或「价 × 流通量」那条路坏了" >&2
     exit 1
 }
+# 3a-vicesima-sexies. S-908(2026-11-23,Jazz「读取后是否落表」):全宇宙行情的即时值(价 / 市值 / 量 / 流通 / 总量 / 上限 /
+#                     BTC 占比)此前只进缓存,取完就没了;CMC 的回包一份都没落过。现在每 30 分钟落一份 `market_snapshot`,
+#                     请求路径先读表。CMC 按代码查币会查错 ⇒ 身份对不上的不落、点名。
+python3 -m pytest tests/test_market_snapshot.py -q || {
+    echo "✗ preflight stage: S-908 —— 行情快照(落表 / 身份核对 / 请求路径先读表 / CMC 日预算)红" >&2
+    exit 1
+}
+# 3a-vicesima-septies. S-908(Jazz「研究时候是否直接走了 api 而不是走我们数据库」):研究 / 脚本区直接写 CoinGecko 主机名的
+#                     文件 24 个(不过闸门、不记账)。名单只许变短;信号结算「先读库、库里没有才回落」的顺序一并钉住。
+python3 -m pytest tests/test_research_reads_the_db.py -q || {
+    echo "✗ preflight stage: S-908 —— 有新脚本直接打 CoinGecko(读库,或走 data_layer 过闸门);或名单里的文件已清、没从名单拿掉" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

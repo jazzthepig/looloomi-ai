@@ -1642,14 +1642,26 @@ async def _cmc_global_fallback() -> dict | None:
     CMC 没有 ETH 占比、没有 DeFi 市值 ⇒ 那两个字段是 **None,不是 0**。
     「没有数据」塌成「0」会把「读不到」变成「真的没有」。
     """
+    # S-908(2026-11-23):先读 `market_snapshot`(后台每 30 分钟落一份),不够新才打活的。
+    # 以前这里每次缓存过期都打一笔 CMC ⇒ 自设的日预算几小时就打光,打光以后这个面就暗了。
+    _as_of = None
     try:
-        from src.data.market.cmc_provider import cmc_global_metrics
-        m = await cmc_global_metrics()
+        from src.data.market.market_snapshot import cmc_latest_shaped
+        _snap = await cmc_latest_shaped()
+        m = _snap.get("global") or {}
+        _as_of = _snap.get("as_of") if m else None
     except Exception:
-        return None
+        m = {}
+    if not m:
+        try:
+            from src.data.market.cmc_provider import cmc_global_metrics
+            m = await cmc_global_metrics()
+        except Exception:
+            return None
     if not m:
         return None
     return {
+        "data_as_of":          _as_of,          # 来自快照时 = 快照时刻;活取 = None(就是现在)
         "btc_dominance":       m.get("btc_dominance_pct"),
         "eth_dominance":       None,
         "total_market_cap_usd": m.get("total_market_cap_usd"),
@@ -2398,12 +2410,25 @@ async def get_macro_pulse() -> dict:
         _cg_btc_ok = _btc_quote is not None
         _cmc_global: dict = {}
         _cmc_btc: dict = {}
+        _cmc_as_of = None
         if (not _cg_global_ok) or (not _cg_btc_ok):
+            # S-908:先读库里的行情快照(≤ 90 分钟),缺哪块才活取哪块 —— 请求路径不再是 CMC 额度的主要花销
+            try:
+                from src.data.market.market_snapshot import cmc_latest_shaped
+                _snap = await cmc_latest_shaped()
+                if not _cg_global_ok:
+                    _cmc_global = _snap.get("global") or {}
+                if not _cg_btc_ok:
+                    _cmc_btc = (_snap.get("quotes") or {}).get("BTC") or {}
+                if _cmc_global or _cmc_btc:
+                    _cmc_as_of = _snap.get("as_of")
+            except Exception:
+                pass
             try:
                 from src.data.market.cmc_provider import cmc_global_metrics, cmc_quotes
-                if not _cg_global_ok:
+                if not _cg_global_ok and not _cmc_global:
                     _cmc_global = await cmc_global_metrics() or {}
-                if not _cg_btc_ok:
+                if not _cg_btc_ok and not _cmc_btc:
                     _cmc_btc = (await cmc_quotes(["BTC"]) or {}).get("BTC") or {}
             except Exception:
                 pass
@@ -2486,6 +2511,7 @@ async def get_macro_pulse() -> dict:
             "btc": btc_entry,  # {usd, usd_24h_change, usd_7d_change}
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "data_source": _src,   # S-894:哪一家给的
+            "data_as_of": _cmc_as_of,   # S-908:CMC 那部分取自库里的快照时 = 快照时刻;否则 None
             # ── flat fields (MCP agent compat) ────────────────────────────────
             "btc_price":             _btc_px,
             "btc_dominance":         _btc_dom,

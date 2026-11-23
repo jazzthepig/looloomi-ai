@@ -94,6 +94,7 @@
     "macro_briefs",
     "macro_daily",
     "market_interpretation_daily",
+    "market_snapshot",
     "market_state_vectors",
     "meta_allocator_daily",
     "multiplier_daily",
@@ -893,6 +894,25 @@
       "settled_at",
       "symbol",
       "x28"
+    ],
+    "market_snapshot": [
+      "btc_dominance",
+      "circulating_supply",
+      "d",
+      "identity",
+      "market_cap",
+      "max_supply",
+      "name",
+      "pct_24h",
+      "pct_7d",
+      "price",
+      "source",
+      "source_ts",
+      "symbol",
+      "total_supply",
+      "ts",
+      "vendor_id",
+      "volume_24h"
     ]
   },
   "rpc_functions": [

@@ -9,7 +9,7 @@ CoinGecko 闸门(`src/data/market/cg_guard.py`)负责**把总量按在天内**;C
 
 Jazz 在 Railway 上补了把 CMC 的免费 key。免费档有**自己的**日调用上限,而且我们
 **不知道**那个上限是多少 —— 所以本模块**自己计数**:Redis 里一个当日计数,
-默认 40 次/天(`CMC_DAILY_BUDGET`)。用完就停,不试、不撞、不因为「还剩一点」
+默认 120 次/天(`CMC_DAILY_BUDGET`;S-908 前是 40)。用完就停,不试、不撞、不因为「还剩一点」
 就多打一发把免费档也撞穿。
 
 **key 怎么找**:三个显式名(`CMC_API_KEY` / `COINMARKETCAP_API_KEY` /
@@ -54,7 +54,12 @@ from typing import Any, Optional
 import httpx
 
 #: 免费档的日预算。宁可少用 —— 撞穿免费档是要账号的。
-DEFAULT_DAILY_BUDGET = 40
+#: 40 → 120(S-908,2026-11-23):行情快照每 30 分钟一轮、一轮 2 笔 ⇒ 96 笔/天,另留 24 笔给请求路径的活回落。
+#: 120 × 31 = 3,720 笔/月,官方免费档月额度(价目页 11-23 读到的是 10,000–15,000)的四成以内。
+DEFAULT_DAILY_BUDGET = 120
+
+#: 最近一次**没成**的请求是怎么没成的(path / why / at)。`_get` 没成只回 None,调用方说不出原因 ⇒ 记在这儿。
+LAST: dict[str, Any] = {}
 
 #: CMC 的「额度/积分耗尽」错误码族。
 LIMIT_ERROR_CODES = {1001, 1002, 1008, 1009, 1010, 1011}
@@ -262,8 +267,12 @@ async def _block_rest_of_day(reason: str) -> None:
 
 async def _get(path: str, params: dict) -> Optional[dict]:
     """打一次 CMC。返回解析后的 JSON;不可用返回 None(带原因写进日志)。"""
+    def _fail(reason: str) -> None:
+        LAST.update({"path": path, "why": reason[:160], "at": datetime.now(timezone.utc).isoformat()})
+
     allowed, why = await admit()
     if not allowed:
+        _fail(why)
         return None
     key = _api_key()
     await _spend()
@@ -272,7 +281,8 @@ async def _get(path: str, params: dict) -> Optional[dict]:
             f"{CMC_BASE}{path}",
             params=params,
             headers={"X-CMC_PRO_API_KEY": key, "Accept": "application/json"})
-    except Exception:
+    except Exception as e:
+        _fail(f"传输失败:{type(e).__name__}")
         return None
     if r.status_code != 200:
         try:
@@ -290,10 +300,12 @@ async def _get(path: str, params: dict) -> Optional[dict]:
                     code = st.get("code")
         if code in LIMIT_ERROR_CODES:
             await _block_rest_of_day(f"cmc_error_{code}")
+        _fail(f"HTTP {r.status_code}" + (f" / cmc_error_{code}" if code is not None else ""))
         return None
     try:
         return r.json() or {}
     except Exception:
+        _fail("回包不是 JSON")
         return None
 
 
@@ -313,8 +325,10 @@ async def cmc_quotes(symbols: list[str]) -> dict:
     out: dict[str, dict] = {}
     for i in range(0, len(syms), 100):
         chunk = syms[i:i + 100]
+        # `skip_invalid`(官方文档,11-23 读):一批里有一个代码 CMC 不认识,缺省是**整批报 400**;
+        # 传 true ⇒ 认识的照回,不认识的那个缺着。一个名字不该拖掉其余 24 个。
         body = await _get("/cryptocurrency/quotes/latest",
-                          {"symbol": ",".join(chunk), "convert": "USD"})
+                          {"symbol": ",".join(chunk), "convert": "USD", "skip_invalid": "true"})
         data = (body or {}).get("data") or {}
         if not isinstance(data, dict):
             continue
@@ -331,6 +345,10 @@ async def cmc_quotes(symbols: list[str]) -> dict:
                 "volume_24h": q.get("volume_24h"),
                 "percent_change_24h": q.get("percent_change_24h"),
                 "percent_change_7d": q.get("percent_change_7d"),
+                # 供给三样(S-908):CoinGecko 停订期间,「总量 / 上限」在库里没有别的来源
+                "circulating_supply": row.get("circulating_supply"),
+                "total_supply": row.get("total_supply"),
+                "max_supply": row.get("max_supply"),
                 "last_updated": row.get("last_updated"),
                 "source": "coinmarketcap",
             }

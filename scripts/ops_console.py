@@ -197,6 +197,14 @@ REFUSAL_POLICY = {
         "stale_after_days": 7,
         "escalate_after_n_refusals": 12,
     },
+    "_market_snapshot_loop": {
+        "reason": "S-908 — 行情快照:CoinMarketCap 这一轮不可用就不写(没配 key / 当日自设额度用完 / 撞到对方额度码当天停用 / "
+                  "两笔都没回数据),原因在这一行的 reason 里(market_snapshot.run_once)。不落旧数、不编数。",
+        "clears_when": "额度类:次日 UTC 00:00 自动清;上游类:每 10 分钟重看。90 分钟内没有新快照时,宏观脉搏自己回落到活取。",
+        "owner": "Seth",
+        "stale_after_days": 1,
+        "escalate_after_n_refusals": 12,
+    },
     "_r_tickets_paper_loop": {
         "reason": "S-719 / S-862 — 票的扫描读 perp_bv_daily(Binance U 本位永续日档);昨天那一档还没上传时,"
                   "函数停在前一天(「only 0 bars on …」),不拿半天的数据开票。",

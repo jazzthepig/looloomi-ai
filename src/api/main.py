@@ -2510,6 +2510,37 @@ async def _start_events_loop():
     print("[EVENTS] ✅ event store scheduled (hourly)")
 
 
+async def _market_snapshot_loop():
+    """行情快照(`src/data/market/market_snapshot.py`,S-908):每 10 分钟醒一次,`run_once` 自己按 30 分钟节流 —— CMC 两笔(25 个名字的报价 + 全市场)→ 身份核对 → `market_snapshot`(只追加)。宏观脉搏 / `/global` 的 CMC 兜底先读这张表。"""
+    await _asyncio.sleep(_boot_delay(480))
+    while True:
+        try:
+            from src.data.market.market_snapshot import run_once as _ms_run
+            r = await _ms_run()
+            if r.get("ok") and r.get("rejected"):
+                # 落了的是对的,但有名字没过身份核对:ok 行带上是谁、为什么(只记 ok 就再也看不见它们)
+                await _record_loop_attempt("_market_snapshot_loop", "ok", reason=str(r.get("why") or "")[:400] or None,
+                                           detail={"written": r.get("written"), "rejected": r.get("rejected")},
+                                           writer="src.api.main._market_snapshot_loop")
+            else:
+                await _iteration_result("_market_snapshot_loop", r)
+            await _beat("_market_snapshot_loop", **_beat_of(r),
+                        detail={"written": r.get("written"), "ts": r.get("ts") or r.get("last_ts"), "status": r.get("status"),
+                                "btc_dominance": r.get("btc_dominance"), "by_identity": r.get("by_identity"),
+                                "rejected": r.get("rejected"), "note": r.get("note")})
+        except Exception as _e:
+            print(f"[SNAPSHOT] ⚠️  pass FAILED: {_e}")
+            await _beat("_market_snapshot_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_market_snapshot_loop", _e)
+        await _asyncio.sleep(600)
+
+
+@app.on_event("startup")
+async def _start_market_snapshot_loop():
+    _asyncio.create_task(_market_snapshot_loop())
+    print("[SNAPSHOT] ✅ market snapshot scheduled (30 min; CMC quotes + global → market_snapshot)")
+
+
 async def _issuer_fundamentals_loop():
     """轨道公司季度基本面(`src/data/market/issuer_fundamentals.py`,11-02):SEC EDGAR XBRL,每天看一次、7 天内跑过就跳过。"""
     await _asyncio.sleep(_boot_delay(7200))          # 不急;S-482 的 30 秒窗口里 900–1500 档已经满了

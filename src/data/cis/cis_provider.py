@@ -800,6 +800,7 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                 "low_24h":              coin.get("low_24h", 0),
                 "sparkline_7d":         sparkline_prices[-24:] if sparkline_prices else [],  # last 24h hourly
                 "sparkline_return_7d":  sparkline_return,
+                "last_updated":         coin.get("last_updated"),
                 "source":               "coingecko_pro" if _pro else "coingecko",
             }
 
@@ -807,6 +808,14 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                      f"({'parallel' if _pro else 'serial'}, batch_size={batch_size})")
         _cache_set(cache_key, result)
         await _upstash_set(redis_key, result, ttl=1800)
+        # S-908:取到就落一份(`market_snapshot`,30 分钟一份)。以前这份全宇宙行情只进内存 + Redis,
+        # 取完就没了 —— 「总量 / 上限 / 全交易所成交额」在库里因此没有任何来源。落表失败不连累取数。
+        if result:
+            try:
+                from src.data.market.market_snapshot import persist_cg_markets
+                await asyncio.wait_for(persist_cg_markets(result), timeout=10)
+            except Exception as _pe:                        # noqa: BLE001
+                _logger.warning(f"market_snapshot persist skipped: {type(_pe).__name__}")
         return result
 
     except Exception as e:
