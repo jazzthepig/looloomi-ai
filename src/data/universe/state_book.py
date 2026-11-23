@@ -38,10 +38,13 @@ VOL_WIN, VOL_MIN_OBS, TARGET_VOL, MAX_SCALE, ANN = 90, 60, 0.10, 3.0, 365
 LAG_GRACE_DAYS = 3
 #: S-898:已知的外部停供。输入日(状态看 d − 1、成员收益看 d)落在窗口里的那些天不触发「晚到 / 状态缺」,一直等;
 #: 停供结束后再给 OUTAGE_BACKFILL_DAYS 天回填,过了仍没有才按原规则落账并写明。往这张表里加一行 = 改规则,先记台账。
-SOURCE_OUTAGES: tuple[tuple[str, str, str], ...] = (
-    ("2026-11-19", "2026-12-01", "CoinGecko 订阅停(Jazz 11-21;12-01 恢复)"),
+#: 每行:(起, 止, 名字, 受影响的状态轴, 受影响的成员前缀)。**只管读这个源的输入** —— 别的源(股 / 金的收盘、趋势轴)晚到照原规则。
+SOURCE_OUTAGES: tuple[tuple[str, str, str, tuple[str, ...], tuple[str, ...]], ...] = (
+    ("2026-11-19", "2026-12-01", "CoinGecko 订阅停(Jazz 11-21;12-01 恢复)",
+     ("lead", "l"), ("style_", "tom_pd13_", "s823_r6", "s819_short_", "R-v2")),
 )
 OUTAGE_BACKFILL_DAYS = 7
+ARM_AXES = {"TxLEAD": ("t", "lead"), "TxL": ("t", "l"), "T_ONLY": ("t",), "HOLD_ALL": ()}
 HISTORY_DAYS = 200                   # σ 要 90 个日历日;多读一些
 RULE = ("state_strength_v2:S-890(名单冻结 2026-11-01、26 条面板、判据 v2;d−1 收盘的状态;等权平均缩放后收益,"
         "缩放 min(3, 10%/σ90);对现金的超额)")
@@ -150,11 +153,14 @@ def cell_of(arm: str, t: Optional[float], l: Optional[float], lead: Optional[boo
     raise ValueError(arm)
 
 
-def outage_reason(prev: dt.date, d: dt.date, cut: dt.date) -> Optional[str]:
-    """S-898:d 这一天要的输入(状态看 prev、成员收益看 d)落在已知停供窗口里、且还在回填宽限内 ⇒ 返回停供的名字(等);否则 None。"""
-    for a, b, why in SOURCE_OUTAGES:
+def outage_reason(prev: dt.date, d: dt.date, cut: dt.date, axes: tuple = (), members: tuple = ()) -> Optional[str]:
+    """S-898:d 这一天缺的输入(状态轴 `axes` 看 prev、成员 `members` 的收益看 d)里有读停供源的、日子落在停供窗口里、
+    且还在回填宽限内 ⇒ 返回停供的名字(等);否则 None。缺的全是别的源 ⇒ None(照原来的晚到规则)。"""
+    for a, b, why, hit_axes, hit_members in SOURCE_OUTAGES:
         lo, hi = D(a), D(b)
-        if (lo <= prev <= hi or lo <= d <= hi) and cut <= hi + dt.timedelta(days=OUTAGE_BACKFILL_DAYS):
+        if not (lo <= prev <= hi or lo <= d <= hi) or cut > hi + dt.timedelta(days=OUTAGE_BACKFILL_DAYS):
+            continue
+        if any(x in hit_axes for x in axes) or any(k.startswith(hit_members) for k in members):
             return why
     return None
 
@@ -228,17 +234,21 @@ def plan_rows(inputs: dict, have: dict, cutoff: str) -> dict:
         d = last + dt.timedelta(days=1)
         while d <= cut:
             prev = d - dt.timedelta(days=1)
-            held_by = outage_reason(prev, d, cut)
-            late = (cut - d).days >= LAG_GRACE_DAYS and held_by is None    # 停供窗口里的日子不算晚到:等源,不落账(S-898)
+            overdue = (cut - d).days >= LAG_GRACE_DAYS
             c = cell_of(arm, inputs["t"].get(prev), inputs["l"].get(prev), inputs["lead"].get(prev))
+            gone_axes = tuple(x for x in ARM_AXES[arm] if inputs[x].get(prev) is None)
+            held_by = outage_reason(prev, d, cut, axes=gone_axes) if c is None else None
+            late = overdue and held_by is None                   # 缺的轴读的是停供的源:等,不落「状态缺」(S-898)
             if c is None and not late:
                 if held_by:
-                    waiting[arm] = f"{d} 等 {prev} 的状态:{held_by}"
+                    waiting[arm] = f"{d} 等 {prev} 的状态({','.join(gone_axes)}):{held_by}"
                 break                                            # 前一天的状态还没出:等
             roster = list(ROSTERS[arm].get(c, ())) if c else []
             members = [k for k in roster if k not in EXCLUDED and k not in missing]
             wait = [k for k in members if (known.get(k) is None or known[k] < d)
                     and sum(1 for x in inputs["rets"].get(k, {}) if x < d) >= VOL_MIN_OBS]
+            held_by = outage_reason(prev, d, cut, members=tuple(wait)) if wait else None
+            late = overdue and held_by is None                   # 晚到的成员里有读停供源的:等,不落「晚到」(S-898)
             if wait and not late:
                 if held_by:
                     waiting[arm] = f"{d} 等成员 {','.join(wait)}:{held_by}"

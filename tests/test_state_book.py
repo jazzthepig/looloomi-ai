@@ -165,12 +165,19 @@ def test_plan_opens_once_names_what_cannot_be_held_and_waits_for_late_sources(mo
 def test_a_known_outage_waits_instead_of_writing_cash_into_the_record() -> None:
     """S-898:CoinGecko 11-20 起停供,「谁在领」「稳定币」两条轴和风格 / Tom / R6 的源都断了。照原规则 3 天后会把
     「状态缺 = 现金」「成员晚到 = 不可持有」永久写进账里。已知停供窗口里的日子一直等;恢复后按同一条规则顺序写出。"""
-    assert sb.SOURCE_OUTAGES == (("2026-11-19", "2026-12-01", "CoinGecko 订阅停(Jazz 11-21;12-01 恢复)"),), "加一行 = 改规则,先记台账"
-    assert sb.outage_reason(dt.date(2026, 11, 18), dt.date(2026, 11, 19), dt.date(2026, 11, 27))
-    assert sb.outage_reason(dt.date(2026, 11, 17), dt.date(2026, 11, 18), dt.date(2026, 11, 27)) is None, "窗口之前的日子照原规则"
-    assert sb.outage_reason(dt.date(2026, 12, 1), dt.date(2026, 12, 2), dt.date(2026, 12, 8))
-    assert sb.outage_reason(dt.date(2026, 11, 20), dt.date(2026, 11, 21), dt.date(2026, 12, 9)) is None, "回填宽限过了不再等"
-    assert sb.outage_reason(dt.date(2026, 12, 2), dt.date(2026, 12, 3), dt.date(2026, 12, 5)) is None
+    assert [x[:3] for x in sb.SOURCE_OUTAGES] == [("2026-11-19", "2026-12-01", "CoinGecko 订阅停(Jazz 11-21;12-01 恢复)")], "加一行 = 改规则,先记台账"
+    day = dt.date
+    assert sb.outage_reason(day(2026, 11, 18), day(2026, 11, 19), day(2026, 11, 27), axes=("lead",))
+    assert sb.outage_reason(day(2026, 11, 17), day(2026, 11, 18), day(2026, 11, 27), axes=("lead",)) is None, "窗口之前的日子照原规则"
+    assert sb.outage_reason(day(2026, 12, 1), day(2026, 12, 2), day(2026, 12, 8), members=("style_ai",))
+    assert sb.outage_reason(day(2026, 11, 20), day(2026, 11, 21), day(2026, 12, 9), axes=("l",)) is None, "回填宽限过了不再等"
+    assert sb.outage_reason(day(2026, 12, 2), day(2026, 12, 3), day(2026, 12, 5), axes=("lead",)) is None
+    # 只管读 CG 的输入:趋势轴(币安)、股 / 金(EODHD)晚到不归它管
+    assert sb.outage_reason(day(2026, 11, 21), day(2026, 11, 22), day(2026, 11, 27), axes=("t",)) is None
+    assert sb.outage_reason(day(2026, 11, 21), day(2026, 11, 22), day(2026, 11, 27), members=("XAUUSD", "ACWI", "X1V", "核心")) is None
+    assert sb.outage_reason(day(2026, 11, 21), day(2026, 11, 22), day(2026, 11, 27), members=("XAUUSD", "s823_r6"))
+    assert all(sb.outage_reason(day(2026, 11, 21), day(2026, 11, 22), day(2026, 11, 27), members=(k,))
+               for k in ("style_meme", "tom_pd13_eth", "s819_short_s030", "R-v2"))
 
     cg = [k for k in sb.SOURCES if k.startswith(("style_", "tom_pd13", "s823", "s819"))]
     stop = dt.date(2026, 11, 19)                            # CG 的最后一天
@@ -186,7 +193,15 @@ def test_a_known_outage_waits_instead_of_writing_cash_into_the_record() -> None:
     assert last == {"TxLEAD": "2026-11-19", "TxL": "2026-11-19", "T_ONLY": "2026-11-27", "HOLD_ALL": "2026-11-19"}, last
     assert not p["notes"] and not any(h["note"].startswith("状态缺") for h in p["holdings"]), "停供期间一行「状态缺 / 晚到」都不许落"
     assert set(p["waiting"]) == {"TxLEAD", "TxL", "HOLD_ALL"} and all("CoinGecko" in w for w in p["waiting"].values())
-    assert "s823_r6" in p["waiting"]["TxLEAD"] and "状态" in p["waiting"]["TxL"]
+
+    assert "s823_r6" in p["waiting"]["TxLEAD"] and "(l)" in p["waiting"]["TxL"]
+    # 停供窗口里,金(EODHD)晚到不受保护:T_ONLY 照原规则等 3 天、之后按不可持有记并写明
+    gold_late = outage_inputs(cut)
+    gold_late["rets"]["XAUUSD"] = {d: v for d, v in gold_late["rets"]["XAUUSD"].items() if d <= dt.date(2026, 11, 21)}
+    gold_late["known"]["XAUUSD"] = dt.date(2026, 11, 21)
+    pg = sb.plan_rows(gold_late, {}, cut.isoformat())
+    assert max(r["d"] for r in pg["nav"] if r["arm"] == "T_ONLY") == "2026-11-24" and "T_ONLY" not in pg["waiting"]
+    assert any(n.startswith("T_ONLY") and "XAUUSD" in n and "晚到" in n for n in pg["notes"])
 
     # 恢复、回填之后:等着的那些天按顺序写出,主臂在「线下 · 主流领」拿 R6
     cut2 = dt.date(2026, 12, 3)
