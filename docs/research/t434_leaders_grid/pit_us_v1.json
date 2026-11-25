@@ -1,0 +1,2899 @@
+{
+ "as_of": "2026-11-25",
+ "ledger": "S-915",
+ "measure": "SEC dei:EntityPublicFloat(非关联方持股市值,美元,各公司第二财季末)",
+ "leaders": [
+  {
+   "category": "aerospace",
+   "cik": 101829,
+   "name": "RTX Corp",
+   "tickers": "RTX",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2011": 69.0,
+    "2022": 142.0,
+    "2023": 142.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "aerospace",
+   "cik": 40545,
+   "name": "GENERAL ELECTRIC CO",
+   "tickers": "GE",
+   "category_from": "grid",
+   "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2012": 218.0,
+    "2013": 234.0,
+    "2014": 261.0,
+    "2015": 261.0,
+    "2016": 266.0,
+    "2017": 232.0,
+    "2024": 170.0,
+    "2025": 270.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "aerospace",
+   "cik": 12927,
+   "name": "BOEING CO",
+   "tickers": "BA,BA-PA",
+   "category_from": "grid",
+   "years": [
+    2018,
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2018": 193.0,
+    "2019": 205.0,
+    "2020": 104.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "aerospace",
+   "cik": 773840,
+   "name": "HONEYWELL INTERNATIONAL INC",
+   "tickers": "HON",
+   "category_from": "grid",
+   "years": [
+    2021
+   ],
+   "float_bn": {
+    "2021": 153.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "automakers",
+   "cik": 37996,
+   "name": "FORD MOTOR CO",
+   "tickers": "F,F-PB,F-PC,F-PD",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2011": 51.0,
+    "2012": 36.0,
+    "2013": 60.0,
+    "2014": 66.0,
+    "2015": 59.0,
+    "2016": 49.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "automakers",
+   "cik": 1467858,
+   "name": "General Motors Co",
+   "tickers": "GM",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019
+   ],
+   "float_bn": {
+    "2017": 51.0,
+    "2018": 56.0,
+    "2019": 55.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "automakers",
+   "cik": 1318605,
+   "name": "Tesla, Inc.",
+   "tickers": "TSLA",
+   "category_from": "grid",
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2020": 161.0,
+    "2021": 541.0,
+    "2022": 580.0,
+    "2023": 723.0,
+    "2024": 550.0,
+    "2025": 893.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "banks",
+   "cik": 19617,
+   "name": "JPMORGAN CHASE & CO",
+   "tickers": "JPM",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 159.0,
+    "2017": 320.0,
+    "2018": 348.0,
+    "2019": 355.0,
+    "2020": 384.0,
+    "2021": 461.0,
+    "2022": 328.0,
+    "2023": 421.0,
+    "2024": 573.0,
+    "2025": 794.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "banks",
+   "cik": 72971,
+   "name": "WELLS FARGO & COMPANY/MN",
+   "tickers": "WFC",
+   "category_from": "grid",
+   "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2012": 175.0,
+    "2013": 218.0,
+    "2014": 275.0,
+    "2015": 288.0,
+    "2016": 238.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "beverages",
+   "cik": 21344,
+   "name": "COCA COLA CO",
+   "tickers": "KO",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 148.0,
+    "2012": 167.0,
+    "2013": 177.0,
+    "2014": 184.0,
+    "2015": 170.0,
+    "2016": 193.0,
+    "2017": 193.0,
+    "2018": 185.0,
+    "2019": 216.0,
+    "2020": 186.0,
+    "2021": 232.0,
+    "2022": 276.0,
+    "2023": 258.0,
+    "2024": 272.0,
+    "2025": 301.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "biotech",
+   "cik": 313616,
+   "name": "DANAHER CORP /DE/",
+   "tickers": "DHR",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2011": 31.0,
+    "2012": 30.0,
+    "2013": 38.0,
+    "2014": 48.0,
+    "2015": 54.0,
+    "2016": 62.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "biotech",
+   "cik": 97745,
+   "name": "THERMO FISHER SCIENTIFIC INC.",
+   "tickers": "TMO",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2017": 68.0,
+    "2018": 83.0,
+    "2019": 117.0,
+    "2020": 139.0,
+    "2021": 202.0,
+    "2022": 215.0,
+    "2023": 201.0,
+    "2024": 211.0,
+    "2025": 154.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "chemicals",
+   "cik": 30554,
+   "name": "EIDP, Inc.",
+   "tickers": "CTA-PB,CTA-PA",
+   "category_from": "sic",
+   "years": [
+    2011,
+    2012,
+    2016
+   ],
+   "float_bn": {
+    "2011": 50.0,
+    "2012": 47.0,
+    "2016": 57.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "chemicals",
+   "cik": 1110783,
+   "name": "MONSANTO CO /NEW/",
+   "tickers": null,
+   "category_from": "sic",
+   "years": [
+    2013
+   ],
+   "float_bn": {
+    "2013": 54.0
+   },
+   "listed_today": false,
+   "is_today_leader": false
+  },
+  {
+   "category": "chemicals",
+   "cik": 29915,
+   "name": "DOW CHEMICAL CO /DE/",
+   "tickers": null,
+   "category_from": "sic",
+   "years": [
+    2014,
+    2015
+   ],
+   "float_bn": {
+    "2014": 61.0,
+    "2015": 59.0
+   },
+   "listed_today": false,
+   "is_today_leader": false
+  },
+  {
+   "category": "chemicals",
+   "cik": 1666700,
+   "name": "DuPont de Nemours, Inc.",
+   "tickers": "DD",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018
+   ],
+   "float_bn": {
+    "2017": 77.0,
+    "2018": 152.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "chemicals",
+   "cik": 1707925,
+   "name": "LINDE PLC",
+   "tickers": "LIN",
+   "category_from": "sic",
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2019": 108.0,
+    "2020": 111.0,
+    "2021": 149.0,
+    "2022": 143.0,
+    "2023": 186.0,
+    "2024": 210.0,
+    "2025": 220.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "conglomerate",
+   "cik": 60086,
+   "name": "LOEWS CORP",
+   "tickers": "L",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2016
+   ],
+   "float_bn": {
+    "2011": 13.0,
+    "2012": 13.0,
+    "2013": 14.0,
+    "2014": 14.0,
+    "2016": 11.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "conglomerate",
+   "cik": 217346,
+   "name": "TEXTRON INC",
+   "tickers": "TXT",
+   "category_from": "grid",
+   "years": [
+    2015
+   ],
+   "float_bn": {
+    "2015": 12.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "conglomerate",
+   "cik": 1659166,
+   "name": "Fortive Corp",
+   "tickers": "FTV",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2017": 19.0,
+    "2018": 24.0,
+    "2019": 24.0,
+    "2020": 17.0,
+    "2021": 25.0,
+    "2022": 20.0,
+    "2023": 26.0,
+    "2024": 26.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "conglomerate",
+   "cik": 1094285,
+   "name": "TELEDYNE TECHNOLOGIES INC",
+   "tickers": "TDY",
+   "category_from": "grid",
+   "years": [
+    2025
+   ],
+   "float_bn": {
+    "2025": 24.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "construction",
+   "cik": 1124198,
+   "name": "FLUOR CORP",
+   "tickers": "FLR",
+   "category_from": "sic",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014
+   ],
+   "float_bn": {
+    "2011": 11.0,
+    "2012": 8.0,
+    "2013": 10.0,
+    "2014": 12.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "construction",
+   "cik": 882184,
+   "name": "HORTON D R INC /DE/",
+   "tickers": "DHI",
+   "category_from": "grid",
+   "years": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2015": 10.0,
+    "2016": 10.0,
+    "2017": 12.0,
+    "2018": 15.0,
+    "2021": 32.0,
+    "2022": 26.0,
+    "2023": 33.0,
+    "2024": 53.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "construction",
+   "cik": 920760,
+   "name": "LENNAR CORP /NEW/",
+   "tickers": "LEN,LEN-B",
+   "category_from": "grid",
+   "years": [
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2019": 14.0,
+    "2020": 17.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "construction",
+   "cik": 1050915,
+   "name": "QUANTA SERVICES, INC.",
+   "tickers": "PWR",
+   "category_from": "sic",
+   "years": [
+    2025
+   ],
+   "float_bn": {
+    "2025": 56.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "consumer-goods",
+   "cik": 80424,
+   "name": "PROCTER & GAMBLE Co",
+   "tickers": "PG",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 184.0,
+    "2012": 185.0,
+    "2013": 221.0,
+    "2014": 246.0,
+    "2015": 215.0,
+    "2016": 215.0,
+    "2017": 226.0,
+    "2019": 304.0,
+    "2020": 341.0,
+    "2021": 392.0,
+    "2022": 357.0,
+    "2023": 345.0,
+    "2024": 393.0,
+    "2025": 333.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "consumer-goods",
+   "cik": 21665,
+   "name": "COLGATE PALMOLIVE CO",
+   "tickers": "CL",
+   "category_from": "grid",
+   "years": [
+    2018
+   ],
+   "float_bn": {
+    "2018": 56.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "electricity",
+   "cik": 1109357,
+   "name": "EXELON CORP",
+   "tickers": "EXC",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013
+   ],
+   "float_bn": {
+    "2011": 59.0,
+    "2012": 59.0,
+    "2013": 59.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "electricity",
+   "cik": 1326160,
+   "name": "Duke Energy CORP",
+   "tickers": "DUK",
+   "category_from": "grid",
+   "years": [
+    2014,
+    2015
+   ],
+   "float_bn": {
+    "2014": 52.0,
+    "2015": 49.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "electricity",
+   "cik": 753308,
+   "name": "NEXTERA ENERGY INC",
+   "tickers": "NEE",
+   "category_from": "grid",
+   "years": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2016": 60.0,
+    "2017": 66.0,
+    "2018": 79.0,
+    "2019": 98.0,
+    "2020": 117.0,
+    "2021": 143.0,
+    "2022": 152.0,
+    "2023": 150.0,
+    "2024": 145.0,
+    "2025": 143.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "entertainment",
+   "cik": 1001039,
+   "name": "TWDC Enterprises 18 Corp.",
+   "tickers": "DIS",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017
+   ],
+   "float_bn": {
+    "2011": 75.0,
+    "2012": 78.0,
+    "2013": 102.0,
+    "2014": 138.0,
+    "2015": 179.0,
+    "2016": 161.0,
+    "2017": 178.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "entertainment",
+   "cik": 1744489,
+   "name": "Walt Disney Co",
+   "tickers": "DIS",
+   "category_from": "grid",
+   "years": [
+    2018,
+    2021,
+    2022
+   ],
+   "float_bn": {
+    "2018": 200.0,
+    "2021": 343.0,
+    "2022": 250.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "entertainment",
+   "cik": 1065280,
+   "name": "NETFLIX INC",
+   "tickers": "NFLX",
+   "category_from": "grid",
+   "years": [
+    2019,
+    2020,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2019": 157.0,
+    "2020": 197.0,
+    "2023": 192.0,
+    "2024": 287.0,
+    "2025": 566.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "financial-services",
+   "cik": 4962,
+   "name": "AMERICAN EXPRESS CO",
+   "tickers": "AXP",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012
+   ],
+   "float_bn": {
+    "2011": 62.0,
+    "2012": 66.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "financial-services",
+   "cik": 1403161,
+   "name": "VISA INC.",
+   "tickers": "V",
+   "category_from": "grid",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2013": 88.0,
+    "2014": 108.0,
+    "2015": 128.0,
+    "2016": 146.0,
+    "2017": 164.0,
+    "2018": 214.0,
+    "2019": 272.0,
+    "2020": 273.0,
+    "2021": 359.0,
+    "2022": 366.0,
+    "2023": 365.0,
+    "2024": 439.0,
+    "2025": 601.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "food",
+   "cik": 63908,
+   "name": "MCDONALDS CORP",
+   "tickers": "MCD",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 87.0,
+    "2012": 89.0,
+    "2013": 99.0,
+    "2014": 99.0,
+    "2015": 90.0,
+    "2017": 124.0,
+    "2018": 122.0,
+    "2019": 158.0,
+    "2020": 137.0,
+    "2021": 172.0,
+    "2022": 182.0,
+    "2023": 217.0,
+    "2024": 183.0,
+    "2025": 208.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "food",
+   "cik": 1637459,
+   "name": "Kraft Heinz Co",
+   "tickers": "KHC",
+   "category_from": "grid",
+   "years": [
+    2016
+   ],
+   "float_bn": {
+    "2016": 107.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "insurance",
+   "cik": 731766,
+   "name": "UNITEDHEALTH GROUP INC",
+   "tickers": "UNH",
+   "category_from": "grid",
+   "years": [
+    2011
+   ],
+   "float_bn": {
+    "2011": 55.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "insurance",
+   "cik": 1067983,
+   "name": "BERKSHIRE HATHAWAY INC",
+   "tickers": "BRK-B,BRK-A",
+   "category_from": "sic",
+   "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2012": 150.0,
+    "2013": 205.0,
+    "2014": 235.0,
+    "2015": 257.0,
+    "2016": 278.0,
+    "2017": 328.0,
+    "2018": 367.0,
+    "2019": 417.0,
+    "2020": 336.0,
+    "2021": 504.0,
+    "2022": 500.0,
+    "2023": 626.0,
+    "2024": 749.0,
+    "2025": 903.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "internet",
+   "cik": 1288776,
+   "name": "GOOGLE INC.",
+   "tickers": "GOOGL",
+   "category_from": "sic",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014
+   ],
+   "float_bn": {
+    "2011": 115.0,
+    "2012": 135.0,
+    "2013": 215.0,
+    "2014": 290.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "internet",
+   "cik": 1326801,
+   "name": "Meta Platforms, Inc.",
+   "tickers": "META,METAM",
+   "category_from": "grid",
+   "years": [
+    2015
+   ],
+   "float_bn": {
+    "2015": 198.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "internet",
+   "cik": 1652044,
+   "name": "Alphabet Inc.",
+   "tickers": "GOOGL,GOOG,GOOGM,GOOGN",
+   "category_from": "grid",
+   "years": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2016": 414.0,
+    "2017": 554.0,
+    "2018": 680.0,
+    "2019": 663.0,
+    "2020": 850.0,
+    "2021": 1451.0,
+    "2022": 1256.0,
+    "2023": 1331.0,
+    "2024": 2000.0,
+    "2025": 1900.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "manufacturing",
+   "cik": 18230,
+   "name": "CATERPILLAR INC",
+   "tickers": "CAT",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 68.0,
+    "2012": 55.0,
+    "2024": 160.0,
+    "2025": 181.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "manufacturing",
+   "cik": 320187,
+   "name": "NIKE, Inc.",
+   "tickers": "NKE",
+   "category_from": "sic",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2013": 60.0,
+    "2014": 72.0,
+    "2015": 93.0,
+    "2016": 70.0,
+    "2017": 83.0,
+    "2018": 100.0,
+    "2019": 124.0,
+    "2020": 180.0,
+    "2021": 228.0,
+    "2022": 144.0,
+    "2023": 141.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "medical-devices",
+   "cik": 1800,
+   "name": "ABBOTT LABORATORIES",
+   "tickers": "ABT",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 79.0,
+    "2012": 98.0,
+    "2019": 145.0,
+    "2020": 158.0,
+    "2021": 201.0,
+    "2022": 186.0,
+    "2023": 185.0,
+    "2024": 177.0,
+    "2025": 232.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "medical-devices",
+   "cik": 66740,
+   "name": "3M CO",
+   "tickers": "MMM",
+   "category_from": "sic",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+   ],
+   "float_bn": {
+    "2013": 75.0,
+    "2014": 93.0,
+    "2015": 96.0,
+    "2016": 106.0,
+    "2017": 124.0,
+    "2018": 115.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "mining",
+   "cik": 831259,
+   "name": "FREEPORT-MCMORAN INC",
+   "tickers": "FCX",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2018,
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2011": 50.0,
+    "2012": 32.0,
+    "2013": 28.0,
+    "2014": 37.0,
+    "2015": 19.0,
+    "2018": 22.0,
+    "2023": 57.0,
+    "2024": 70.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "mining",
+   "cik": 1164727,
+   "name": "NEWMONT Corp /DE/",
+   "tickers": "NEM,NEMCL",
+   "category_from": "grid",
+   "years": [
+    2016,
+    2017,
+    2019,
+    2020,
+    2021,
+    2022,
+    2025
+   ],
+   "float_bn": {
+    "2016": 21.0,
+    "2017": 17.0,
+    "2019": 31.0,
+    "2020": 50.0,
+    "2021": 51.0,
+    "2022": 47.0,
+    "2025": 64.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "oil-gas",
+   "cik": 34088,
+   "name": "EXXON MOBIL CORP",
+   "tickers": "XOM",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 395.0,
+    "2012": 394.0,
+    "2013": 397.0,
+    "2014": 429.0,
+    "2015": 346.0,
+    "2016": 388.0,
+    "2017": 342.0,
+    "2018": 350.0,
+    "2019": 324.0,
+    "2020": 189.0,
+    "2021": 267.0,
+    "2022": 356.0,
+    "2023": 429.0,
+    "2024": 511.0,
+    "2025": 460.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "pharmaceuticals",
+   "cik": 200406,
+   "name": "JOHNSON & JOHNSON",
+   "tickers": "JNJ",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2011": 184.0,
+    "2012": 186.0,
+    "2013": 242.0,
+    "2014": 296.0,
+    "2015": 276.0,
+    "2016": 332.0,
+    "2017": 332.0,
+    "2018": 325.0,
+    "2019": 368.0,
+    "2020": 363.0,
+    "2021": 445.0,
+    "2022": 472.0,
+    "2023": 430.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "pharmaceuticals",
+   "cik": 59478,
+   "name": "ELI LILLY & Co",
+   "tickers": "LLY",
+   "category_from": "grid",
+   "years": [
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2024": 770.0,
+    "2025": 808.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "real-estate",
+   "cik": 1063761,
+   "name": "SIMON PROPERTY GROUP INC.",
+   "tickers": "SPGJ,SPG,SPG-PJ",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2011": 33.0,
+    "2012": 46.0,
+    "2013": 49.0,
+    "2014": 51.0,
+    "2015": 53.0,
+    "2016": 68.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "real-estate",
+   "cik": 1053507,
+   "name": "AMERICAN TOWER CORP /MA/",
+   "tickers": "AMT",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2025
+   ],
+   "float_bn": {
+    "2017": 56.0,
+    "2018": 63.0,
+    "2019": 90.0,
+    "2020": 114.0,
+    "2021": 122.0,
+    "2022": 119.0,
+    "2025": 103.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "real-estate",
+   "cik": 1045609,
+   "name": "Prologis, Inc.",
+   "tickers": "PLD,PLDGP",
+   "category_from": "grid",
+   "years": [
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2023": 113.0,
+    "2024": 104.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "retail",
+   "cik": 104169,
+   "name": "Walmart Inc.",
+   "tickers": "WMT",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013
+   ],
+   "float_bn": {
+    "2011": 92.0,
+    "2012": 123.0,
+    "2013": 125.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "retail",
+   "cik": 1018724,
+   "name": "AMAZON COM INC",
+   "tickers": "AMZN",
+   "category_from": "grid",
+   "years": [
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2014": 123.0,
+    "2015": 166.0,
+    "2016": 280.0,
+    "2017": 387.0,
+    "2018": 694.0,
+    "2019": 786.0,
+    "2020": 1174.0,
+    "2021": 1507.0,
+    "2022": 945.0,
+    "2023": 1184.0,
+    "2024": 1815.0,
+    "2025": 2118.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "semiconductors",
+   "cik": 50863,
+   "name": "INTEL CORP",
+   "tickers": "INTC",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2011": 119.0,
+    "2012": 134.0,
+    "2013": 121.0,
+    "2014": 153.0,
+    "2015": 147.0,
+    "2016": 155.0,
+    "2017": 158.0,
+    "2018": 229.0,
+    "2019": 212.0,
+    "2020": 244.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "semiconductors",
+   "cik": 1045810,
+   "name": "NVIDIA CORP",
+   "tickers": "NVDA",
+   "category_from": "grid",
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2021": 467.0,
+    "2022": 434.0,
+    "2023": 1100.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "semiconductors",
+   "cik": 1730168,
+   "name": "Broadcom Inc.",
+   "tickers": "AVGO",
+   "category_from": "grid",
+   "years": [
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2024": 583.0,
+    "2025": 939.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "software",
+   "cik": 51143,
+   "name": "INTERNATIONAL BUSINESS MACHINES CORP",
+   "tickers": "IBM",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012
+   ],
+   "float_bn": {
+    "2011": 205.0,
+    "2012": 223.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "software",
+   "cik": 789019,
+   "name": "MICROSOFT CORP",
+   "tickers": "MSFT",
+   "category_from": "grid",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2013": 285.0,
+    "2014": 365.0,
+    "2015": 424.0,
+    "2016": 466.0,
+    "2017": 650.0,
+    "2018": 770.0,
+    "2019": 1200.0,
+    "2020": 1700.0,
+    "2021": 2500.0,
+    "2022": 1800.0,
+    "2023": 2800.0,
+    "2024": 3100.0,
+    "2025": 3600.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "steel-industry",
+   "cik": 73309,
+   "name": "NUCOR CORP",
+   "tickers": "NUE",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 12.0,
+    "2012": 12.0,
+    "2013": 14.0,
+    "2014": 16.0,
+    "2015": 14.0,
+    "2016": 16.0,
+    "2017": 18.0,
+    "2018": 20.0,
+    "2019": 17.0,
+    "2020": 12.0,
+    "2021": 28.0,
+    "2022": 27.0,
+    "2023": 41.0,
+    "2024": 37.0,
+    "2025": 31.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "tech-hardware",
+   "cik": 320193,
+   "name": "Apple Inc.",
+   "tickers": "AAPL",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 323.0,
+    "2012": 560.0,
+    "2013": 416.0,
+    "2014": 463.0,
+    "2015": 710.0,
+    "2016": 579.0,
+    "2017": 748.0,
+    "2018": 829.0,
+    "2019": 875.0,
+    "2020": 1071.0,
+    "2021": 2021.0,
+    "2022": 2830.0,
+    "2023": 2591.0,
+    "2024": 2629.0,
+    "2025": 3253.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "telecommunication",
+   "cik": 732717,
+   "name": "AT&T INC.",
+   "tickers": "T,TBB,T-PA,T-PC",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2016,
+    2017,
+    2018,
+    2019,
+    2025
+   ],
+   "float_bn": {
+    "2011": 186.0,
+    "2012": 207.0,
+    "2013": 189.0,
+    "2016": 266.0,
+    "2017": 232.0,
+    "2018": 233.0,
+    "2019": 245.0,
+    "2025": 207.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "telecommunication",
+   "cik": 732712,
+   "name": "VERIZON COMMUNICATIONS INC",
+   "tickers": "VZ",
+   "category_from": "grid",
+   "years": [
+    2014,
+    2015,
+    2020,
+    2022,
+    2024
+   ],
+   "float_bn": {
+    "2014": 203.0,
+    "2015": 189.0,
+    "2020": 228.0,
+    "2022": 213.0,
+    "2024": 174.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "telecommunication",
+   "cik": 1166691,
+   "name": "COMCAST CORP",
+   "tickers": "CMCSA,CCZ",
+   "category_from": "grid",
+   "years": [
+    2021,
+    2023
+   ],
+   "float_bn": {
+    "2021": 260.0,
+    "2023": 170.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "tobacco",
+   "cik": 1413329,
+   "name": "Philip Morris International Inc.",
+   "tickers": "PM",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2011": 118.0,
+    "2012": 148.0,
+    "2013": 141.0,
+    "2014": 132.0,
+    "2015": 124.0,
+    "2016": 158.0,
+    "2017": 182.0,
+    "2018": 126.0,
+    "2019": 122.0,
+    "2020": 109.0,
+    "2021": 154.0,
+    "2022": 153.0,
+    "2023": 152.0,
+    "2024": 158.0,
+    "2025": 283.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "transportation",
+   "cik": 1090727,
+   "name": "UNITED PARCEL SERVICE INC",
+   "tickers": "UPS",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2016,
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2011": 54.0,
+    "2012": 57.0,
+    "2016": 74.0,
+    "2021": 151.0,
+    "2022": 134.0,
+    "2023": 130.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  },
+  {
+   "category": "transportation",
+   "cik": 100885,
+   "name": "UNION PACIFIC CORP",
+   "tickers": "UNP",
+   "category_from": "grid",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2017,
+    2018,
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2013": 71.0,
+    "2014": 89.0,
+    "2015": 83.0,
+    "2017": 87.0,
+    "2018": 105.0,
+    "2019": 119.0,
+    "2020": 114.0
+   },
+   "listed_today": true,
+   "is_today_leader": true
+  },
+  {
+   "category": "transportation",
+   "cik": 1543151,
+   "name": "Uber Technologies, Inc",
+   "tickers": "UBER",
+   "category_from": "grid",
+   "years": [
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2024": 147.0,
+    "2025": 188.0
+   },
+   "listed_today": true,
+   "is_today_leader": false
+  }
+ ],
+ "former_leaders": [
+  {
+   "category": "aerospace",
+   "cik": 40545,
+   "name": "GENERAL ELECTRIC CO",
+   "tickers": "GE",
+   "category_from": "grid",
+   "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2012": 218.0,
+    "2013": 234.0,
+    "2014": 261.0,
+    "2015": 261.0,
+    "2016": 266.0,
+    "2017": 232.0,
+    "2024": 170.0,
+    "2025": 270.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017,
+    2024,
+    2025
+   ],
+   "today_leader": "SPCX"
+  },
+  {
+   "category": "aerospace",
+   "cik": 12927,
+   "name": "BOEING CO",
+   "tickers": "BA,BA-PA",
+   "category_from": "grid",
+   "years": [
+    2018,
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2018": 193.0,
+    "2019": 205.0,
+    "2020": 104.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2018,
+    2019,
+    2020
+   ],
+   "today_leader": "SPCX"
+  },
+  {
+   "category": "aerospace",
+   "cik": 773840,
+   "name": "HONEYWELL INTERNATIONAL INC",
+   "tickers": "HON",
+   "category_from": "grid",
+   "years": [
+    2021
+   ],
+   "float_bn": {
+    "2021": 153.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2021
+   ],
+   "today_leader": "SPCX"
+  },
+  {
+   "category": "aerospace",
+   "cik": 101829,
+   "name": "RTX Corp",
+   "tickers": "RTX",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2011": 69.0,
+    "2022": 142.0,
+    "2023": 142.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2022,
+    2023
+   ],
+   "today_leader": "SPCX"
+  },
+  {
+   "category": "automakers",
+   "cik": 37996,
+   "name": "FORD MOTOR CO",
+   "tickers": "F,F-PB,F-PC,F-PD",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2011": 51.0,
+    "2012": 36.0,
+    "2013": 60.0,
+    "2014": 66.0,
+    "2015": 59.0,
+    "2016": 49.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016
+   ],
+   "today_leader": "TSLA"
+  },
+  {
+   "category": "automakers",
+   "cik": 1467858,
+   "name": "General Motors Co",
+   "tickers": "GM",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019
+   ],
+   "float_bn": {
+    "2017": 51.0,
+    "2018": 56.0,
+    "2019": 55.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2017,
+    2018,
+    2019
+   ],
+   "today_leader": "TSLA"
+  },
+  {
+   "category": "banks",
+   "cik": 72971,
+   "name": "WELLS FARGO & COMPANY/MN",
+   "tickers": "WFC",
+   "category_from": "grid",
+   "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2012": 175.0,
+    "2013": 218.0,
+    "2014": 275.0,
+    "2015": 288.0,
+    "2016": 238.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016
+   ],
+   "today_leader": "JPM"
+  },
+  {
+   "category": "biotech",
+   "cik": 313616,
+   "name": "DANAHER CORP /DE/",
+   "tickers": "DHR",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2011": 31.0,
+    "2012": 30.0,
+    "2013": 38.0,
+    "2014": 48.0,
+    "2015": 54.0,
+    "2016": 62.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016
+   ],
+   "today_leader": "TMO"
+  },
+  {
+   "category": "chemicals",
+   "cik": 29915,
+   "name": "DOW CHEMICAL CO /DE/",
+   "tickers": null,
+   "category_from": "sic",
+   "years": [
+    2014,
+    2015
+   ],
+   "float_bn": {
+    "2014": 61.0,
+    "2015": 59.0
+   },
+   "listed_today": false,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015
+   ],
+   "today_leader": "APD"
+  },
+  {
+   "category": "chemicals",
+   "cik": 30554,
+   "name": "EIDP, Inc.",
+   "tickers": "CTA-PB,CTA-PA",
+   "category_from": "sic",
+   "years": [
+    2011,
+    2012,
+    2016
+   ],
+   "float_bn": {
+    "2011": 50.0,
+    "2012": 47.0,
+    "2016": 57.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2016
+   ],
+   "today_leader": "APD"
+  },
+  {
+   "category": "chemicals",
+   "cik": 1666700,
+   "name": "DuPont de Nemours, Inc.",
+   "tickers": "DD",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018
+   ],
+   "float_bn": {
+    "2017": 77.0,
+    "2018": 152.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2017,
+    2018
+   ],
+   "today_leader": "APD"
+  },
+  {
+   "category": "chemicals",
+   "cik": 1707925,
+   "name": "LINDE PLC",
+   "tickers": "LIN",
+   "category_from": "sic",
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2019": 108.0,
+    "2020": 111.0,
+    "2021": 149.0,
+    "2022": 143.0,
+    "2023": 186.0,
+    "2024": 210.0,
+    "2025": 220.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "today_leader": "APD"
+  },
+  {
+   "category": "conglomerate",
+   "cik": 217346,
+   "name": "TEXTRON INC",
+   "tickers": "TXT",
+   "category_from": "grid",
+   "years": [
+    2015
+   ],
+   "float_bn": {
+    "2015": 12.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015
+   ],
+   "today_leader": "TDY"
+  },
+  {
+   "category": "conglomerate",
+   "cik": 60086,
+   "name": "LOEWS CORP",
+   "tickers": "L",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2016
+   ],
+   "float_bn": {
+    "2011": 13.0,
+    "2012": 13.0,
+    "2013": 14.0,
+    "2014": 14.0,
+    "2016": 11.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2016
+   ],
+   "today_leader": "TDY"
+  },
+  {
+   "category": "conglomerate",
+   "cik": 1659166,
+   "name": "Fortive Corp",
+   "tickers": "FTV",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2017": 19.0,
+    "2018": 24.0,
+    "2019": 24.0,
+    "2020": 17.0,
+    "2021": 25.0,
+    "2022": 20.0,
+    "2023": 26.0,
+    "2024": 26.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "today_leader": "TDY"
+  },
+  {
+   "category": "construction",
+   "cik": 920760,
+   "name": "LENNAR CORP /NEW/",
+   "tickers": "LEN,LEN-B",
+   "category_from": "grid",
+   "years": [
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2019": 14.0,
+    "2020": 17.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2019,
+    2020
+   ],
+   "today_leader": "DHI"
+  },
+  {
+   "category": "construction",
+   "cik": 1050915,
+   "name": "QUANTA SERVICES, INC.",
+   "tickers": "PWR",
+   "category_from": "sic",
+   "years": [
+    2025
+   ],
+   "float_bn": {
+    "2025": 56.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2025
+   ],
+   "today_leader": "DHI"
+  },
+  {
+   "category": "consumer-goods",
+   "cik": 21665,
+   "name": "COLGATE PALMOLIVE CO",
+   "tickers": "CL",
+   "category_from": "grid",
+   "years": [
+    2018
+   ],
+   "float_bn": {
+    "2018": 56.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2018
+   ],
+   "today_leader": "PG"
+  },
+  {
+   "category": "electricity",
+   "cik": 1326160,
+   "name": "Duke Energy CORP",
+   "tickers": "DUK",
+   "category_from": "grid",
+   "years": [
+    2014,
+    2015
+   ],
+   "float_bn": {
+    "2014": 52.0,
+    "2015": 49.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015
+   ],
+   "today_leader": "NEE"
+  },
+  {
+   "category": "entertainment",
+   "cik": 1001039,
+   "name": "TWDC Enterprises 18 Corp.",
+   "tickers": "DIS",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017
+   ],
+   "float_bn": {
+    "2011": 75.0,
+    "2012": 78.0,
+    "2013": 102.0,
+    "2014": 138.0,
+    "2015": 179.0,
+    "2016": 161.0,
+    "2017": 178.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017
+   ],
+   "today_leader": "NFLX"
+  },
+  {
+   "category": "entertainment",
+   "cik": 1744489,
+   "name": "Walt Disney Co",
+   "tickers": "DIS",
+   "category_from": "grid",
+   "years": [
+    2018,
+    2021,
+    2022
+   ],
+   "float_bn": {
+    "2018": 200.0,
+    "2021": 343.0,
+    "2022": 250.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2018,
+    2021,
+    2022
+   ],
+   "today_leader": "NFLX"
+  },
+  {
+   "category": "food",
+   "cik": 1637459,
+   "name": "Kraft Heinz Co",
+   "tickers": "KHC",
+   "category_from": "grid",
+   "years": [
+    2016
+   ],
+   "float_bn": {
+    "2016": 107.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2016
+   ],
+   "today_leader": "MCD"
+  },
+  {
+   "category": "insurance",
+   "cik": 1067983,
+   "name": "BERKSHIRE HATHAWAY INC",
+   "tickers": "BRK-B,BRK-A",
+   "category_from": "sic",
+   "years": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2012": 150.0,
+    "2013": 205.0,
+    "2014": 235.0,
+    "2015": 257.0,
+    "2016": 278.0,
+    "2017": 328.0,
+    "2018": 367.0,
+    "2019": 417.0,
+    "2020": 336.0,
+    "2021": 504.0,
+    "2022": 500.0,
+    "2023": 626.0,
+    "2024": 749.0,
+    "2025": 903.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "today_leader": "UNH"
+  },
+  {
+   "category": "internet",
+   "cik": 1326801,
+   "name": "Meta Platforms, Inc.",
+   "tickers": "META,METAM",
+   "category_from": "grid",
+   "years": [
+    2015
+   ],
+   "float_bn": {
+    "2015": 198.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015
+   ],
+   "today_leader": "GOOG"
+  },
+  {
+   "category": "manufacturing",
+   "cik": 320187,
+   "name": "NIKE, Inc.",
+   "tickers": "NKE",
+   "category_from": "sic",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2013": 60.0,
+    "2014": 72.0,
+    "2015": 93.0,
+    "2016": 70.0,
+    "2017": 83.0,
+    "2018": 100.0,
+    "2019": 124.0,
+    "2020": 180.0,
+    "2021": 228.0,
+    "2022": 144.0,
+    "2023": 141.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "today_leader": "CAT"
+  },
+  {
+   "category": "medical-devices",
+   "cik": 66740,
+   "name": "3M CO",
+   "tickers": "MMM",
+   "category_from": "sic",
+   "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+   ],
+   "float_bn": {
+    "2013": 75.0,
+    "2014": 93.0,
+    "2015": 96.0,
+    "2016": 106.0,
+    "2017": 124.0,
+    "2018": 115.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017,
+    2018
+   ],
+   "today_leader": "ABT"
+  },
+  {
+   "category": "mining",
+   "cik": 831259,
+   "name": "FREEPORT-MCMORAN INC",
+   "tickers": "FCX",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2018,
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2011": 50.0,
+    "2012": 32.0,
+    "2013": 28.0,
+    "2014": 37.0,
+    "2015": 19.0,
+    "2018": 22.0,
+    "2023": 57.0,
+    "2024": 70.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2018,
+    2023,
+    2024
+   ],
+   "today_leader": "SCCO"
+  },
+  {
+   "category": "mining",
+   "cik": 1164727,
+   "name": "NEWMONT Corp /DE/",
+   "tickers": "NEM,NEMCL",
+   "category_from": "grid",
+   "years": [
+    2016,
+    2017,
+    2019,
+    2020,
+    2021,
+    2022,
+    2025
+   ],
+   "float_bn": {
+    "2016": 21.0,
+    "2017": 17.0,
+    "2019": 31.0,
+    "2020": 50.0,
+    "2021": 51.0,
+    "2022": 47.0,
+    "2025": 64.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2016,
+    2017,
+    2019,
+    2020,
+    2021,
+    2022,
+    2025
+   ],
+   "today_leader": "SCCO"
+  },
+  {
+   "category": "pharmaceuticals",
+   "cik": 200406,
+   "name": "JOHNSON & JOHNSON",
+   "tickers": "JNJ",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2011": 184.0,
+    "2012": 186.0,
+    "2013": 242.0,
+    "2014": 296.0,
+    "2015": 276.0,
+    "2016": 332.0,
+    "2017": 332.0,
+    "2018": 325.0,
+    "2019": 368.0,
+    "2020": 363.0,
+    "2021": 445.0,
+    "2022": 472.0,
+    "2023": 430.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "today_leader": "LLY"
+  },
+  {
+   "category": "real-estate",
+   "cik": 1063761,
+   "name": "SIMON PROPERTY GROUP INC.",
+   "tickers": "SPGJ,SPG,SPG-PJ",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+   ],
+   "float_bn": {
+    "2011": 33.0,
+    "2012": 46.0,
+    "2013": 49.0,
+    "2014": 51.0,
+    "2015": 53.0,
+    "2016": 68.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016
+   ],
+   "today_leader": "WELL"
+  },
+  {
+   "category": "real-estate",
+   "cik": 1053507,
+   "name": "AMERICAN TOWER CORP /MA/",
+   "tickers": "AMT",
+   "category_from": "grid",
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2025
+   ],
+   "float_bn": {
+    "2017": 56.0,
+    "2018": 63.0,
+    "2019": 90.0,
+    "2020": 114.0,
+    "2021": 122.0,
+    "2022": 119.0,
+    "2025": 103.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2025
+   ],
+   "today_leader": "WELL"
+  },
+  {
+   "category": "real-estate",
+   "cik": 1045609,
+   "name": "Prologis, Inc.",
+   "tickers": "PLD,PLDGP",
+   "category_from": "grid",
+   "years": [
+    2023,
+    2024
+   ],
+   "float_bn": {
+    "2023": 113.0,
+    "2024": 104.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2023,
+    2024
+   ],
+   "today_leader": "WELL"
+  },
+  {
+   "category": "semiconductors",
+   "cik": 50863,
+   "name": "INTEL CORP",
+   "tickers": "INTC",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020
+   ],
+   "float_bn": {
+    "2011": 119.0,
+    "2012": 134.0,
+    "2013": 121.0,
+    "2014": 153.0,
+    "2015": 147.0,
+    "2016": 155.0,
+    "2017": 158.0,
+    "2018": 229.0,
+    "2019": 212.0,
+    "2020": 244.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020
+   ],
+   "today_leader": "NVDA"
+  },
+  {
+   "category": "semiconductors",
+   "cik": 1730168,
+   "name": "Broadcom Inc.",
+   "tickers": "AVGO",
+   "category_from": "grid",
+   "years": [
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2024": 583.0,
+    "2025": 939.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2024,
+    2025
+   ],
+   "today_leader": "NVDA"
+  },
+  {
+   "category": "telecommunication",
+   "cik": 732717,
+   "name": "AT&T INC.",
+   "tickers": "T,TBB,T-PA,T-PC",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2013,
+    2016,
+    2017,
+    2018,
+    2019,
+    2025
+   ],
+   "float_bn": {
+    "2011": 186.0,
+    "2012": 207.0,
+    "2013": 189.0,
+    "2016": 266.0,
+    "2017": 232.0,
+    "2018": 233.0,
+    "2019": 245.0,
+    "2025": 207.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2025
+   ],
+   "today_leader": "VZ"
+  },
+  {
+   "category": "telecommunication",
+   "cik": 1166691,
+   "name": "COMCAST CORP",
+   "tickers": "CMCSA,CCZ",
+   "category_from": "grid",
+   "years": [
+    2021,
+    2023
+   ],
+   "float_bn": {
+    "2021": 260.0,
+    "2023": 170.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2021,
+    2023
+   ],
+   "today_leader": "VZ"
+  },
+  {
+   "category": "transportation",
+   "cik": 1090727,
+   "name": "UNITED PARCEL SERVICE INC",
+   "tickers": "UPS",
+   "category_from": "grid",
+   "years": [
+    2011,
+    2012,
+    2016,
+    2021,
+    2022,
+    2023
+   ],
+   "float_bn": {
+    "2011": 54.0,
+    "2012": 57.0,
+    "2016": 74.0,
+    "2021": 151.0,
+    "2022": 134.0,
+    "2023": 130.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2016,
+    2021,
+    2022,
+    2023
+   ],
+   "today_leader": "UNP"
+  },
+  {
+   "category": "transportation",
+   "cik": 1543151,
+   "name": "Uber Technologies, Inc",
+   "tickers": "UBER",
+   "category_from": "grid",
+   "years": [
+    2024,
+    2025
+   ],
+   "float_bn": {
+    "2024": 147.0,
+    "2025": 188.0
+   },
+   "listed_today": true,
+   "is_today_leader": false,
+   "years_led_since_2015": [
+    2024,
+    2025
+   ],
+   "today_leader": "UNP"
+  }
+ ],
+ "guard_dropped_points": 2217,
+ "unmapped_companies": 135
+}

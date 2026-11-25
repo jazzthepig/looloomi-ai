@@ -7,7 +7,8 @@
 
 规则写在台账 S-915(写代码、取全量之前定的),查询照它做:
   ① 守卫:单点 > 4 万亿美元,或 > 同一 CIK 其它年份的中位数 20 倍(只有两个点时 = 另一个点),
-     或 > 同年总资产(`sec_assets`,CY{Y}Q4I)的 60 倍 ⇒ 当录入错误,不参与(计数带回)。后一条是结果 1 之后加的(事后修正)。
+     或 > 前后一年内总资产(`sec_assets`,CY{Y}Q4I)最大值的 60 倍 ⇒ 当录入错误,不参与(计数带回)。后一条是结果 1 之后加的(事后修正);
+     「前后一年」是第二轮看到 Biglari Holdings 2017 年报 $4,020 亿、当年没有总资产点之后加的。SIC 6221(黄金 ETF 信托之类)不归行业。
   ② 只算美国:`loc` 以 `US-` 开头。注册在爱尔兰 / 瑞士等地的 10-K 申报公司不算 —— 那些地区这里覆盖不全。
   ③ 行业:今天还在榜上的(现用代码对上 `members_v2.json` 里的美国公司)用网格的主行业;对不上的(多半已退市 / 被并购)用下面的 SIC 对照;
      对照之外 ⇒ 不归任何行业(计数带回,不猜)。**今天还在的公司用的是今天的归属**(GE 2016 年算在「航空航天」,不是当年的「综合企业」)。
@@ -39,7 +40,7 @@ SIC_CODE = {
     "4832": "entertainment", "4833": "entertainment", "5812": "food", "5961": "retail",
     "7370": "internet", "7371": "internet", "7374": "internet", "7372": "software", "7373": "software",
     "3731": "aerospace", "8711": "construction", "8731": "biotech",
-    "6770": None, "9995": None, "7389": None,
+    "6770": None, "9995": None, "7389": None, "6221": None,    # 6221:商品合约(黄金 ETF 信托这类,不是经营公司)
 }
 SIC_RANGE = [
     ("1000", "1099", "mining"), ("1200", "1299", "mining"), ("1400", "1499", "mining"), ("1500", "1799", "construction"),
@@ -95,7 +96,7 @@ a as (select cik, substr(ccp, 3, 4)::int y, val from sec_assets),
 pr(cik, ticker) as (values {pred}),
 s as (select cik, count(*) n, sum(val) tot, percentile_cont(0.5) within group (order by val) med from f group by cik),
 k as (select f.* from f join s on s.cik = f.cik
-      left join a on a.cik = f.cik and a.y = f.y
+      left join lateral (select max(a.val) val from a where a.cik = f.cik and a.y between f.y - 1 and f.y + 1) a on true
       where f.val <= {MAX_VAL:.0f} and not (s.n = 2 and f.val > {SPIKE_X} * (s.tot - f.val)) and not (s.n >= 3 and f.val > {SPIKE_X} * s.med)
         and not (a.val is not null and f.val > {ASSET_X} * a.val)),
 tk as (select c.cik, upper(trim(t)) ticker from sec_company c, unnest(string_to_array(coalesce(c.tickers, ''), ',')) t
