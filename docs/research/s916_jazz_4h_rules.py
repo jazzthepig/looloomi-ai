@@ -30,6 +30,8 @@ EMA7 / 20 / 50、布林 20 × 2σ、H20 / L20 = 此前 20 根(不含本根)的�
     nohup python3 docs/research/s916_jazz_4h_rules.py > docs/research/s916_run.txt 2>&1 &      # 写 s916_results.json(含今天的匹配板)
     nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold > docs/research/s916_run_hold.txt 2>&1 &   # S-917:只设止损、拿满 28 天
     nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold --dmin 0.01 --cap 20 > docs/research/s916_run_hold_d1c20.txt 2>&1 &   # S-918
+    nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt ema50 --dmin 0.01 --cap 20 > docs/research/s916_run_ema50_d1c20.txt 2>&1 &   # S-919
+    nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt atr3 --dmin 0.01 --cap 20 > docs/research/s916_run_atr3_d1c20.txt 2>&1 &    # S-919
 """
 from __future__ import annotations
 
@@ -66,10 +68,11 @@ BB_N, BB_K, HL_N, SWING_N, RETEST_WIN, RETEST_TOL, CANCEL = 20, 2.0, 20, 10, 12,
 BUF, DMIN, DMAX, TP_R, MAX_BARS, COST, EVERY = 0.002, 0.004, 0.08, 2.0, 90, 0.0012, 30
 MIN_N, MIN_PAYOFF, N_NULL, SEED, RISK = 20, 2.0, 100, 916, 0.04
 #: S-917:`--mgmt hold` = 只有结构止损、不平一半、不保本、不跟 EMA7,拿满 168 根(28 天)按收盘平 —— 把管法和进场分开看
-MGMT = "hold" if "--mgmt" in sys.argv and sys.argv[sys.argv.index("--mgmt") + 1] == "hold" else "jazz"
-HOLD_BARS = 168
-if MGMT == "hold":
-    OUT = "docs/research/s916_results_hold.json"
+MGMT = sys.argv[sys.argv.index("--mgmt") + 1] if "--mgmt" in sys.argv else "jazz"
+assert MGMT in ("jazz", "hold", "ema50", "atr3"), MGMT          # S-919:ema50 = 2R 平一半 + EMA50 跟踪;atr3 = 3 × ATR 吊灯
+HOLD_BARS, ATR_K = 168, 3.0
+if MGMT != "jazz":
+    OUT = f"docs/research/s916_results_{MGMT}.json"
 #: S-918:`--dmin 0.01` 止损下限;`--cap 20` 单张 R 的上截断(亏损不截)。默认不变(0.4%、不截)
 def _arg(name: str, default: float) -> float:
     return float(sys.argv[sys.argv.index(name) + 1]) if name in sys.argv else default
@@ -121,7 +124,11 @@ def indicators(b: dict) -> dict:
             h20[i], l20[i] = h[i - HL_N:i].max(), l[i - HL_N:i].min()
         if i >= SWING_N - 1:
             sl[i], sh[i] = l[i - SWING_N + 1:i + 1].min(), h[i - SWING_N + 1:i + 1].max()
-    ind.update({"bl": bl, "bu": bu, "h20": h20, "l20": l20, "sl": sl, "sh": sh})
+    tr = np.maximum(h - l, np.maximum(np.abs(h - np.r_[c[0], c[:-1]]), np.abs(l - np.r_[c[0], c[:-1]])))
+    atr = np.full(n, np.nan)
+    for i in range(14, n):
+        atr[i] = tr[i - 13:i + 1].mean()
+    ind.update({"bl": bl, "bu": bu, "h20": h20, "l20": l20, "sl": sl, "sh": sh, "atr": atr})
     return ind
 
 
@@ -134,11 +141,15 @@ def manage(b: dict, ind: dict, i0: int, side: int, entry: float, stop: float) ->
         return None
     if MGMT == "hold":
         return manage_hold(b, i0, side, entry, stop, risk)
-    o, h, l, c, e7 = b["o"], b["h"], b["l"], b["c"], ind["e7"]
+    if MGMT == "atr3":
+        return manage_atr(b, ind, i0, side, entry, stop, risk)
+    o, h, l, c = b["o"], b["h"], b["l"], b["c"]
+    e7 = ind["e50"] if MGMT == "ema50" else ind["e7"]
+    max_bars = HOLD_BARS if MGMT == "ema50" else MAX_BARS
     half_done, cur_stop, realized, size = False, stop, 0.0, 1.0
     target = entry + side * TP_R * risk
     n = len(c)
-    for j in range(i0, min(n, i0 + MAX_BARS + 1)):
+    for j in range(i0, min(n, i0 + max_bars + 1)):
         first = j > i0
         # 止损(跳空按开盘)
         if side > 0 and l[j] <= cur_stop:
@@ -155,8 +166,8 @@ def manage(b: dict, ind: dict, i0: int, side: int, entry: float, stop: float) ->
         if half_done and ((side > 0 and c[j] < e7[j]) or (side < 0 and c[j] > e7[j])) and j > i0:
             realized += size * side * (c[j] - entry) / risk
             return {"r": realized - COST * entry / risk, "exit_i": j, "bars": j - i0}
-    j = min(n - 1, i0 + MAX_BARS)
-    if j - i0 < MAX_BARS:
+    j = min(n - 1, i0 + max_bars)
+    if j - i0 < max_bars:
         return None                                        # 数据不够拿满 —— 不算(样本末尾)
     realized += size * side * (c[j] - entry) / risk
     return {"r": realized - COST * entry / risk, "exit_i": j, "bars": j - i0}
@@ -174,6 +185,28 @@ def manage_hold(b: dict, i0: int, side: int, entry: float, stop: float, risk: fl
         if side < 0 and h[j] >= stop:
             px = o[j] if first and o[j] > stop else stop
             return {"r": (entry - px) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
+    j = i0 + HOLD_BARS
+    if j >= n:
+        return None
+    return {"r": side * (c[j] - entry) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
+
+
+def manage_atr(b: dict, ind: dict, i0: int, side: int, entry: float, stop: float, risk: float) -> dict | None:
+    """S-919 的 atr3:不平一半;吊灯止损 = 进场后最高收盘 − 3 × ATR14(空单镜像),只往有利方向移;盘中碰到按止损价,跳空按开盘;拿满 168 根。"""
+    o, h, l, c, atr = b["o"], b["h"], b["l"], b["c"], ind["atr"]
+    n, cur, best = len(c), stop, entry
+    for j in range(i0, min(n, i0 + HOLD_BARS + 1)):
+        first = j > i0
+        if side > 0 and l[j] <= cur:
+            px = o[j] if first and o[j] < cur else cur
+            return {"r": (px - entry) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
+        if side < 0 and h[j] >= cur:
+            px = o[j] if first and o[j] > cur else cur
+            return {"r": (entry - px) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
+        if not math.isnan(atr[j]):                         # 这根收盘之后才更新(下一根起生效)
+            best = max(best, c[j]) if side > 0 else min(best, c[j])
+            ch = best - side * ATR_K * atr[j]
+            cur = max(cur, ch) if side > 0 else min(cur, ch)
     j = i0 + HOLD_BARS
     if j >= n:
         return None
@@ -460,7 +493,7 @@ if __name__ == "__main__":
         # 管票:直接打到止损 = −1R − 成本
         tb = {"t": b["t"][:5], "o": np.array([100, 100, 100, 100, 100.0]), "h": np.array([101, 101, 101, 101, 101.0]),
               "l": np.array([99, 89, 99, 99, 99.0]), "c": np.array([100, 95, 100, 100, 100.0])}
-        ti = {"e7": np.full(5, 100.0)}
+        ti = {"e7": np.full(5, 100.0), "e50": np.full(5, 100.0), "atr": np.full(5, 1.0)}
         m = manage(tb, ti, 1, 1, 100.0, 90.0)
         assert m and abs(m["r"] - (-1 - COST * 100 / 10)) < 1e-9, m          # 两种管法都是 −1R − 成本
         tb2 = {"t": b["t"][:6], "o": np.array([100, 100, 100, 100, 100, 100.0]), "h": np.array([101, 121, 122, 123, 124, 125.0]),
@@ -469,9 +502,17 @@ if __name__ == "__main__":
         if MGMT == "jazz":
             m2 = manage(tb2, ti2, 1, 1, 100.0, 90.0)
             assert m2 and abs(m2["r"] - (0.5 * 2 + 0.5 * 0.4 - COST * 100 / 10)) < 1e-9, m2   # +2R 平一半,之后收盘 104 < EMA7 112 全平
-        if MGMT == "hold":
+        if MGMT in ("hold", "atr3"):
             mh = manage_hold(tb2, 1, 1, 100.0, 90.0, 10.0)
             assert mh is None, "拿不满 168 根的票不算"
+        ta = {"t": b["t"][:4], "o": np.array([100, 100, 104, 108.0]), "h": np.array([101, 105, 110, 109.0]),
+              "l": np.array([99, 99, 103, 100.0]), "c": np.array([100, 104, 109, 101.0])}
+        ia = {"atr": np.array([np.nan, 2.0, 2.0, 2.0])}
+        old_hold = globals()["HOLD_BARS"]
+        globals()["HOLD_BARS"] = 3
+        ma = manage_atr(ta, ia, 1, 1, 100.0, 95.0, 5.0)
+        globals()["HOLD_BARS"] = old_hold
+        assert ma and abs(ma["r"] - ((103.0 - 100) / 5 - COST * 100 / 5)) < 1e-9, ma   # 109 − 3×2 = 103,第 3 根低 100 ≤ 103 ⇒ 103 出
         if not math.isinf(CAP):
             assert max(x[2] for r in RULES for x in tickets(b, ind, r)) <= CAP + 1e-12, "截断没生效"
         assert out["n_tested"] == len(RULES) * len(CELLS)
