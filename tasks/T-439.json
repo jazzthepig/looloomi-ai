@@ -1,0 +1,28 @@
+{
+  "id": "T-439",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-918:S-917 的稳健检验 —— 同一脚本 `--mgmt hold --dmin 0.01 --cap 20`(止损下限 1%、单张 R 截在 +20)再跑一遍 —— 只跑 Seth 写好的脚本",
+  "source": "台账 S-918(预注册,写于 T-438 结果之后、新计算之前)。脚本 = main 上更新过的 `docs/research/s916_jazz_4h_rules.py`(多了 `--dmin` / `--cap`,输出多了中位 R 与去掉最好 5 张后的均值;匹配板跳过最后一根旧于 2 天的币)。先 fetch,从 origin/main 开分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-439.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s916_jazz_4h_rules.py --selftest --mgmt hold --dmin 0.01 --cap 20 | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold --dmin 0.01 --cap 20 > docs/research/s916_run_hold_d1c20.txt 2>&1 &`,只 tail,等 WROTE(应写 `s916_results_hold_d1c20.json`;写成别的名字说明脚本是旧的,停下报告)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|BASE|ROW|BOARD|ARMED|WROTE)' docs/research/s916_run_hold_d1c20.txt | cut -c1-500`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "s916_results_hold_d1c20.json + s916_run_hold_d1c20.txt;卡 in_review,推 lane-a/T-439。"
+  },
+  "prior_value": "S-917 的正号靠胜率不到一成的少数大赢家,而 R 口径放大窄止损的票 —— 过不了这一道的格子不配进给 Jazz 的匹配板。",
+  "notes": "2026-11-25T19:12:22Z Seth 开卡(S-917 结果 1 之后)。"
+}
