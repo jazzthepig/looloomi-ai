@@ -1,0 +1,59 @@
+loaded BTC 3099
+loaded ETH 3099
+loaded BTC 81171 hourly → 20270 4h
+loaded ETH 81171 hourly → 20270 4h
+loaded SOL 51697 hourly → 12918 4h
+loaded BNB 51697 hourly → 12918 4h
+loaded XRP 51697 hourly → 12918 4h
+loaded ADA 51697 hourly → 12918 4h
+loaded AVAX 51697 hourly → 12918 4h
+loaded DOGE 51697 hourly → 12918 4h
+loaded LINK 51697 hourly → 12918 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31251 hourly → 7812 4h
+COUNTS {"n_tested": 24, "n_holds": 0, "null": {"n": 100, "median": 0.0, "q95": 1.0, "p_ge_real": 1.0}}
+UNCOND LB_L | disc n523 r-0.223 win0.319 pay1.53 w-3.29 | hold n818 r-0.062 win0.336 pay1.82 w-1.3 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 1340}
+UNCOND UB_S | disc n466 r-0.144 win0.337 pay1.61 w-1.3 | hold n1003 r-0.162 win0.366 pay1.36 w-1.3 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 1456}
+UNCOND BR_L | disc n1060 r-0.123 win0.314 pay1.82 w-1.3 | hold n1640 r-0.039 win0.332 pay1.9 w-1.3 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 2335}
+UNCOND BR_S | disc n864 r-0.093 win0.334 pay1.74 w-1.3 | hold n1449 r-0.084 win0.334 pay1.77 w-1.3 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 2285}
+UNCOND BRF_L | disc n757 r-0.037 win0.337 pay1.87 w-1.3 | hold n1149 r0.021 win0.337 pay2.03 w-1.3 | curve {"final": 0.004, "max_dd": 1.0, "longest_under_n": 1566}
+UNCOND BRF_S | disc n638 r-0.086 win0.335 pay1.75 w-1.3 | hold n1070 r-0.077 win0.33 pay1.82 w-1.3 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 1688}
+BASE 1 | disc n1376 r-0.127 win0.303 pay1.9 w-1.3 | hold n2407 r-0.044 win0.328 pay1.92 w-1.3
+BASE -1 | disc n1396 r-0.031 win0.351 pay1.77 w-1.53 | hold n2392 r-0.068 win0.332 pay1.82 w-1.3
+ROW LB_L 线上·主流领 | disc n57 r-0.07 win0.333 pay1.82 w-1.3 vs n163 r-0.275 win0.252 pay1.93 w-1.3 | hold n298 r-0.051 win0.346 pay1.77 w-1.3 vs n868 r-0.077 win0.319 pay1.91 w-1.3 
+ROW LB_L 线上·二线领 | disc n116 r-0.082 win0.31 pay1.98 w-1.3 vs n183 r-0.133 win0.311 pay1.8 w-1.25 | hold n290 r-0.178 win0.314 pay1.7 w-1.3 vs n499 r-0.261 win0.267 pay1.82 w-1.3 
+ROW LB_L 线下·主流领 | disc n80 r-0.275 win0.35 pay1.19 w-1.3 vs n437 r-0.166 win0.288 pay1.92 w-1.3 | hold n138 r0.239 win0.326 pay2.67 w-1.3 vs n720 r0.194 win0.393 pay2.01 w-1.3 
+ROW LB_L 线下·二线领 | disc n100 r-0.417 win0.29 pay1.23 w-1.3 vs n196 r-0.045 win0.357 pay1.68 w-1.3 | hold n92 r-0.189 win0.391 pay1.15 w-1.3 vs n313 r-0.162 win0.294 pay1.88 w-1.3 
+ROW UB_S 线上·主流领 | disc n59 r-0.306 win0.254 pay1.93 w-1.3 vs n190 r0.093 win0.395 pay1.76 w-1.53 | hold n368 r-0.189 win0.372 pay1.27 w-1.3 vs n873 r0.003 win0.353 pay1.84 w-1.3 
+ROW UB_S 线上·二线领 | disc n34 r0.174 win0.471 pay1.44 w-1.3 vs n219 r-0.14 win0.32 pay1.71 w-1.3 | hold n131 r0.155 win0.435 pay1.6 w-1.3 vs n514 r0.02 win0.354 pay1.88 w-1.3 
+ROW UB_S 线下·主流领 | disc n183 r-0.026 win0.344 pay1.84 w-1.3 vs n380 r0.155 win0.405 pay1.83 w-1.3 | hold n364 r-0.148 win0.368 pay1.38 w-1.3 vs n688 r-0.334 win0.259 pay1.64 w-1.3 
+ROW UB_S 线下·二线领 | disc n78 r-0.087 win0.385 pay1.41 w-1.3 vs n189 r-0.161 win0.317 pay1.67 w-1.3 | hold n140 r-0.424 win0.279 pay1.32 w-1.3 vs n313 r0.189 win0.403 pay1.92 w-1.3 
+ROW BR_L 线上·主流领 | disc n161 r-0.292 win0.255 pay1.87 w-1.3 vs n163 r-0.275 win0.252 pay1.93 w-1.3 | hold n632 r-0.048 win0.347 pay1.76 w-1.3 vs n868 r-0.077 win0.319 pay1.91 w-1.3 
+ROW BR_L 线上·二线领 | disc n199 r-0.085 win0.307 pay2.0 w-1.29 vs n183 r-0.133 win0.311 pay1.8 w-1.25 | hold n358 r-0.079 win0.31 pay2.0 w-1.3 vs n499 r-0.261 win0.267 pay1.82 w-1.3 
+ROW BR_L 线下·主流领 | disc n236 r-0.39 win0.267 pay1.42 w-1.3 vs n437 r-0.166 win0.288 pay1.92 w-1.3 | hold n438 r0.1 win0.336 pay2.24 w-1.3 vs n720 r0.194 win0.393 pay2.01 w-1.3 
+ROW BR_L 线下·二线领 | disc n141 r-0.388 win0.277 pay1.32 w-1.3 vs n196 r-0.045 win0.357 pay1.68 w-1.3 | hold n210 r-0.222 win0.324 pay1.47 w-1.3 vs n313 r-0.162 win0.294 pay1.88 w-1.3 
+ROW BR_S 线上·主流领 | disc n108 r-0.058 win0.324 pay1.92 w-1.3 vs n190 r0.093 win0.395 pay1.76 w-1.53 | hold n552 r0.056 win0.355 pay1.96 w-1.3 vs n873 r0.003 win0.353 pay1.84 w-1.3 
+ROW BR_S 线上·二线领 | disc n85 r-0.185 win0.353 pay1.34 w-1.3 vs n219 r-0.14 win0.32 pay1.71 w-1.3 | hold n266 r-0.173 win0.289 pay1.92 w-1.3 vs n514 r0.02 win0.354 pay1.88 w-1.3 
+ROW BR_S 线下·主流领 | disc n328 r-0.159 win0.302 pay1.83 w-1.3 vs n380 r0.155 win0.405 pay1.83 w-1.3 | hold n419 r-0.269 win0.313 pay1.43 w-1.3 vs n688 r-0.334 win0.259 pay1.64 w-1.3 
+ROW BR_S 线下·二线领 | disc n128 r0.194 win0.398 pay1.95 w-1.3 vs n189 r-0.161 win0.317 pay1.67 w-1.3 | hold n207 r0.052 win0.386 pay1.71 w-1.3 vs n313 r0.189 win0.403 pay1.92 w-1.3 
+ROW BRF_L 线上·主流领 | disc n121 r-0.179 win0.264 pay2.15 w-1.3 vs n163 r-0.275 win0.252 pay1.93 w-1.3 | hold n443 r-0.04 win0.341 pay1.83 w-1.3 vs n868 r-0.077 win0.319 pay1.91 w-1.3 
+ROW BRF_L 线上·二线领 | disc n159 r0.041 win0.346 pay2.0 w-1.29 vs n183 r-0.133 win0.311 pay1.8 w-1.25 | hold n304 r-0.103 win0.293 pay2.1 w-1.3 vs n499 r-0.261 win0.267 pay1.82 w-1.3 
+ROW BRF_L 线下·主流领 | disc n133 r-0.307 win0.293 pay1.45 w-1.28 vs n437 r-0.166 win0.288 pay1.92 w-1.3 | hold n270 r0.163 win0.348 pay2.29 w-1.3 vs n720 r0.194 win0.393 pay2.01 w-1.3 
+ROW BRF_L 线下·二线领 | disc n101 r-0.406 win0.257 pay1.44 w-1.3 vs n196 r-0.045 win0.357 pay1.68 w-1.3 | hold n132 r0.221 win0.402 pay1.99 w-1.3 vs n313 r-0.162 win0.294 pay1.88 w-1.3 
+ROW BRF_S 线上·主流领 | disc n85 r-0.109 win0.329 pay1.73 w-1.3 vs n190 r0.093 win0.395 pay1.76 w-1.53 | hold n405 r0.128 win0.356 pay2.14 w-1.3 vs n873 r0.003 win0.353 pay1.84 w-1.3 
+ROW BRF_S 线上·二线领 | disc n43 r-0.142 win0.326 pay1.66 w-1.3 vs n219 r-0.14 win0.32 pay1.71 w-1.3 | hold n141 r-0.061 win0.326 pay1.9 w-1.3 vs n514 r0.02 win0.354 pay1.88 w-1.3 
+ROW BRF_S 线下·主流领 | disc n275 r-0.109 win0.309 pay1.91 w-1.3 vs n380 r0.155 win0.405 pay1.83 w-1.3 | hold n351 r-0.29 win0.305 pay1.42 w-1.3 vs n688 r-0.334 win0.259 pay1.64 w-1.3 
+ROW BRF_S 线下·二线领 | disc n92 r0.09 win0.391 pay1.76 w-1.3 vs n189 r-0.161 win0.317 pay1.67 w-1.3 | hold n168 r-0.111 win0.333 pay1.7 w-1.3 vs n313 r0.189 win0.403 pay1.92 w-1.3 
+BOARD 2026-11-19 线下·主流领 home: -
+ARMED BTC 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 62581.174498, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 58768.51, "broke_at": "2026-11-25T04:00:00+00:00", "valid": true, "retest_zone": [58768.51, 58592.20447], "cancel_if_close_beyond": 59356.1951, "wait_bars_left": 11, "home_today": false}, {"rule": "BRF_S", "level": 58768.51, "broke_at": "2026-11-25T04:0
+ARMED ETH 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 1765.38364, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 1648.35, "broke_at": "2026-11-25T04:00:00+00:00", "valid": true, "retest_zone": [1648.35, 1643.40495], "cancel_if_close_beyond": 1664.8335, "wait_bars_left": 11, "home_today": false}, {"rule": "BRF_S", "level": 1648.35, "broke_at": "2026-11-25T04:00:00+00
+ARMED SOL 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 74.405341, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 68.5, "broke_at": "2026-11-25T04:00:00+00:00", "valid": true, "retest_zone": [68.5, 68.2945], "cancel_if_close_beyond": 69.185, "wait_bars_left": 11, "home_today": false}, {"rule": "BRF_S", "level": 68.5, "broke_at": "2026-11-25T04:00:00+00:00", "valid": t
+ARMED BNB 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 567.463691, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED XRP 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 0.967742, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 0.9093, "broke_at": "2026-11-25T08:00:00+00:00", "valid": true, "retest_zone": [0.9093, 0.906572], "cancel_if_close_beyond": 0.918393, "wait_bars_left": 12, "home_today": false}, {"rule": "BRF_S", "level": 0.9093, "broke_at": "2026-11-25T08:00:00+00:00", "v
+ARMED ADA 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 0.151422, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 0.1409, "broke_at": "2026-11-25T08:00:00+00:00", "valid": true, "retest_zone": [0.1409, 0.140477], "cancel_if_close_beyond": 0.142309, "wait_bars_left": 12, "home_today": false}, {"rule": "BRF_S", "level": 0.1409, "broke_at": "2026-11-25T08:00:00+00:00", "v
+ARMED AVAX 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 6.957464, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 6.423, "broke_at": "2026-11-25T08:00:00+00:00", "valid": true, "retest_zone": [6.423, 6.403731], "cancel_if_close_beyond": 6.48723, "wait_bars_left": 12, "home_today": false}, {"rule": "BRF_S", "level": 6.423, "broke_at": "2026-11-25T08:00:00+00:00", "valid
+ARMED DOGE 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 0.057644, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 0.05376, "broke_at": "2026-11-25T08:00:00+00:00", "valid": true, "retest_zone": [0.05376, 0.053599], "cancel_if_close_beyond": 0.054298, "wait_bars_left": 12, "home_today": false}, {"rule": "BRF_S", "level": 0.05376, "broke_at": "2026-11-25T08:00:00+00:00",
+ARMED LINK 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 9.19633, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED NEAR 2026-10-23T04:00:00+00:00 down [{"rule": "UB_S", "limit": 5.364856, "stop": 5.461902, "stop_dist": 0.0181, "valid": true, "notional_pct_of_equity_at_4pct_risk": 2.21, "home_today": false}]
+ARMED SUI 2026-11-25T08:00:00+00:00 down [{"rule": "UB_S", "limit": 0.69589, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}, {"rule": "BR_S", "level": 0.6337, "broke_at": "2026-11-25T08:00:00+00:00", "valid": true, "retest_zone": [0.6337, 0.631799], "cancel_if_close_beyond": 0.640037, "wait_bars_left": 12, "home_today": false}, {"rule": "BRF_S", "level": 0.6337, "broke_at": "2026-11-25T08:00:00+00:00", "va
+WROTE docs/research/s916_results.json
