@@ -1,0 +1,5898 @@
+{
+ "as_of": "2026-11-25",
+ "source": "companiesmarketcap.com industry rankings, first page (top 100 by market cap)",
+ "floor_bn": 10.0,
+ "cells": [
+  {
+   "industry": "汽车",
+   "category": "automakers",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 3,
+    "name": "BYD",
+    "ticker": "002594.SZ",
+    "slug": "byd",
+    "mcap_bn": 105.57,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 4,
+    "name": "Xiaomi",
+    "ticker": "XIACF",
+    "slug": "xiaomi",
+    "mcap_bn": 91.32,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "汽车",
+   "category": "automakers",
+   "region": "印度",
+   "leader": {
+    "rank": 8,
+    "name": "Maruti Suzuki India",
+    "ticker": "MARUTI.NS",
+    "slug": "maruti-suzuki-india",
+    "mcap_bn": 47.41,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 10,
+    "name": "Mahindra & Mahindra",
+    "ticker": "M&M.NS",
+    "slug": "mahindra-&-mahindra",
+    "mcap_bn": 45.07,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "汽车",
+   "category": "automakers",
+   "region": "日本",
+   "leader": {
+    "rank": 2,
+    "name": "Toyota",
+    "ticker": "TM",
+    "slug": "toyota",
+    "mcap_bn": 249.0,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 11,
+    "name": "Honda",
+    "ticker": "HMC",
+    "slug": "honda",
+    "mcap_bn": 43.16,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "汽车",
+   "category": "automakers",
+   "region": "欧洲",
+   "leader": {
+    "rank": 5,
+    "name": "Ferrari",
+    "ticker": "RACE",
+    "slug": "ferrari",
+    "mcap_bn": 69.94,
+    "country": "Italy"
+   },
+   "runner_up": {
+    "rank": 12,
+    "name": "Porsche",
+    "ticker": "P911.DE",
+    "slug": "porsche",
+    "mcap_bn": 42.64,
+    "country": "Germany"
+   }
+  },
+  {
+   "industry": "汽车",
+   "category": "automakers",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Tesla",
+    "ticker": "TSLA",
+    "slug": "tesla",
+    "mcap_bn": 1523.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "General Motors",
+    "ticker": "GM",
+    "slug": "general-motors",
+    "mcap_bn": 68.86,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "汽车",
+   "category": "automakers",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 7,
+    "name": "Hyundai",
+    "ticker": "005380.KS",
+    "slug": "hyundai",
+    "mcap_bn": 54.26,
+    "country": "S. Korea"
+   },
+   "runner_up": {
+    "rank": 16,
+    "name": "Kia",
+    "ticker": "000270.KS",
+    "slug": "kia",
+    "mcap_bn": 27.37,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 36,
+    "name": "Al Rajhi Bank",
+    "ticker": "1120.SR",
+    "slug": "al-rajhi-bank",
+    "mcap_bn": 97.79,
+    "country": "S. Arabia"
+   },
+   "runner_up": {
+    "rank": 52,
+    "name": "First Abu Dhabi Bank",
+    "ticker": "FAB.AE",
+    "slug": "first-abu-dhabi-bank",
+    "mcap_bn": 65.33,
+    "country": "UAE"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 2,
+    "name": "China Construction Bank",
+    "ticker": "601939.SS",
+    "slug": "china-construction-bank",
+    "mcap_bn": 487.04,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "Agricultural Bank of China",
+    "ticker": "601288.SS",
+    "slug": "agricultural-bank-of-china",
+    "mcap_bn": 415.13,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "加拿大",
+   "leader": {
+    "rank": 9,
+    "name": "Royal Bank Of Canada",
+    "ticker": "RY",
+    "slug": "royal-bank-of-canada",
+    "mcap_bn": 260.53,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 14,
+    "name": "Toronto Dominion Bank",
+    "ticker": "TD",
+    "slug": "toronto-dominion-bank",
+    "mcap_bn": 188.9,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "印度",
+   "leader": {
+    "rank": 21,
+    "name": "HDFC Bank",
+    "ticker": "HDB",
+    "slug": "hdfc-bank",
+    "mcap_bn": 139.57,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 24,
+    "name": "ICICI Bank",
+    "ticker": "IBN",
+    "slug": "icici-bank",
+    "mcap_bn": 127.41,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "拉美",
+   "leader": {
+    "rank": 48,
+    "name": "Itaú Unibanco",
+    "ticker": "ITUB",
+    "slug": "itau-unibanco",
+    "mcap_bn": 73.73,
+    "country": "Brazil"
+   },
+   "runner_up": {
+    "rank": 63,
+    "name": "Nu Holdings",
+    "ticker": "NU",
+    "slug": "nu-holdings",
+    "mcap_bn": 57.09,
+    "country": "Brazil"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "日本",
+   "leader": {
+    "rank": 12,
+    "name": "Mitsubishi UFJ Financial",
+    "ticker": "MUFG",
+    "slug": "mitsubishi-ufj-financial",
+    "mcap_bn": 217.85,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 20,
+    "name": "Sumitomo Mitsui Financial Group",
+    "ticker": "SMFG",
+    "slug": "sumitomo-mitsui-financial-group",
+    "mcap_bn": 140.64,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "欧洲",
+   "leader": {
+    "rank": 7,
+    "name": "HSBC",
+    "ticker": "HSBC",
+    "slug": "hsbc",
+    "mcap_bn": 283.63,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 17,
+    "name": "Santander",
+    "ticker": "SAN",
+    "slug": "santander",
+    "mcap_bn": 165.37,
+    "country": "Spain"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 15,
+    "name": "Commonwealth Bank",
+    "ticker": "CBA.AX",
+    "slug": "commonwealth-bank",
+    "mcap_bn": 187.53,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 19,
+    "name": "DBS Group",
+    "ticker": "D05.SI",
+    "slug": "dbs",
+    "mcap_bn": 146.88,
+    "country": "Singapore"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "JPMorgan Chase",
+    "ticker": "JPM",
+    "slug": "jp-morgan-chase",
+    "mcap_bn": 840.92,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Bank of America",
+    "ticker": "BAC",
+    "slug": "bank-of-america",
+    "mcap_bn": 332.17,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "银行",
+   "category": "banks",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 59,
+    "name": "Fubon Financial",
+    "ticker": "2881.TW",
+    "slug": "fubon-financial",
+    "mcap_bn": 59.66,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 71,
+    "name": "Cathay Financial Holding",
+    "ticker": "2882.TW",
+    "slug": "cathay-financial-holding",
+    "mcap_bn": 46.64,
+    "country": "Taiwan"
+   }
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 31,
+    "name": "Teva Pharmaceutical Industries",
+    "ticker": "TEVA",
+    "slug": "teva-pharmaceutical-industries",
+    "mcap_bn": 46.95,
+    "country": "Israel"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 20,
+    "name": "WuXi AppTec",
+    "ticker": "2359.HK",
+    "slug": "wuxi-apptec",
+    "mcap_bn": 72.21,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 30,
+    "name": "Jiangsu Hengrui Medicine",
+    "ticker": "600276.SS",
+    "slug": "jiangsu-hengrui-medicine",
+    "mcap_bn": 47.51,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "印度",
+   "leader": {
+    "rank": 29,
+    "name": "Sun Pharmaceutical",
+    "ticker": "SUNPHARMA.NS",
+    "slug": "sun-pharmaceutical",
+    "mcap_bn": 48.03,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 43,
+    "name": "Divis Laboratories",
+    "ticker": "DIVISLAB.NS",
+    "slug": "divis-laboratories",
+    "mcap_bn": 32.01,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "日本",
+   "leader": {
+    "rank": 19,
+    "name": "Chugai Pharmaceutical",
+    "ticker": "4519.T",
+    "slug": "chugai-pharmaceutical",
+    "mcap_bn": 73.08,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "Takeda Pharmaceutical",
+    "ticker": "TAK",
+    "slug": "takeda-pharmaceutical",
+    "mcap_bn": 71.96,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "欧洲",
+   "leader": {
+    "rank": 4,
+    "name": "Roche",
+    "ticker": "RO.SW",
+    "slug": "roche",
+    "mcap_bn": 392.63,
+    "country": "Switzerland"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Novartis",
+    "ticker": "NVS",
+    "slug": "novartis",
+    "mcap_bn": 290.62,
+    "country": "Switzerland"
+   }
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 22,
+    "name": "CSL",
+    "ticker": "CSL.AX",
+    "slug": "csl",
+    "mcap_bn": 65.29,
+    "country": "Australia"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Eli Lilly",
+    "ticker": "LLY",
+    "slug": "eli-lilly",
+    "mcap_bn": 1249.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Johnson & Johnson",
+    "ticker": "JNJ",
+    "slug": "johnson-and-johnson",
+    "mcap_bn": 663.14,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "生物科技",
+   "category": "biotech",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 32,
+    "name": "Samsung Biologics",
+    "ticker": "207940.KS",
+    "slug": "samsung-biologics",
+    "mcap_bn": 46.63,
+    "country": "S. Korea"
+   },
+   "runner_up": {
+    "rank": 40,
+    "name": "Celltrion",
+    "ticker": "068270.KS",
+    "slug": "celltrion",
+    "mcap_bn": 35.43,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 12,
+    "name": "SABIC",
+    "ticker": "2010.SR",
+    "slug": "sabic",
+    "mcap_bn": 37.85,
+    "country": "S. Arabia"
+   },
+   "runner_up": {
+    "rank": 19,
+    "name": "Borouge",
+    "ticker": "BOROUGE.AE",
+    "slug": "borouge",
+    "mcap_bn": 18.98,
+    "country": "UAE"
+   }
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 14,
+    "name": "Wanhua Chemical",
+    "ticker": "600309.SS",
+    "slug": "wanhua-chemical",
+    "mcap_bn": 32.46,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "Hengli Petrochemical",
+    "ticker": "600346.SS",
+    "slug": "hengli-petrochemical",
+    "mcap_bn": 16.97,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "拉美",
+   "leader": {
+    "rank": 24,
+    "name": "Sociedad Química y Minera",
+    "ticker": "SQM",
+    "slug": "sqm",
+    "mcap_bn": 13.91,
+    "country": "Chile"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "日本",
+   "leader": {
+    "rank": 5,
+    "name": "Shin-Etsu Chemical",
+    "ticker": "4063.T",
+    "slug": "shin-etsu-chemical",
+    "mcap_bn": 59.76,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 23,
+    "name": "Nippon Sanso",
+    "ticker": "4091.T",
+    "slug": "nippon-sanso",
+    "mcap_bn": 15.54,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "欧洲",
+   "leader": {
+    "rank": 1,
+    "name": "Linde",
+    "ticker": "LIN",
+    "slug": "linde",
+    "mcap_bn": 237.34,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Air Liquide",
+    "ticker": "AI.PA",
+    "slug": "air-liquide",
+    "mcap_bn": 130.47,
+    "country": "France"
+   }
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 6,
+    "name": "Wesfarmers",
+    "ticker": "WES.AX",
+    "slug": "wesfarmers",
+    "mcap_bn": 57.25,
+    "country": "Australia"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "美国",
+   "leader": {
+    "rank": 4,
+    "name": "Air Products and Chemicals",
+    "ticker": "APD",
+    "slug": "air-products-and-chemicals",
+    "mcap_bn": 67.73,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 9,
+    "name": "Corteva",
+    "ticker": "CTVA",
+    "slug": "corteva",
+    "mcap_bn": 51.8,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "化工",
+   "category": "chemicals",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 8,
+    "name": "Nan Ya Plastics",
+    "ticker": "1303.TW",
+    "slug": "nan-ya-plastics",
+    "mcap_bn": 54.77,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 32,
+    "name": "LG Chem",
+    "ticker": "051910.KS",
+    "slug": "lg-chem",
+    "mcap_bn": 11.23,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 12,
+    "name": "TAQA",
+    "ticker": "TAQA.AE",
+    "slug": "taqa",
+    "mcap_bn": 81.43,
+    "country": "UAE"
+   },
+   "runner_up": {
+    "rank": 29,
+    "name": "Dubai Electricity and Water Authority (DEWA)",
+    "ticker": "DEWA.AE",
+    "slug": "dubai-electricity-and-water-authority",
+    "mcap_bn": 39.2,
+    "country": "UAE"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 4,
+    "name": "CATL",
+    "ticker": "300750.SZ",
+    "slug": "catl",
+    "mcap_bn": 158.18,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 5,
+    "name": "China Yangtze Power",
+    "ticker": "600900.SS",
+    "slug": "china-yangtze-power",
+    "mcap_bn": 116.39,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "加拿大",
+   "leader": {
+    "rank": 39,
+    "name": "Fortis",
+    "ticker": "FTS",
+    "slug": "fortis",
+    "mcap_bn": 30.31,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 52,
+    "name": "Hydro One",
+    "ticker": "H.TO",
+    "slug": "hydro-one",
+    "mcap_bn": 23.94,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "印度",
+   "leader": {
+    "rank": 26,
+    "name": "Adani Power",
+    "ticker": "ADANIPOWER.NS",
+    "slug": "adani-power",
+    "mcap_bn": 43.15,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 33,
+    "name": "NTPC Limited",
+    "ticker": "NTPC.NS",
+    "slug": "ntpc-limited",
+    "mcap_bn": 32.92,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "拉美",
+   "leader": {
+    "rank": 64,
+    "name": "AXIA Energia SA",
+    "ticker": "AXIA3.SA",
+    "slug": "axia-energia-sa",
+    "mcap_bn": 18.68,
+    "country": "Brazil"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "日本",
+   "leader": {
+    "rank": 69,
+    "name": "KEPCO",
+    "ticker": "9503.T",
+    "slug": "kepco",
+    "mcap_bn": 17.64,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 86,
+    "name": "Chubu Electric Power",
+    "ticker": "9502.T",
+    "slug": "chubu-electric-power",
+    "mcap_bn": 11.29,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "欧洲",
+   "leader": {
+    "rank": 3,
+    "name": "Iberdrola",
+    "ticker": "IBE.MC",
+    "slug": "iberdrola",
+    "mcap_bn": 165.15,
+    "country": "Spain"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Siemens Energy",
+    "ticker": "ENR.F",
+    "slug": "siemens-energy",
+    "mcap_bn": 113.06,
+    "country": "Germany"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 70,
+    "name": "Tenaga Nasional",
+    "ticker": "TNABY",
+    "slug": "tenaga-nasional",
+    "mcap_bn": 17.61,
+    "country": "Malaysia"
+   },
+   "runner_up": {
+    "rank": 79,
+    "name": "Origin Energy",
+    "ticker": "ORG.AX",
+    "slug": "origin-energy",
+    "mcap_bn": 14.28,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "GE Vernova",
+    "ticker": "GEV",
+    "slug": "ge-vernova",
+    "mcap_bn": 200.28,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Nextera Energy",
+    "ticker": "NEE",
+    "slug": "nextera-energy",
+    "mcap_bn": 176.11,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "电力",
+   "category": "electricity",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 17,
+    "name": "LG Energy Solution",
+    "ticker": "373220.KS",
+    "slug": "lg-energy-solution",
+    "mcap_bn": 54.8,
+    "country": "S. Korea"
+   },
+   "runner_up": {
+    "rank": 85,
+    "name": "Korea Electric Power",
+    "ticker": "KEP",
+    "slug": "korea-electric-power",
+    "mcap_bn": 11.95,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 43,
+    "name": "Al Rajhi Bank",
+    "ticker": "1120.SR",
+    "slug": "al-rajhi-bank",
+    "mcap_bn": 97.54,
+    "country": "S. Arabia"
+   },
+   "runner_up": {
+    "rank": 64,
+    "name": "First Abu Dhabi Bank",
+    "ticker": "FAB.AE",
+    "slug": "first-abu-dhabi-bank",
+    "mcap_bn": 65.57,
+    "country": "UAE"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 4,
+    "name": "China Construction Bank",
+    "ticker": "601939.SS",
+    "slug": "china-construction-bank",
+    "mcap_bn": 488.13,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 5,
+    "name": "Agricultural Bank of China",
+    "ticker": "601288.SS",
+    "slug": "agricultural-bank-of-china",
+    "mcap_bn": 416.62,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "加拿大",
+   "leader": {
+    "rank": 11,
+    "name": "Royal Bank Of Canada",
+    "ticker": "RY",
+    "slug": "royal-bank-of-canada",
+    "mcap_bn": 260.53,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 17,
+    "name": "Toronto Dominion Bank",
+    "ticker": "TD",
+    "slug": "toronto-dominion-bank",
+    "mcap_bn": 188.9,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "印度",
+   "leader": {
+    "rank": 24,
+    "name": "HDFC Bank",
+    "ticker": "HDB",
+    "slug": "hdfc-bank",
+    "mcap_bn": 139.57,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 29,
+    "name": "ICICI Bank",
+    "ticker": "IBN",
+    "slug": "icici-bank",
+    "mcap_bn": 127.41,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "拉美",
+   "leader": {
+    "rank": 58,
+    "name": "Itaú Unibanco",
+    "ticker": "ITUB",
+    "slug": "itau-unibanco",
+    "mcap_bn": 73.73,
+    "country": "Brazil"
+   },
+   "runner_up": {
+    "rank": 80,
+    "name": "Nu Holdings",
+    "ticker": "NU",
+    "slug": "nu-holdings",
+    "mcap_bn": 57.09,
+    "country": "Brazil"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "日本",
+   "leader": {
+    "rank": 14,
+    "name": "Mitsubishi UFJ Financial",
+    "ticker": "MUFG",
+    "slug": "mitsubishi-ufj-financial",
+    "mcap_bn": 217.85,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 23,
+    "name": "Sumitomo Mitsui Financial Group",
+    "ticker": "SMFG",
+    "slug": "sumitomo-mitsui-financial-group",
+    "mcap_bn": 140.64,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "欧洲",
+   "leader": {
+    "rank": 9,
+    "name": "HSBC",
+    "ticker": "HSBC",
+    "slug": "hsbc",
+    "mcap_bn": 283.63,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 20,
+    "name": "Santander",
+    "ticker": "SAN",
+    "slug": "santander",
+    "mcap_bn": 165.37,
+    "country": "Spain"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 18,
+    "name": "Commonwealth Bank",
+    "ticker": "CBA.AX",
+    "slug": "commonwealth-bank",
+    "mcap_bn": 187.69,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 22,
+    "name": "DBS Group",
+    "ticker": "D05.SI",
+    "slug": "dbs",
+    "mcap_bn": 145.83,
+    "country": "Singapore"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "JPMorgan Chase",
+    "ticker": "JPM",
+    "slug": "jp-morgan-chase",
+    "mcap_bn": 840.92,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Visa",
+    "ticker": "V",
+    "slug": "visa",
+    "mcap_bn": 763.85,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "金融服务",
+   "category": "financial-services",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 74,
+    "name": "Fubon Financial",
+    "ticker": "2881.TW",
+    "slug": "fubon-financial",
+    "mcap_bn": 59.64,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 92,
+    "name": "Cathay Financial Holding",
+    "ticker": "2882.TW",
+    "slug": "cathay-financial-holding",
+    "mcap_bn": 46.62,
+    "country": "Taiwan"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 53,
+    "name": "Almarai",
+    "ticker": "2280.SR",
+    "slug": "almarai",
+    "mcap_bn": 11.29,
+    "country": "S. Arabia"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 12,
+    "name": "Muyuan Foods",
+    "ticker": "002714.SZ",
+    "slug": "muyuan-foods",
+    "mcap_bn": 39.36,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 19,
+    "name": "Foshan Haitian Flavouring and Food",
+    "ticker": "603288.SS",
+    "slug": "foshan-haitian-flavouring-and-food",
+    "mcap_bn": 31.55,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "加拿大",
+   "leader": {
+    "rank": 16,
+    "name": "Restaurant Brands International",
+    "ticker": "QSR",
+    "slug": "rbi",
+    "mcap_bn": 33.75,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "George Weston",
+    "ticker": "WN.TO",
+    "slug": "george-weston",
+    "mcap_bn": 29.66,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "印度",
+   "leader": {
+    "rank": 7,
+    "name": "Hindustan Unilever",
+    "ticker": "HINDUNILVR.NS",
+    "slug": "hindustan-unilever",
+    "mcap_bn": 51.06,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 14,
+    "name": "Eternal (Zomato)",
+    "ticker": "ETERNAL.NS",
+    "slug": "eternal-zomato",
+    "mcap_bn": 35.9,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "拉美",
+   "leader": {
+    "rank": 13,
+    "name": "JBS N.V.",
+    "ticker": "JBS",
+    "slug": "jbs",
+    "mcap_bn": 38.71,
+    "country": "Brazil"
+   },
+   "runner_up": {
+    "rank": 35,
+    "name": "Grupo Bimbo",
+    "ticker": "BIMBOA.MX",
+    "slug": "grupo-bimbo",
+    "mcap_bn": 15.99,
+    "country": "Mexico"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "日本",
+   "leader": {
+    "rank": 26,
+    "name": "Ajinomoto",
+    "ticker": "2802.T",
+    "slug": "ajinomoto",
+    "mcap_bn": 22.8,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 36,
+    "name": "Kirin Holdings",
+    "ticker": "2503.T",
+    "slug": "kirin-holdings",
+    "mcap_bn": 15.01,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "欧洲",
+   "leader": {
+    "rank": 1,
+    "name": "Nestlé",
+    "ticker": "NESN.SW",
+    "slug": "nestle",
+    "mcap_bn": 259.12,
+    "country": "Switzerland"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "Unilever",
+    "ticker": "UL",
+    "slug": "unilever",
+    "mcap_bn": 137.32,
+    "country": "UK"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 39,
+    "name": "Wilmar International",
+    "ticker": "F34.SI",
+    "slug": "wilmar",
+    "mcap_bn": 13.68,
+    "country": "Singapore"
+   },
+   "runner_up": {
+    "rank": 52,
+    "name": "Grab Holdings",
+    "ticker": "GRAB",
+    "slug": "grab",
+    "mcap_bn": 11.34,
+    "country": "Singapore"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "美国",
+   "leader": {
+    "rank": 2,
+    "name": "McDonald",
+    "ticker": "MCD",
+    "slug": "mcdonald",
+    "mcap_bn": 195.06,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 4,
+    "name": "Mondelez International",
+    "ticker": "MDLZ",
+    "slug": "mondelez",
+    "mcap_bn": 83.86,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "食品",
+   "category": "food",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 41,
+    "name": "Uni-President Enterprises",
+    "ticker": "1216.TW",
+    "slug": "uni-president-enterprises",
+    "mcap_bn": 13.08,
+    "country": "Taiwan"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 86,
+    "name": "The Phoenix Holdings",
+    "ticker": "PHOE.TA",
+    "slug": "the-phoenix-holdings-ltd",
+    "mcap_bn": 12.01,
+    "country": "Israel"
+   },
+   "runner_up": {
+    "rank": 97,
+    "name": "Harel Group",
+    "ticker": "HARL.TA",
+    "slug": "harel-group",
+    "mcap_bn": 10.21,
+    "country": "Israel"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 3,
+    "name": "China Life Insurance",
+    "ticker": "601628.SS",
+    "slug": "china-life-insurance",
+    "mcap_bn": 151.79,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 4,
+    "name": "Ping An Insurance",
+    "ticker": "601318.SS",
+    "slug": "ping-an-insurance",
+    "mcap_bn": 149.41,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "加拿大",
+   "leader": {
+    "rank": 19,
+    "name": "Manulife Financial",
+    "ticker": "MFC",
+    "slug": "manulife-financial",
+    "mcap_bn": 68.96,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 22,
+    "name": "Great-West Lifeco",
+    "ticker": "GWO.TO",
+    "slug": "great-west-lifeco",
+    "mcap_bn": 57.94,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "印度",
+   "leader": {
+    "rank": 50,
+    "name": "Life Insurance Corporation of India (LIC)",
+    "ticker": "LICI.NS",
+    "slug": "life-insurance-corporation-of-india",
+    "mcap_bn": 27.73,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 59,
+    "name": "SBI Life Insurance",
+    "ticker": "SBILIFE.NS",
+    "slug": "sbi-life-insurance",
+    "mcap_bn": 19.49,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "拉美",
+   "leader": {
+    "rank": 88,
+    "name": "BB Seguridade Participações",
+    "ticker": "BBSE3.SA",
+    "slug": "bb-seguridade-participacoes",
+    "mcap_bn": 11.96,
+    "country": "Brazil"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "日本",
+   "leader": {
+    "rank": 8,
+    "name": "Tokio Marine",
+    "ticker": "8766.T",
+    "slug": "tokio-marine",
+    "mcap_bn": 103.01,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 28,
+    "name": "MS&AD Insurance",
+    "ticker": "8725.T",
+    "slug": "ms-ad-insurance",
+    "mcap_bn": 46.42,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "欧洲",
+   "leader": {
+    "rank": 2,
+    "name": "Allianz SE",
+    "ticker": "ALV.DE",
+    "slug": "allianz",
+    "mcap_bn": 186.83,
+    "country": "Germany"
+   },
+   "runner_up": {
+    "rank": 5,
+    "name": "Chubb",
+    "ticker": "CB",
+    "slug": "chubb",
+    "mcap_bn": 140.86,
+    "country": "Switzerland"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 51,
+    "name": "QBE Insurance",
+    "ticker": "QBE.AX",
+    "slug": "qbe-insurance",
+    "mcap_bn": 26.36,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 69,
+    "name": "Suncorp",
+    "ticker": "SUN.AX",
+    "slug": "suncorp",
+    "mcap_bn": 14.69,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "UnitedHealth",
+    "ticker": "UNH",
+    "slug": "united-health",
+    "mcap_bn": 301.13,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Progressive",
+    "ticker": "PGR",
+    "slug": "progressive",
+    "mcap_bn": 133.07,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "保险",
+   "category": "insurance",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 27,
+    "name": "Cathay Financial Holding",
+    "ticker": "2882.TW",
+    "slug": "cathay-financial-holding",
+    "mcap_bn": 46.57,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 41,
+    "name": "Samsung Life Insurance",
+    "ticker": "032830.KS",
+    "slug": "samsung-life-insurance",
+    "mcap_bn": 33.03,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 37,
+    "name": "Naspers",
+    "ticker": "NPSNY",
+    "slug": "naspers",
+    "mcap_bn": 27.64,
+    "country": "South Africa"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 4,
+    "name": "Tencent",
+    "ticker": "TCEHY",
+    "slug": "tencent",
+    "mcap_bn": 399.98,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Alibaba",
+    "ticker": "BABA",
+    "slug": "alibaba",
+    "mcap_bn": 214.04,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "加拿大",
+   "leader": {
+    "rank": 7,
+    "name": "Shopify",
+    "ticker": "SHOP",
+    "slug": "shopify",
+    "mcap_bn": 172.77,
+    "country": "Canada"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "印度",
+   "leader": {
+    "rank": 29,
+    "name": "Eternal (Zomato)",
+    "ticker": "ETERNAL.NS",
+    "slug": "eternal-zomato",
+    "mcap_bn": 35.9,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 56,
+    "name": "Paytm",
+    "ticker": "PAYTM.NS",
+    "slug": "paytm",
+    "mcap_bn": 11.92,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "拉美",
+   "leader": {
+    "rank": 18,
+    "name": "MercadoLibre",
+    "ticker": "MELI",
+    "slug": "mercadolibre",
+    "mcap_bn": 72.24,
+    "country": "Argentina"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "日本",
+   "leader": {
+    "rank": 42,
+    "name": "LY Corporation",
+    "ticker": "4689.T",
+    "slug": "z-holdings",
+    "mcap_bn": 21.66,
+    "country": "Japan"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "欧洲",
+   "leader": {
+    "rank": 12,
+    "name": "Spotify",
+    "ticker": "SPOT",
+    "slug": "spotify",
+    "mcap_bn": 120.38,
+    "country": "Sweden"
+   },
+   "runner_up": {
+    "rank": 31,
+    "name": "Bending Spoons",
+    "ticker": "BSP",
+    "slug": "bending-spoons",
+    "mcap_bn": 31.04,
+    "country": "Italy"
+   }
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 27,
+    "name": "Sea Limited",
+    "ticker": "SE",
+    "slug": "sea",
+    "mcap_bn": 40.13,
+    "country": "Singapore"
+   },
+   "runner_up": {
+    "rank": 47,
+    "name": "REA Group",
+    "ticker": "REA.AX",
+    "slug": "rea-group",
+    "mcap_bn": 13.88,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Alphabet (Google)",
+    "ticker": "GOOG",
+    "slug": "alphabet-google",
+    "mcap_bn": 3436.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Amazon",
+    "ticker": "AMZN",
+    "slug": "amazon",
+    "mcap_bn": 2761.0,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "互联网",
+   "category": "internet",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 43,
+    "name": "Naver",
+    "ticker": "035420.KS",
+    "slug": "naver",
+    "mcap_bn": 18.29,
+    "country": "S. Korea"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "奢侈品",
+   "category": "luxury-goods",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 8,
+    "name": "Chow Tai Fook",
+    "ticker": "1929.HK",
+    "slug": "chow-tai-fook",
+    "mcap_bn": 14.44,
+    "country": "Hong Kong"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "奢侈品",
+   "category": "luxury-goods",
+   "region": "印度",
+   "leader": {
+    "rank": 6,
+    "name": "Titan Company",
+    "ticker": "TITAN.NS",
+    "slug": "titan-company",
+    "mcap_bn": 44.69,
+    "country": "India"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "奢侈品",
+   "category": "luxury-goods",
+   "region": "欧洲",
+   "leader": {
+    "rank": 1,
+    "name": "LVMH",
+    "ticker": "MC.PA",
+    "slug": "lvmh",
+    "mcap_bn": 208.14,
+    "country": "France"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Hermès",
+    "ticker": "RMS.PA",
+    "slug": "hermès",
+    "mcap_bn": 141.91,
+    "country": "France"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 15,
+    "name": "Foxconn Industrial Internet",
+    "ticker": "601138.SS",
+    "slug": "foxconn-industrial-internet",
+    "mcap_bn": 122.01,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 16,
+    "name": "Midea",
+    "ticker": "000333.SZ",
+    "slug": "midea",
+    "mcap_bn": 107.93,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "加拿大",
+   "leader": {
+    "rank": 73,
+    "name": "Celestica",
+    "ticker": "CLS",
+    "slug": "celestica",
+    "mcap_bn": 26.9,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 95,
+    "name": "Bombardier",
+    "ticker": "BBD-B.TO",
+    "slug": "bombardier",
+    "mcap_bn": 20.1,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "印度",
+   "leader": {
+    "rank": 40,
+    "name": "Maruti Suzuki India",
+    "ticker": "MARUTI.NS",
+    "slug": "maruti-suzuki-india",
+    "mcap_bn": 47.41,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 82,
+    "name": "Eicher Motors",
+    "ticker": "EICHERMOT.NS",
+    "slug": "eicher-motors",
+    "mcap_bn": 24.15,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "日本",
+   "leader": {
+    "rank": 6,
+    "name": "Toyota",
+    "ticker": "TM",
+    "slug": "toyota",
+    "mcap_bn": 249.0,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 22,
+    "name": "KIOXIA Holdings Corporation",
+    "ticker": "285A.T",
+    "slug": "kioxia-holdings-corporation",
+    "mcap_bn": 80.58,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "欧洲",
+   "leader": {
+    "rank": 10,
+    "name": "Airbus",
+    "ticker": "AIR.PA",
+    "slug": "airbus",
+    "mcap_bn": 168.37,
+    "country": "Netherlands"
+   },
+   "runner_up": {
+    "rank": 11,
+    "name": "Rolls-Royce Holdings",
+    "ticker": "RR.L",
+    "slug": "rolls-royce-holdings",
+    "mcap_bn": 142.42,
+    "country": "UK"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 28,
+    "name": "Delta Electronics (Thailand)",
+    "ticker": "DELTA.BK",
+    "slug": "delta-electronics-thailand",
+    "mcap_bn": 67.58,
+    "country": "Thailand"
+   },
+   "runner_up": {
+    "rank": 71,
+    "name": "Flex",
+    "ticker": "FLEX",
+    "slug": "flex",
+    "mcap_bn": 27.31,
+    "country": "Singapore"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "美国",
+   "leader": {
+    "rank": 2,
+    "name": "Tesla",
+    "ticker": "TSLA",
+    "slug": "tesla",
+    "mcap_bn": 1523.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 4,
+    "name": "Intel",
+    "ticker": "INTC",
+    "slug": "intel",
+    "mcap_bn": 317.09,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "制造",
+   "category": "manufacturing",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 1,
+    "name": "TSMC",
+    "ticker": "TSM",
+    "slug": "tsmc",
+    "mcap_bn": 1885.0,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "Samsung",
+    "ticker": "005930.KS",
+    "slug": "samsung",
+    "mcap_bn": 917.67,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "医疗器械",
+   "category": "medical-devices",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 5,
+    "name": "WuXi AppTec",
+    "ticker": "2359.HK",
+    "slug": "wuxi-apptec",
+    "mcap_bn": 71.68,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 11,
+    "name": "Mindray",
+    "ticker": "300760.SZ",
+    "slug": "mindray",
+    "mcap_bn": 32.58,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "医疗器械",
+   "category": "medical-devices",
+   "region": "日本",
+   "leader": {
+    "rank": 13,
+    "name": "Terumo",
+    "ticker": "4543.T",
+    "slug": "terumo",
+    "mcap_bn": 25.13,
+    "country": "Japan"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "医疗器械",
+   "category": "medical-devices",
+   "region": "欧洲",
+   "leader": {
+    "rank": 4,
+    "name": "Medtronic",
+    "ticker": "MDT",
+    "slug": "medtronic",
+    "mcap_bn": 122.96,
+    "country": "Ireland"
+   },
+   "runner_up": {
+    "rank": 9,
+    "name": "Alcon",
+    "ticker": "ALC",
+    "slug": "alcon",
+    "mcap_bn": 36.81,
+    "country": "Switzerland"
+   }
+  },
+  {
+   "industry": "医疗器械",
+   "category": "medical-devices",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 18,
+    "name": "Fisher & Paykel Healthcare",
+    "ticker": "FPH.NZ",
+    "slug": "fisher-paykel-healthcare",
+    "mcap_bn": 15.91,
+    "country": "New Zealand"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "医疗器械",
+   "category": "medical-devices",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Abbott Laboratories",
+    "ticker": "ABT",
+    "slug": "abbott-laboratories",
+    "mcap_bn": 182.52,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Intuitive Surgical",
+    "ticker": "ISRG",
+    "slug": "intuitive-surgical",
+    "mcap_bn": 150.6,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 11,
+    "name": "Ma'aden",
+    "ticker": "1211.SR",
+    "slug": "maaden",
+    "mcap_bn": 57.98,
+    "country": "S. Arabia"
+   },
+   "runner_up": {
+    "rank": 17,
+    "name": "AngloGold Ashanti",
+    "ticker": "AU",
+    "slug": "anglogold-ashanti",
+    "mcap_bn": 39.21,
+    "country": "South Africa"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 2,
+    "name": "China Shenhua Energy",
+    "ticker": "601088.SS",
+    "slug": "china-shenhua-energy",
+    "mcap_bn": 166.01,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Zijin Mining",
+    "ticker": "601899.SS",
+    "slug": "zijin-mining",
+    "mcap_bn": 92.79,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "加拿大",
+   "leader": {
+    "rank": 7,
+    "name": "Agnico Eagle Mines",
+    "ticker": "AEM",
+    "slug": "agnico-eagle-mines",
+    "mcap_bn": 80.73,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 12,
+    "name": "Barrick Gold",
+    "ticker": "B",
+    "slug": "barrick-gold",
+    "mcap_bn": 55.24,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "印度",
+   "leader": {
+    "rank": 27,
+    "name": "Coal India",
+    "ticker": "COALINDIA.NS",
+    "slug": "coal-india",
+    "mcap_bn": 25.34,
+    "country": "India"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "拉美",
+   "leader": {
+    "rank": 8,
+    "name": "Grupo México",
+    "ticker": "GMBXF",
+    "slug": "grupo-mexico",
+    "mcap_bn": 80.67,
+    "country": "Mexico"
+   },
+   "runner_up": {
+    "rank": 16,
+    "name": "Vale",
+    "ticker": "VALE",
+    "slug": "vale",
+    "mcap_bn": 41.7,
+    "country": "Brazil"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "欧洲",
+   "leader": {
+    "rank": 4,
+    "name": "Rio Tinto",
+    "ticker": "RIO",
+    "slug": "rio-tinto",
+    "mcap_bn": 122.16,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 10,
+    "name": "Glencore",
+    "ticker": "GLCNF",
+    "slug": "glencore",
+    "mcap_bn": 70.88,
+    "country": "Switzerland"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 1,
+    "name": "BHP Group",
+    "ticker": "BHP",
+    "slug": "bhp-group",
+    "mcap_bn": 179.42,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 23,
+    "name": "Fortescue",
+    "ticker": "FMG.AX",
+    "slug": "fortescue",
+    "mcap_bn": 27.9,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "矿业",
+   "category": "mining",
+   "region": "美国",
+   "leader": {
+    "rank": 3,
+    "name": "Southern Copper",
+    "ticker": "SCCO",
+    "slug": "southern-copper",
+    "mcap_bn": 122.29,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 5,
+    "name": "Newmont",
+    "ticker": "NEM",
+    "slug": "newmont",
+    "mcap_bn": 104.67,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 1,
+    "name": "Saudi Aramco",
+    "ticker": "2222.SR",
+    "slug": "saudi-aramco",
+    "mcap_bn": 1695.0,
+    "country": "S. Arabia"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "TAQA",
+    "ticker": "TAQA.AE",
+    "slug": "taqa",
+    "mcap_bn": 81.43,
+    "country": "UAE"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 5,
+    "name": "PetroChina",
+    "ticker": "0857.HK",
+    "slug": "petro-china",
+    "mcap_bn": 223.34,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 8,
+    "name": "CNOOC",
+    "ticker": "0883.HK",
+    "slug": "cnooc",
+    "mcap_bn": 126.42,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "加拿大",
+   "leader": {
+    "rank": 13,
+    "name": "Enbridge",
+    "ticker": "ENB",
+    "slug": "enbridge",
+    "mcap_bn": 101.12,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 19,
+    "name": "Canadian Natural Resources",
+    "ticker": "CNQ",
+    "slug": "canadian-natural-resources",
+    "mcap_bn": 89.01,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "印度",
+   "leader": {
+    "rank": 53,
+    "name": "Oil & Natural Gas",
+    "ticker": "ONGC.NS",
+    "slug": "oil-and-natural-gas",
+    "mcap_bn": 30.17,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 65,
+    "name": "Indian Oil",
+    "ticker": "IOC.NS",
+    "slug": "indian-oil",
+    "mcap_bn": 22.04,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "拉美",
+   "leader": {
+    "rank": 12,
+    "name": "Petrobras",
+    "ticker": "PBR",
+    "slug": "petrobras",
+    "mcap_bn": 101.88,
+    "country": "Brazil"
+   },
+   "runner_up": {
+    "rank": 56,
+    "name": "Ecopetrol",
+    "ticker": "EC",
+    "slug": "ecopetrol",
+    "mcap_bn": 27.44,
+    "country": "Colombia"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "日本",
+   "leader": {
+    "rank": 61,
+    "name": "Inpex",
+    "ticker": "1605.T",
+    "slug": "inpex",
+    "mcap_bn": 23.26,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 69,
+    "name": "ENEOS Holdings",
+    "ticker": "5020.T",
+    "slug": "eneos-holdings",
+    "mcap_bn": 18.74,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "欧洲",
+   "leader": {
+    "rank": 4,
+    "name": "Shell",
+    "ticker": "SHEL",
+    "slug": "shell",
+    "mcap_bn": 262.24,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "TotalEnergies",
+    "ticker": "TTE",
+    "slug": "totalenergies",
+    "mcap_bn": 184.51,
+    "country": "France"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 45,
+    "name": "Woodside Energy",
+    "ticker": "WDS",
+    "slug": "woodside-energy",
+    "mcap_bn": 37.01,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 50,
+    "name": "PTT PCL",
+    "ticker": "PTT-R.BK",
+    "slug": "ptt-pcl",
+    "mcap_bn": 31.19,
+    "country": "Thailand"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "美国",
+   "leader": {
+    "rank": 2,
+    "name": "Exxon Mobil",
+    "ticker": "XOM",
+    "slug": "exxon-mobil",
+    "mcap_bn": 640.03,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "Chevron",
+    "ticker": "CVX",
+    "slug": "chevron",
+    "mcap_bn": 402.28,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "石油天然气",
+   "category": "oil-gas",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 62,
+    "name": "Formosa Petrochemical",
+    "ticker": "6505.TW",
+    "slug": "formosa-petrochemical",
+    "mcap_bn": 23.26,
+    "country": "Taiwan"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 32,
+    "name": "Teva Pharmaceutical Industries",
+    "ticker": "TEVA",
+    "slug": "teva-pharmaceutical-industries",
+    "mcap_bn": 46.78,
+    "country": "Israel"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 20,
+    "name": "WuXi AppTec",
+    "ticker": "2359.HK",
+    "slug": "wuxi-apptec",
+    "mcap_bn": 72.22,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 30,
+    "name": "Jiangsu Hengrui Medicine",
+    "ticker": "600276.SS",
+    "slug": "jiangsu-hengrui-medicine",
+    "mcap_bn": 47.49,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "印度",
+   "leader": {
+    "rank": 29,
+    "name": "Sun Pharmaceutical",
+    "ticker": "SUNPHARMA.NS",
+    "slug": "sun-pharmaceutical",
+    "mcap_bn": 48.13,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 42,
+    "name": "Divis Laboratories",
+    "ticker": "DIVISLAB.NS",
+    "slug": "divis-laboratories",
+    "mcap_bn": 32.07,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "日本",
+   "leader": {
+    "rank": 19,
+    "name": "Chugai Pharmaceutical",
+    "ticker": "4519.T",
+    "slug": "chugai-pharmaceutical",
+    "mcap_bn": 73.09,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "Takeda Pharmaceutical",
+    "ticker": "TAK",
+    "slug": "takeda-pharmaceutical",
+    "mcap_bn": 72.2,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "欧洲",
+   "leader": {
+    "rank": 4,
+    "name": "Roche",
+    "ticker": "RO.SW",
+    "slug": "roche",
+    "mcap_bn": 393.15,
+    "country": "Switzerland"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Novartis",
+    "ticker": "NVS",
+    "slug": "novartis",
+    "mcap_bn": 291.62,
+    "country": "Switzerland"
+   }
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 23,
+    "name": "CSL",
+    "ticker": "CSL.AX",
+    "slug": "csl",
+    "mcap_bn": 65.18,
+    "country": "Australia"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Eli Lilly",
+    "ticker": "LLY",
+    "slug": "eli-lilly",
+    "mcap_bn": 1253.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Johnson & Johnson",
+    "ticker": "JNJ",
+    "slug": "johnson-and-johnson",
+    "mcap_bn": 665.52,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "制药",
+   "category": "pharmaceuticals",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 39,
+    "name": "Celltrion",
+    "ticker": "068270.KS",
+    "slug": "celltrion",
+    "mcap_bn": 35.4,
+    "country": "S. Korea"
+   },
+   "runner_up": {
+    "rank": 71,
+    "name": "PharmaEssentia",
+    "ticker": "6446.TW",
+    "slug": "pharmaessentia",
+    "mcap_bn": 14.45,
+    "country": "Taiwan"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 17,
+    "name": "Emaar Properties",
+    "ticker": "EMAAR.AE",
+    "slug": "emaar-properties",
+    "mcap_bn": 29.93,
+    "country": "UAE"
+   },
+   "runner_up": {
+    "rank": 27,
+    "name": "Al Dar Properties",
+    "ticker": "ALDAR.AE",
+    "slug": "al-dar-properties",
+    "mcap_bn": 18.73,
+    "country": "UAE"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 11,
+    "name": "Sun Hung Kai Properties",
+    "ticker": "0016.HK",
+    "slug": "sun-hung-kai-properties",
+    "mcap_bn": 39.55,
+    "country": "Hong Kong"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "China Resources Land",
+    "ticker": "1109.HK",
+    "slug": "china-resources-land",
+    "mcap_bn": 25.4,
+    "country": "Hong Kong"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "印度",
+   "leader": {
+    "rank": 23,
+    "name": "DLF",
+    "ticker": "DLF.NS",
+    "slug": "dlf",
+    "mcap_bn": 20.96,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 52,
+    "name": "Lodha Group",
+    "ticker": "LODHA.NS",
+    "slug": "lodha-group",
+    "mcap_bn": 13.14,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "日本",
+   "leader": {
+    "rank": 18,
+    "name": "Mitsubishi Estate",
+    "ticker": "8802.T",
+    "slug": "mitsubishi-estate",
+    "mcap_bn": 29.46,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 20,
+    "name": "Mitsui Fudosan",
+    "ticker": "8801.T",
+    "slug": "mitsui-fudosan",
+    "mcap_bn": 26.14,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "欧洲",
+   "leader": {
+    "rank": 35,
+    "name": "SEGRO",
+    "ticker": "SGRO.L",
+    "slug": "segro",
+    "mcap_bn": 16.04,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 38,
+    "name": "Vonovia",
+    "ticker": "VNA.DE",
+    "slug": "vonovia",
+    "mcap_bn": 15.72,
+    "country": "Germany"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 13,
+    "name": "Goodman Group",
+    "ticker": "GMG.AX",
+    "slug": "goodman",
+    "mcap_bn": 37.53,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 26,
+    "name": "Vinhomes",
+    "ticker": "VHM.VN",
+    "slug": "vinhomes",
+    "mcap_bn": 19.3,
+    "country": "Vietnam"
+   }
+  },
+  {
+   "industry": "房地产",
+   "category": "real-estate",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Welltower",
+    "ticker": "WELL",
+    "slug": "welltower",
+    "mcap_bn": 176.31,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Prologis",
+    "ticker": "PLD",
+    "slug": "prologis",
+    "mcap_bn": 119.1,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 61,
+    "name": "Shoprite",
+    "ticker": "SHP.JO",
+    "slug": "shoprite-holdings",
+    "mcap_bn": 10.67,
+    "country": "South Africa"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 5,
+    "name": "Alibaba",
+    "ticker": "BABA",
+    "slug": "alibaba",
+    "mcap_bn": 210.06,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "JD.com",
+    "ticker": "JD",
+    "slug": "jingdong-mall",
+    "mcap_bn": 34.48,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "加拿大",
+   "leader": {
+    "rank": 14,
+    "name": "Loblaw Companies",
+    "ticker": "L.TO",
+    "slug": "loblaw-companies",
+    "mcap_bn": 58.83,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 15,
+    "name": "Alimentation Couche-Tard",
+    "ticker": "ATD.TO",
+    "slug": "alimentation-couche-tard",
+    "mcap_bn": 54.91,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "印度",
+   "leader": {
+    "rank": 31,
+    "name": "DMart",
+    "ticker": "DMART.NS",
+    "slug": "dmart",
+    "mcap_bn": 23.91,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 38,
+    "name": "Trent Limited",
+    "ticker": "TRENT.NS",
+    "slug": "trent",
+    "mcap_bn": 18.41,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "拉美",
+   "leader": {
+    "rank": 17,
+    "name": "Walmex",
+    "ticker": "WMMVF",
+    "slug": "walmex",
+    "mcap_bn": 49.07,
+    "country": "Mexico"
+   },
+   "runner_up": {
+    "rank": 40,
+    "name": "Falabella",
+    "ticker": "FALABELLA.SN",
+    "slug": "falabella",
+    "mcap_bn": 16.18,
+    "country": "Chile"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "日本",
+   "leader": {
+    "rank": 7,
+    "name": "Fast Retailing",
+    "ticker": "9983.T",
+    "slug": "fast-retailing",
+    "mcap_bn": 161.89,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 25,
+    "name": "7-Eleven",
+    "ticker": "3382.T",
+    "slug": "7-eleven",
+    "mcap_bn": 30.05,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "欧洲",
+   "leader": {
+    "rank": 6,
+    "name": "Inditex",
+    "ticker": "ITX.MC",
+    "slug": "inditex",
+    "mcap_bn": 199.28,
+    "country": "Spain"
+   },
+   "runner_up": {
+    "rank": 18,
+    "name": "Tesco",
+    "ticker": "TSCO.L",
+    "slug": "tesco",
+    "mcap_bn": 44.65,
+    "country": "UK"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 13,
+    "name": "Wesfarmers",
+    "ticker": "WES.AX",
+    "slug": "wesfarmers",
+    "mcap_bn": 59.04,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 22,
+    "name": "Woolworths Group",
+    "ticker": "WOW.AX",
+    "slug": "woolworths-group",
+    "mcap_bn": 34.42,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "零售",
+   "category": "retail",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Amazon",
+    "ticker": "AMZN",
+    "slug": "amazon",
+    "mcap_bn": 2733.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Walmart",
+    "ticker": "WMT",
+    "slug": "walmart",
+    "mcap_bn": 1046.0,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "半导体",
+   "category": "semiconductors",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 55,
+    "name": "Tower Semiconductor",
+    "ticker": "TSEM",
+    "slug": "tower-semiconductor",
+    "mcap_bn": 14.01,
+    "country": "Israel"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "半导体",
+   "category": "semiconductors",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 9,
+    "name": "CXMT",
+    "ticker": "688825.SS",
+    "slug": "cxmt",
+    "mcap_bn": 385.87,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 22,
+    "name": "Cambricon Technologies",
+    "ticker": "688256.SS",
+    "slug": "cambricon-technologies",
+    "mcap_bn": 91.66,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "半导体",
+   "category": "semiconductors",
+   "region": "日本",
+   "leader": {
+    "rank": 19,
+    "name": "Tokyo Electron",
+    "ticker": "8035.T",
+    "slug": "tokyo-electron",
+    "mcap_bn": 127.13,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 20,
+    "name": "Advantest",
+    "ticker": "6857.T",
+    "slug": "advantest",
+    "mcap_bn": 123.65,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "半导体",
+   "category": "semiconductors",
+   "region": "欧洲",
+   "leader": {
+    "rank": 8,
+    "name": "ASML",
+    "ticker": "ASML",
+    "slug": "asml",
+    "mcap_bn": 514.94,
+    "country": "Netherlands"
+   },
+   "runner_up": {
+    "rank": 17,
+    "name": "Arm Holdings",
+    "ticker": "ARM",
+    "slug": "arm-holdings",
+    "mcap_bn": 172.86,
+    "country": "UK"
+   }
+  },
+  {
+   "industry": "半导体",
+   "category": "semiconductors",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "NVIDIA",
+    "ticker": "NVDA",
+    "slug": "nvidia",
+    "mcap_bn": 3751.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "Broadcom",
+    "ticker": "AVGO",
+    "slug": "broadcom",
+    "mcap_bn": 1437.0,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "半导体",
+   "category": "semiconductors",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 2,
+    "name": "TSMC",
+    "ticker": "TSM",
+    "slug": "tsmc",
+    "mcap_bn": 1811.0,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 4,
+    "name": "Samsung",
+    "ticker": "005930.KS",
+    "slug": "samsung",
+    "mcap_bn": 918.25,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 51,
+    "name": "Kaspi.kz Joint Stock Company",
+    "ticker": "KKS.F",
+    "slug": "kaspi-kz",
+    "mcap_bn": 16.8,
+    "country": "Kazakhstan"
+   },
+   "runner_up": {
+    "rank": 53,
+    "name": "Check Point Software",
+    "ticker": "CHKP",
+    "slug": "check-point-software",
+    "mcap_bn": 16.26,
+    "country": "Israel"
+   }
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 46,
+    "name": "Z.AI",
+    "ticker": "2513.HK",
+    "slug": "z-ai",
+    "mcap_bn": 19.83,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 67,
+    "name": "iFLYTEK",
+    "ticker": "002230.SZ",
+    "slug": "iflytek",
+    "mcap_bn": 12.8,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "加拿大",
+   "leader": {
+    "rank": 11,
+    "name": "Shopify",
+    "ticker": "SHOP",
+    "slug": "shopify",
+    "mcap_bn": 170.21,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 27,
+    "name": "Constellation Software",
+    "ticker": "CSU.TO",
+    "slug": "constellation-software",
+    "mcap_bn": 46.22,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "印度",
+   "leader": {
+    "rank": 80,
+    "name": "Coforge",
+    "ticker": "COFORGE.NS",
+    "slug": "coforge",
+    "mcap_bn": 10.23,
+    "country": "India"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "日本",
+   "leader": {
+    "rank": 73,
+    "name": "SCSK Corporation",
+    "ticker": "9719.T",
+    "slug": "scsk-corp",
+    "mcap_bn": 11.3,
+    "country": "Japan"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "欧洲",
+   "leader": {
+    "rank": 8,
+    "name": "SAP",
+    "ticker": "SAP",
+    "slug": "sap",
+    "mcap_bn": 240.94,
+    "country": "Germany"
+   },
+   "runner_up": {
+    "rank": 13,
+    "name": "Schneider Electric",
+    "ticker": "SU.PA",
+    "slug": "schneider-electric",
+    "mcap_bn": 145.74,
+    "country": "France"
+   }
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 31,
+    "name": "Atlassian",
+    "ticker": "TEAM",
+    "slug": "atlassian",
+    "mcap_bn": 35.46,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 61,
+    "name": "Pro Medicus",
+    "ticker": "PME.AX",
+    "slug": "pro-medicus",
+    "mcap_bn": 13.57,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "软件",
+   "category": "software",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Apple",
+    "ticker": "AAPL",
+    "slug": "apple",
+    "mcap_bn": 5145.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Microsoft",
+    "ticker": "MSFT",
+    "slug": "microsoft",
+    "mcap_bn": 3684.0,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 79,
+    "name": "Tower Semiconductor",
+    "ticker": "TSEM",
+    "slug": "tower-semiconductor",
+    "mcap_bn": 14.05,
+    "country": "Israel"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 9,
+    "name": "CXMT",
+    "ticker": "688825.SS",
+    "slug": "cxmt",
+    "mcap_bn": 385.87,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 28,
+    "name": "Cambricon Technologies",
+    "ticker": "688256.SS",
+    "slug": "cambricon-technologies",
+    "mcap_bn": 91.66,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "日本",
+   "leader": {
+    "rank": 21,
+    "name": "Sony",
+    "ticker": "SONY",
+    "slug": "sony",
+    "mcap_bn": 161.87,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 22,
+    "name": "Tokyo Electron",
+    "ticker": "8035.T",
+    "slug": "tokyo-electron",
+    "mcap_bn": 127.13,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "欧洲",
+   "leader": {
+    "rank": 8,
+    "name": "ASML",
+    "ticker": "ASML",
+    "slug": "asml",
+    "mcap_bn": 515.85,
+    "country": "Netherlands"
+   },
+   "runner_up": {
+    "rank": 20,
+    "name": "Arm Holdings",
+    "ticker": "ARM",
+    "slug": "arm-holdings",
+    "mcap_bn": 172.51,
+    "country": "UK"
+   }
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 35,
+    "name": "Delta Electronics (Thailand)",
+    "ticker": "DELTA.BK",
+    "slug": "delta-electronics-thailand",
+    "mcap_bn": 65.09,
+    "country": "Thailand"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Apple",
+    "ticker": "AAPL",
+    "slug": "apple",
+    "mcap_bn": 5122.0,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "NVIDIA",
+    "ticker": "NVDA",
+    "slug": "nvidia",
+    "mcap_bn": 3697.0,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "科技硬件",
+   "category": "tech-hardware",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 3,
+    "name": "TSMC",
+    "ticker": "TSM",
+    "slug": "tsmc",
+    "mcap_bn": 1811.0,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 4,
+    "name": "Samsung",
+    "ticker": "005930.KS",
+    "slug": "samsung",
+    "mcap_bn": 918.25,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 14,
+    "name": "Emirates Telecom (Etisalat Group)",
+    "ticker": "EAND.AE",
+    "slug": "emirates-telecom-etisalat-group",
+    "mcap_bn": 55.88,
+    "country": "UAE"
+   },
+   "runner_up": {
+    "rank": 15,
+    "name": "Saudi Telecom Company",
+    "ticker": "7010.SR",
+    "slug": "saudi-telecom-company",
+    "mcap_bn": 53.92,
+    "country": "S. Arabia"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 1,
+    "name": "China Mobile",
+    "ticker": "0941.HK",
+    "slug": "china-mobile",
+    "mcap_bn": 219.43,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 17,
+    "name": "China Telecom",
+    "ticker": "0728.HK",
+    "slug": "china-telecom",
+    "mcap_bn": 51.11,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "加拿大",
+   "leader": {
+    "rank": 32,
+    "name": "BCE Inc.",
+    "ticker": "BCE",
+    "slug": "bce",
+    "mcap_bn": 20.64,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 37,
+    "name": "Rogers Communications",
+    "ticker": "RCI",
+    "slug": "rogers-communication",
+    "mcap_bn": 19.35,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "印度",
+   "leader": {
+    "rank": 5,
+    "name": "Bharti Airtel",
+    "ticker": "BHARTIARTL.NS",
+    "slug": "bharti-airtel",
+    "mcap_bn": 142.95,
+    "country": "India"
+   },
+   "runner_up": {
+    "rank": 47,
+    "name": "Vodafone Idea",
+    "ticker": "IDEA.NS",
+    "slug": "vodafone-idea",
+    "mcap_bn": 13.88,
+    "country": "India"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "拉美",
+   "leader": {
+    "rank": 11,
+    "name": "America Movil",
+    "ticker": "AMX",
+    "slug": "america-movil",
+    "mcap_bn": 73.52,
+    "country": "Mexico"
+   },
+   "runner_up": {
+    "rank": 38,
+    "name": "Telefonica Brasil",
+    "ticker": "VIV",
+    "slug": "telefonica-brasil",
+    "mcap_bn": 19.1,
+    "country": "Brazil"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "日本",
+   "leader": {
+    "rank": 7,
+    "name": "SoftBank Group Corp.",
+    "ticker": "9984.T",
+    "slug": "softbank",
+    "mcap_bn": 95.45,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 9,
+    "name": "NTT (Nippon Telegraph & Telephone)",
+    "ticker": "9432.T",
+    "slug": "nippon-telegraph-and-telephone",
+    "mcap_bn": 85.36,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "欧洲",
+   "leader": {
+    "rank": 6,
+    "name": "Deutsche Telekom",
+    "ticker": "DTE.DE",
+    "slug": "deutsche-telekom",
+    "mcap_bn": 140.69,
+    "country": "Germany"
+   },
+   "runner_up": {
+    "rank": 18,
+    "name": "Orange",
+    "ticker": "ORA.PA",
+    "slug": "orange",
+    "mcap_bn": 44.45,
+    "country": "France"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 16,
+    "name": "Singtel",
+    "ticker": "Z74.SI",
+    "slug": "singtel",
+    "mcap_bn": 53.04,
+    "country": "Singapore"
+   },
+   "runner_up": {
+    "rank": 21,
+    "name": "Telstra",
+    "ticker": "TLS.AX",
+    "slug": "telstra",
+    "mcap_bn": 38.57,
+    "country": "Australia"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "美国",
+   "leader": {
+    "rank": 2,
+    "name": "Verizon",
+    "ticker": "VZ",
+    "slug": "verizon",
+    "mcap_bn": 195.45,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "T-Mobile US",
+    "ticker": "TMUS",
+    "slug": "t-mobile-us",
+    "mcap_bn": 177.21,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "电信",
+   "category": "telecommunication",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 20,
+    "name": "Chunghwa Telecom",
+    "ticker": "CHT",
+    "slug": "chunghwa-telecom",
+    "mcap_bn": 39.24,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 44,
+    "name": "SK Group",
+    "ticker": "034730.KS",
+    "slug": "sk-group",
+    "mcap_bn": 17.49,
+    "country": "S. Korea"
+   }
+  },
+  {
+   "industry": "烟草",
+   "category": "tobacco",
+   "region": "印度",
+   "leader": {
+    "rank": 5,
+    "name": "ITC",
+    "ticker": "ITC.NS",
+    "slug": "itc",
+    "mcap_bn": 40.6,
+    "country": "India"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "烟草",
+   "category": "tobacco",
+   "region": "日本",
+   "leader": {
+    "rank": 4,
+    "name": "Japan Tobacco",
+    "ticker": "2914.T",
+    "slug": "japan-tobacco",
+    "mcap_bn": 59.64,
+    "country": "Japan"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "烟草",
+   "category": "tobacco",
+   "region": "欧洲",
+   "leader": {
+    "rank": 2,
+    "name": "British American Tobacco",
+    "ticker": "BTI",
+    "slug": "british-american-tobacco",
+    "mcap_bn": 122.99,
+    "country": "UK"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Imperial Brands",
+    "ticker": "IMB.L",
+    "slug": "imperial-brands",
+    "mcap_bn": 27.36,
+    "country": "UK"
+   }
+  },
+  {
+   "industry": "烟草",
+   "category": "tobacco",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Philip Morris International",
+    "ticker": "PM",
+    "slug": "philip-morris-international",
+    "mcap_bn": 284.45,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 3,
+    "name": "Altria Group",
+    "ticker": "MO",
+    "slug": "altria-group",
+    "mcap_bn": 122.76,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "烟草",
+   "category": "tobacco",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 7,
+    "name": "KT&G (Korea Tobacco)",
+    "ticker": "033780.KS",
+    "slug": "kt&g-(korea-tobacco)",
+    "mcap_bn": 14.2,
+    "country": "S. Korea"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "中东 / 非洲",
+   "leader": {
+    "rank": 38,
+    "name": "ADNOC Logistics & Services",
+    "ticker": "ADNOCLS.AE",
+    "slug": "adnoc-logistics-services",
+    "mcap_bn": 15.04,
+    "country": "UAE"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "中国 / 香港",
+   "leader": {
+    "rank": 29,
+    "name": "Air China",
+    "ticker": "601111.SS",
+    "slug": "air-china",
+    "mcap_bn": 18.84,
+    "country": "China"
+   },
+   "runner_up": {
+    "rank": 40,
+    "name": "COSCO Shipping",
+    "ticker": "601919.SS",
+    "slug": "cosco-shipping",
+    "mcap_bn": 13.88,
+    "country": "China"
+   }
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "加拿大",
+   "leader": {
+    "rank": 5,
+    "name": "CPKC (Canadian Pacific Kansas City)",
+    "ticker": "CP",
+    "slug": "canadian-pacific-railway",
+    "mcap_bn": 80.71,
+    "country": "Canada"
+   },
+   "runner_up": {
+    "rank": 6,
+    "name": "Canadian National Railway",
+    "ticker": "CNI",
+    "slug": "canadian-national-railway",
+    "mcap_bn": 75.25,
+    "country": "Canada"
+   }
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "印度",
+   "leader": {
+    "rank": 24,
+    "name": "InterGlobe Aviation (IndiGo)",
+    "ticker": "INDIGO.NS",
+    "slug": "interglobe-aviation",
+    "mcap_bn": 22.98,
+    "country": "India"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "拉美",
+   "leader": {
+    "rank": 44,
+    "name": "LATAM Airlines",
+    "ticker": "LTM",
+    "slug": "latam-airlines",
+    "mcap_bn": 13.24,
+    "country": "Chile"
+   },
+   "runner_up": null
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "日本",
+   "leader": {
+    "rank": 18,
+    "name": "East Japan Railway",
+    "ticker": "9020.T",
+    "slug": "east-japan-railway",
+    "mcap_bn": 29.25,
+    "country": "Japan"
+   },
+   "runner_up": {
+    "rank": 20,
+    "name": "Central Japan Railway",
+    "ticker": "9022.T",
+    "slug": "central-japan-railway",
+    "mcap_bn": 26.8,
+    "country": "Japan"
+   }
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "欧洲",
+   "leader": {
+    "rank": 9,
+    "name": "DHL Group (Deutsche Post)",
+    "ticker": "DHL.DE",
+    "slug": "deutsche-post",
+    "mcap_bn": 68.56,
+    "country": "Germany"
+   },
+   "runner_up": {
+    "rank": 12,
+    "name": "DSV",
+    "ticker": "DSV.VI",
+    "slug": "dsv",
+    "mcap_bn": 48.31,
+    "country": "Denmark"
+   }
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "澳新 / 东南亚",
+   "leader": {
+    "rank": 28,
+    "name": "Brambles",
+    "ticker": "BXB.AX",
+    "slug": "brambles",
+    "mcap_bn": 19.7,
+    "country": "Australia"
+   },
+   "runner_up": {
+    "rank": 31,
+    "name": "Singapore Airlines",
+    "ticker": "C6L.SI",
+    "slug": "singapore-airlines",
+    "mcap_bn": 16.99,
+    "country": "Singapore"
+   }
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "美国",
+   "leader": {
+    "rank": 1,
+    "name": "Union Pacific Corporation",
+    "ticker": "UNP",
+    "slug": "union-pacific-corporation",
+    "mcap_bn": 172.82,
+    "country": "USA"
+   },
+   "runner_up": {
+    "rank": 2,
+    "name": "Uber",
+    "ticker": "UBER",
+    "slug": "uber",
+    "mcap_bn": 132.11,
+    "country": "USA"
+   }
+  },
+  {
+   "industry": "运输",
+   "category": "transportation",
+   "region": "韩国 / 台湾",
+   "leader": {
+    "rank": 35,
+    "name": "Evergreen Marine",
+    "ticker": "2603.TW",
+    "slug": "evergreen-marine",
+    "mcap_bn": 16.29,
+    "country": "Taiwan"
+   },
+   "runner_up": {
+    "rank": 37,
+    "name": "HMM",
+    "ticker": "011200.KS",
+    "slug": "hmm",
+    "mcap_bn": 15.51,
+    "country": "S. Korea"
+   }
+  }
+ ],
+ "pool": [
+  {
+   "rank": 1,
+   "name": "Apple",
+   "ticker": "AAPL",
+   "slug": "apple",
+   "mcap_bn": 5122.0,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "科技硬件",
+    "软件"
+   ],
+   "pool_key": "AAPL",
+   "onchain_vol_m": 15.38
+  },
+  {
+   "rank": 1,
+   "name": "NVIDIA",
+   "ticker": "NVDA",
+   "slug": "nvidia",
+   "mcap_bn": 3751.0,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "半导体"
+   ],
+   "pool_key": "NVDA",
+   "onchain_vol_m": 220.57
+  },
+  {
+   "rank": 1,
+   "name": "Alphabet (Google)",
+   "ticker": "GOOG",
+   "slug": "alphabet-google",
+   "mcap_bn": 3436.0,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": "GOOGL",
+   "onchain_vol_m": 42.83
+  },
+  {
+   "rank": 1,
+   "name": "Amazon",
+   "ticker": "AMZN",
+   "slug": "amazon",
+   "mcap_bn": 2733.0,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": "AMZN",
+   "onchain_vol_m": 18.77
+  },
+  {
+   "rank": 2,
+   "name": "TSMC",
+   "ticker": "TSM",
+   "slug": "tsmc",
+   "mcap_bn": 1811.0,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "半导体",
+    "科技硬件",
+    "制造"
+   ],
+   "pool_key": "TSM",
+   "onchain_vol_m": 2.45
+  },
+  {
+   "rank": 1,
+   "name": "Saudi Aramco",
+   "ticker": "2222.SR",
+   "slug": "saudi-aramco",
+   "mcap_bn": 1695.0,
+   "country": "S. Arabia",
+   "region": "中东 / 非洲",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": "2222.SR",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 2,
+   "name": "Tesla",
+   "ticker": "TSLA",
+   "slug": "tesla",
+   "mcap_bn": 1523.0,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "制造",
+    "汽车"
+   ],
+   "pool_key": "TSLA",
+   "onchain_vol_m": 31.74
+  },
+  {
+   "rank": 1,
+   "name": "Eli Lilly",
+   "ticker": "LLY",
+   "slug": "eli-lilly",
+   "mcap_bn": 1253.0,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "制药",
+    "生物科技"
+   ],
+   "pool_key": "LLY",
+   "onchain_vol_m": 2.73
+  },
+  {
+   "rank": 1,
+   "name": "JPMorgan Chase",
+   "ticker": "JPM",
+   "slug": "jp-morgan-chase",
+   "mcap_bn": 840.92,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": "JPM",
+   "onchain_vol_m": 1.6
+  },
+  {
+   "rank": 2,
+   "name": "Exxon Mobil",
+   "ticker": "XOM",
+   "slug": "exxon-mobil",
+   "mcap_bn": 640.03,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": "XOM",
+   "onchain_vol_m": 1.54
+  },
+  {
+   "rank": 8,
+   "name": "ASML",
+   "ticker": "ASML",
+   "slug": "asml",
+   "mcap_bn": 514.94,
+   "country": "Netherlands",
+   "region": "欧洲",
+   "leads": [
+    "半导体",
+    "科技硬件"
+   ],
+   "pool_key": "ASML",
+   "onchain_vol_m": 1.31
+  },
+  {
+   "rank": 2,
+   "name": "China Construction Bank",
+   "ticker": "601939.SS",
+   "slug": "china-construction-bank",
+   "mcap_bn": 487.04,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": "601939.SHG",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 4,
+   "name": "Tencent",
+   "ticker": "TCEHY",
+   "slug": "tencent",
+   "mcap_bn": 399.98,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": "TCEHY",
+   "onchain_vol_m": 0.03
+  },
+  {
+   "rank": 4,
+   "name": "Roche",
+   "ticker": "RO.SW",
+   "slug": "roche",
+   "mcap_bn": 393.15,
+   "country": "Switzerland",
+   "region": "欧洲",
+   "leads": [
+    "制药",
+    "生物科技"
+   ],
+   "pool_key": "ROG.SW",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 9,
+   "name": "CXMT",
+   "ticker": "688825.SS",
+   "slug": "cxmt",
+   "mcap_bn": 385.87,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "半导体",
+    "科技硬件"
+   ],
+   "pool_key": "688825.SHG",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "UnitedHealth",
+   "ticker": "UNH",
+   "slug": "united-health",
+   "mcap_bn": 301.13,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": "UNH",
+   "onchain_vol_m": 0.59
+  },
+  {
+   "rank": 1,
+   "name": "Philip Morris International",
+   "ticker": "PM",
+   "slug": "philip-morris-international",
+   "mcap_bn": 284.45,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "烟草"
+   ],
+   "pool_key": "PM",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "HSBC",
+   "ticker": "HSBC",
+   "slug": "hsbc",
+   "mcap_bn": 283.63,
+   "country": "UK",
+   "region": "欧洲",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": "HSBC",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 4,
+   "name": "Shell",
+   "ticker": "SHEL",
+   "slug": "shell",
+   "mcap_bn": 262.24,
+   "country": "UK",
+   "region": "欧洲",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": "SHEL",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 9,
+   "name": "Royal Bank Of Canada",
+   "ticker": "RY",
+   "slug": "royal-bank-of-canada",
+   "mcap_bn": 260.53,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": "RY",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "Nestlé",
+   "ticker": "NESN.SW",
+   "slug": "nestle",
+   "mcap_bn": 259.12,
+   "country": "Switzerland",
+   "region": "欧洲",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": "NESN.SW",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 6,
+   "name": "Toyota",
+   "ticker": "TM",
+   "slug": "toyota",
+   "mcap_bn": 249.0,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "制造",
+    "汽车"
+   ],
+   "pool_key": "TM",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 8,
+   "name": "SAP",
+   "ticker": "SAP",
+   "slug": "sap",
+   "mcap_bn": 240.94,
+   "country": "Germany",
+   "region": "欧洲",
+   "leads": [
+    "软件"
+   ],
+   "pool_key": "SAP",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "Linde",
+   "ticker": "LIN",
+   "slug": "linde",
+   "mcap_bn": 237.34,
+   "country": "UK",
+   "region": "欧洲",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": "LIN",
+   "onchain_vol_m": 0.04
+  },
+  {
+   "rank": 5,
+   "name": "PetroChina",
+   "ticker": "0857.HK",
+   "slug": "petro-china",
+   "mcap_bn": 223.34,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": "0857.HK",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "China Mobile",
+   "ticker": "0941.HK",
+   "slug": "china-mobile",
+   "mcap_bn": 219.43,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": "0941.HK",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 12,
+   "name": "Mitsubishi UFJ Financial",
+   "ticker": "MUFG",
+   "slug": "mitsubishi-ufj-financial",
+   "mcap_bn": 217.85,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": "MUFG",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 5,
+   "name": "Alibaba",
+   "ticker": "BABA",
+   "slug": "alibaba",
+   "mcap_bn": 210.06,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": "BABA",
+   "onchain_vol_m": 3.17
+  },
+  {
+   "rank": 1,
+   "name": "LVMH",
+   "ticker": "MC.PA",
+   "slug": "lvmh",
+   "mcap_bn": 208.14,
+   "country": "France",
+   "region": "欧洲",
+   "leads": [
+    "奢侈品"
+   ],
+   "pool_key": "MC.PA",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "GE Vernova",
+   "ticker": "GEV",
+   "slug": "ge-vernova",
+   "mcap_bn": 200.28,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": "GEV",
+   "onchain_vol_m": 0.73
+  },
+  {
+   "rank": 6,
+   "name": "Inditex",
+   "ticker": "ITX.MC",
+   "slug": "inditex",
+   "mcap_bn": 199.28,
+   "country": "Spain",
+   "region": "欧洲",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 2,
+   "name": "Verizon",
+   "ticker": "VZ",
+   "slug": "verizon",
+   "mcap_bn": 195.45,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": "VZ",
+   "onchain_vol_m": 0.01
+  },
+  {
+   "rank": 2,
+   "name": "McDonald",
+   "ticker": "MCD",
+   "slug": "mcdonald",
+   "mcap_bn": 195.06,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": "MCD",
+   "onchain_vol_m": 1.89
+  },
+  {
+   "rank": 15,
+   "name": "Commonwealth Bank",
+   "ticker": "CBA.AX",
+   "slug": "commonwealth-bank",
+   "mcap_bn": 187.53,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": "CBA.AU",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 2,
+   "name": "Allianz SE",
+   "ticker": "ALV.DE",
+   "slug": "allianz",
+   "mcap_bn": 186.83,
+   "country": "Germany",
+   "region": "欧洲",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": "ALV.XETRA",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "Abbott Laboratories",
+   "ticker": "ABT",
+   "slug": "abbott-laboratories",
+   "mcap_bn": 182.52,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "医疗器械"
+   ],
+   "pool_key": "ABT",
+   "onchain_vol_m": 0.82
+  },
+  {
+   "rank": 1,
+   "name": "BHP Group",
+   "ticker": "BHP",
+   "slug": "bhp-group",
+   "mcap_bn": 179.42,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": "BHP",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "Welltower",
+   "ticker": "WELL",
+   "slug": "welltower",
+   "mcap_bn": 176.31,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": "WELL",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 1,
+   "name": "Union Pacific Corporation",
+   "ticker": "UNP",
+   "slug": "union-pacific-corporation",
+   "mcap_bn": 172.82,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": "UNP",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 11,
+   "name": "Shopify",
+   "ticker": "SHOP",
+   "slug": "shopify",
+   "mcap_bn": 170.21,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "软件",
+    "互联网"
+   ],
+   "pool_key": "SHOP",
+   "onchain_vol_m": 1.2
+  },
+  {
+   "rank": 10,
+   "name": "Airbus",
+   "ticker": "AIR.PA",
+   "slug": "airbus",
+   "mcap_bn": 168.37,
+   "country": "Netherlands",
+   "region": "欧洲",
+   "leads": [
+    "制造"
+   ],
+   "pool_key": "AIR.PA",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 2,
+   "name": "China Shenhua Energy",
+   "ticker": "601088.SS",
+   "slug": "china-shenhua-energy",
+   "mcap_bn": 166.01,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": "601088.SHG",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 3,
+   "name": "Iberdrola",
+   "ticker": "IBE.MC",
+   "slug": "iberdrola",
+   "mcap_bn": 165.15,
+   "country": "Spain",
+   "region": "欧洲",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": "IBE.MC",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "Fast Retailing",
+   "ticker": "9983.T",
+   "slug": "fast-retailing",
+   "mcap_bn": 161.89,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": "9983.TSE",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 21,
+   "name": "Sony",
+   "ticker": "SONY",
+   "slug": "sony",
+   "mcap_bn": 161.87,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "科技硬件"
+   ],
+   "pool_key": "SONY",
+   "onchain_vol_m": 0.01
+  },
+  {
+   "rank": 4,
+   "name": "CATL",
+   "ticker": "300750.SZ",
+   "slug": "catl",
+   "mcap_bn": 158.18,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 3,
+   "name": "China Life Insurance",
+   "ticker": "601628.SS",
+   "slug": "china-life-insurance",
+   "mcap_bn": 151.79,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": "601628.SHG",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 5,
+   "name": "Bharti Airtel",
+   "ticker": "BHARTIARTL.NS",
+   "slug": "bharti-airtel",
+   "mcap_bn": 142.95,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": "BHARTIARTL.NSE",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 6,
+   "name": "Deutsche Telekom",
+   "ticker": "DTE.DE",
+   "slug": "deutsche-telekom",
+   "mcap_bn": 140.69,
+   "country": "Germany",
+   "region": "欧洲",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": "DTE.XETRA",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 21,
+   "name": "HDFC Bank",
+   "ticker": "HDB",
+   "slug": "hdfc-bank",
+   "mcap_bn": 139.57,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 19,
+   "name": "Tokyo Electron",
+   "ticker": "8035.T",
+   "slug": "tokyo-electron",
+   "mcap_bn": 127.13,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "半导体"
+   ],
+   "pool_key": "8035.TSE",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 2,
+   "name": "British American Tobacco",
+   "ticker": "BTI",
+   "slug": "british-american-tobacco",
+   "mcap_bn": 122.99,
+   "country": "UK",
+   "region": "欧洲",
+   "leads": [
+    "烟草"
+   ],
+   "pool_key": "BTI",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 4,
+   "name": "Medtronic",
+   "ticker": "MDT",
+   "slug": "medtronic",
+   "mcap_bn": 122.96,
+   "country": "Ireland",
+   "region": "欧洲",
+   "leads": [
+    "医疗器械"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 3,
+   "name": "Southern Copper",
+   "ticker": "SCCO",
+   "slug": "southern-copper",
+   "mcap_bn": 122.29,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": "SCCO",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 4,
+   "name": "Rio Tinto",
+   "ticker": "RIO",
+   "slug": "rio-tinto",
+   "mcap_bn": 122.16,
+   "country": "UK",
+   "region": "欧洲",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": "RIO",
+   "onchain_vol_m": 0.16
+  },
+  {
+   "rank": 15,
+   "name": "Foxconn Industrial Internet",
+   "ticker": "601138.SS",
+   "slug": "foxconn-industrial-internet",
+   "mcap_bn": 122.01,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "制造"
+   ],
+   "pool_key": "601138.SHG",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 12,
+   "name": "Spotify",
+   "ticker": "SPOT",
+   "slug": "spotify",
+   "mcap_bn": 120.38,
+   "country": "Sweden",
+   "region": "欧洲",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 3,
+   "name": "BYD",
+   "ticker": "002594.SZ",
+   "slug": "byd",
+   "mcap_bn": 105.57,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "汽车"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 8,
+   "name": "Tokio Marine",
+   "ticker": "8766.T",
+   "slug": "tokio-marine",
+   "mcap_bn": 103.01,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 12,
+   "name": "Petrobras",
+   "ticker": "PBR",
+   "slug": "petrobras",
+   "mcap_bn": 101.88,
+   "country": "Brazil",
+   "region": "拉美",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": "PBR",
+   "onchain_vol_m": 0.59
+  },
+  {
+   "rank": 13,
+   "name": "Enbridge",
+   "ticker": "ENB",
+   "slug": "enbridge",
+   "mcap_bn": 101.12,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 36,
+   "name": "Al Rajhi Bank",
+   "ticker": "1120.SR",
+   "slug": "al-rajhi-bank",
+   "mcap_bn": 97.79,
+   "country": "S. Arabia",
+   "region": "中东 / 非洲",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "SoftBank Group Corp.",
+   "ticker": "9984.T",
+   "slug": "softbank",
+   "mcap_bn": 95.45,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": "9984.TSE",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 12,
+   "name": "TAQA",
+   "ticker": "TAQA.AE",
+   "slug": "taqa",
+   "mcap_bn": 81.43,
+   "country": "UAE",
+   "region": "中东 / 非洲",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "Agnico Eagle Mines",
+   "ticker": "AEM",
+   "slug": "agnico-eagle-mines",
+   "mcap_bn": 80.73,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 5,
+   "name": "CPKC (Canadian Pacific Kansas City)",
+   "ticker": "CP",
+   "slug": "canadian-pacific-railway",
+   "mcap_bn": 80.71,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 8,
+   "name": "Grupo México",
+   "ticker": "GMBXF",
+   "slug": "grupo-mexico",
+   "mcap_bn": 80.67,
+   "country": "Mexico",
+   "region": "拉美",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 48,
+   "name": "Itaú Unibanco",
+   "ticker": "ITUB",
+   "slug": "itau-unibanco",
+   "mcap_bn": 73.73,
+   "country": "Brazil",
+   "region": "拉美",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 11,
+   "name": "America Movil",
+   "ticker": "AMX",
+   "slug": "america-movil",
+   "mcap_bn": 73.52,
+   "country": "Mexico",
+   "region": "拉美",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 19,
+   "name": "Chugai Pharmaceutical",
+   "ticker": "4519.T",
+   "slug": "chugai-pharmaceutical",
+   "mcap_bn": 73.09,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "制药",
+    "生物科技"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 18,
+   "name": "MercadoLibre",
+   "ticker": "MELI",
+   "slug": "mercadolibre",
+   "mcap_bn": 72.24,
+   "country": "Argentina",
+   "region": "拉美",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 20,
+   "name": "WuXi AppTec",
+   "ticker": "2359.HK",
+   "slug": "wuxi-apptec",
+   "mcap_bn": 72.22,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "制药",
+    "生物科技",
+    "医疗器械"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 5,
+   "name": "Ferrari",
+   "ticker": "RACE",
+   "slug": "ferrari",
+   "mcap_bn": 69.94,
+   "country": "Italy",
+   "region": "欧洲",
+   "leads": [
+    "汽车"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 19,
+   "name": "Manulife Financial",
+   "ticker": "MFC",
+   "slug": "manulife-financial",
+   "mcap_bn": 68.96,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 9,
+   "name": "DHL Group (Deutsche Post)",
+   "ticker": "DHL.DE",
+   "slug": "deutsche-post",
+   "mcap_bn": 68.56,
+   "country": "Germany",
+   "region": "欧洲",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 4,
+   "name": "Air Products and Chemicals",
+   "ticker": "APD",
+   "slug": "air-products-and-chemicals",
+   "mcap_bn": 67.73,
+   "country": "USA",
+   "region": "美国",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 23,
+   "name": "CSL",
+   "ticker": "CSL.AX",
+   "slug": "csl",
+   "mcap_bn": 65.18,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "制药",
+    "生物科技"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 35,
+   "name": "Delta Electronics (Thailand)",
+   "ticker": "DELTA.BK",
+   "slug": "delta-electronics-thailand",
+   "mcap_bn": 65.09,
+   "country": "Thailand",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "科技硬件",
+    "制造"
+   ],
+   "pool_key": "2308.TW",
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 5,
+   "name": "Shin-Etsu Chemical",
+   "ticker": "4063.T",
+   "slug": "shin-etsu-chemical",
+   "mcap_bn": 59.76,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 59,
+   "name": "Fubon Financial",
+   "ticker": "2881.TW",
+   "slug": "fubon-financial",
+   "mcap_bn": 59.66,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "银行",
+    "金融服务"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 4,
+   "name": "Japan Tobacco",
+   "ticker": "2914.T",
+   "slug": "japan-tobacco",
+   "mcap_bn": 59.64,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "烟草"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 13,
+   "name": "Wesfarmers",
+   "ticker": "WES.AX",
+   "slug": "wesfarmers",
+   "mcap_bn": 59.04,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "零售",
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 14,
+   "name": "Loblaw Companies",
+   "ticker": "L.TO",
+   "slug": "loblaw-companies",
+   "mcap_bn": 58.83,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 11,
+   "name": "Ma'aden",
+   "ticker": "1211.SR",
+   "slug": "maaden",
+   "mcap_bn": 57.98,
+   "country": "S. Arabia",
+   "region": "中东 / 非洲",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 14,
+   "name": "Emirates Telecom (Etisalat Group)",
+   "ticker": "EAND.AE",
+   "slug": "emirates-telecom-etisalat-group",
+   "mcap_bn": 55.88,
+   "country": "UAE",
+   "region": "中东 / 非洲",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 17,
+   "name": "LG Energy Solution",
+   "ticker": "373220.KS",
+   "slug": "lg-energy-solution",
+   "mcap_bn": 54.8,
+   "country": "S. Korea",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 8,
+   "name": "Nan Ya Plastics",
+   "ticker": "1303.TW",
+   "slug": "nan-ya-plastics",
+   "mcap_bn": 54.77,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "Hyundai",
+   "ticker": "005380.KS",
+   "slug": "hyundai",
+   "mcap_bn": 54.26,
+   "country": "S. Korea",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "汽车"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 16,
+   "name": "Singtel",
+   "ticker": "Z74.SI",
+   "slug": "singtel",
+   "mcap_bn": 53.04,
+   "country": "Singapore",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "Hindustan Unilever",
+   "ticker": "HINDUNILVR.NS",
+   "slug": "hindustan-unilever",
+   "mcap_bn": 51.06,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 17,
+   "name": "Walmex",
+   "ticker": "WMMVF",
+   "slug": "walmex",
+   "mcap_bn": 49.07,
+   "country": "Mexico",
+   "region": "拉美",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 29,
+   "name": "Sun Pharmaceutical",
+   "ticker": "SUNPHARMA.NS",
+   "slug": "sun-pharmaceutical",
+   "mcap_bn": 48.13,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "制药",
+    "生物科技"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 40,
+   "name": "Maruti Suzuki India",
+   "ticker": "MARUTI.NS",
+   "slug": "maruti-suzuki-india",
+   "mcap_bn": 47.41,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "制造",
+    "汽车"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 32,
+   "name": "Teva Pharmaceutical Industries",
+   "ticker": "TEVA",
+   "slug": "teva-pharmaceutical-industries",
+   "mcap_bn": 46.78,
+   "country": "Israel",
+   "region": "中东 / 非洲",
+   "leads": [
+    "制药",
+    "生物科技"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 32,
+   "name": "Samsung Biologics",
+   "ticker": "207940.KS",
+   "slug": "samsung-biologics",
+   "mcap_bn": 46.63,
+   "country": "S. Korea",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "生物科技"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 27,
+   "name": "Cathay Financial Holding",
+   "ticker": "2882.TW",
+   "slug": "cathay-financial-holding",
+   "mcap_bn": 46.57,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 6,
+   "name": "Titan Company",
+   "ticker": "TITAN.NS",
+   "slug": "titan-company",
+   "mcap_bn": 44.69,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "奢侈品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 26,
+   "name": "Adani Power",
+   "ticker": "ADANIPOWER.NS",
+   "slug": "adani-power",
+   "mcap_bn": 43.15,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 5,
+   "name": "ITC",
+   "ticker": "ITC.NS",
+   "slug": "itc",
+   "mcap_bn": 40.6,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "烟草"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 27,
+   "name": "Sea Limited",
+   "ticker": "SE",
+   "slug": "sea",
+   "mcap_bn": 40.13,
+   "country": "Singapore",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 11,
+   "name": "Sun Hung Kai Properties",
+   "ticker": "0016.HK",
+   "slug": "sun-hung-kai-properties",
+   "mcap_bn": 39.55,
+   "country": "Hong Kong",
+   "region": "中国 / 香港",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 12,
+   "name": "Muyuan Foods",
+   "ticker": "002714.SZ",
+   "slug": "muyuan-foods",
+   "mcap_bn": 39.36,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 20,
+   "name": "Chunghwa Telecom",
+   "ticker": "CHT",
+   "slug": "chunghwa-telecom",
+   "mcap_bn": 39.24,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 13,
+   "name": "JBS N.V.",
+   "ticker": "JBS",
+   "slug": "jbs",
+   "mcap_bn": 38.71,
+   "country": "Brazil",
+   "region": "拉美",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 12,
+   "name": "SABIC",
+   "ticker": "2010.SR",
+   "slug": "sabic",
+   "mcap_bn": 37.85,
+   "country": "S. Arabia",
+   "region": "中东 / 非洲",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 13,
+   "name": "Goodman Group",
+   "ticker": "GMG.AX",
+   "slug": "goodman",
+   "mcap_bn": 37.53,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 45,
+   "name": "Woodside Energy",
+   "ticker": "WDS",
+   "slug": "woodside-energy",
+   "mcap_bn": 37.01,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 29,
+   "name": "Eternal (Zomato)",
+   "ticker": "ETERNAL.NS",
+   "slug": "eternal-zomato",
+   "mcap_bn": 35.9,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 31,
+   "name": "Atlassian",
+   "ticker": "TEAM",
+   "slug": "atlassian",
+   "mcap_bn": 35.46,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "软件"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 39,
+   "name": "Celltrion",
+   "ticker": "068270.KS",
+   "slug": "celltrion",
+   "mcap_bn": 35.4,
+   "country": "S. Korea",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "制药"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 16,
+   "name": "Restaurant Brands International",
+   "ticker": "QSR",
+   "slug": "rbi",
+   "mcap_bn": 33.75,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 14,
+   "name": "Wanhua Chemical",
+   "ticker": "600309.SS",
+   "slug": "wanhua-chemical",
+   "mcap_bn": 32.46,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 39,
+   "name": "Fortis",
+   "ticker": "FTS",
+   "slug": "fortis",
+   "mcap_bn": 30.31,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 53,
+   "name": "Oil & Natural Gas",
+   "ticker": "ONGC.NS",
+   "slug": "oil-and-natural-gas",
+   "mcap_bn": 30.17,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 17,
+   "name": "Emaar Properties",
+   "ticker": "EMAAR.AE",
+   "slug": "emaar-properties",
+   "mcap_bn": 29.93,
+   "country": "UAE",
+   "region": "中东 / 非洲",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 18,
+   "name": "Mitsubishi Estate",
+   "ticker": "8802.T",
+   "slug": "mitsubishi-estate",
+   "mcap_bn": 29.46,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 18,
+   "name": "East Japan Railway",
+   "ticker": "9020.T",
+   "slug": "east-japan-railway",
+   "mcap_bn": 29.25,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 50,
+   "name": "Life Insurance Corporation of India (LIC)",
+   "ticker": "LICI.NS",
+   "slug": "life-insurance-corporation-of-india",
+   "mcap_bn": 27.73,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 37,
+   "name": "Naspers",
+   "ticker": "NPSNY",
+   "slug": "naspers",
+   "mcap_bn": 27.64,
+   "country": "South Africa",
+   "region": "中东 / 非洲",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 73,
+   "name": "Celestica",
+   "ticker": "CLS",
+   "slug": "celestica",
+   "mcap_bn": 26.9,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "制造"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 51,
+   "name": "QBE Insurance",
+   "ticker": "QBE.AX",
+   "slug": "qbe-insurance",
+   "mcap_bn": 26.36,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 27,
+   "name": "Coal India",
+   "ticker": "COALINDIA.NS",
+   "slug": "coal-india",
+   "mcap_bn": 25.34,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "矿业"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 13,
+   "name": "Terumo",
+   "ticker": "4543.T",
+   "slug": "terumo",
+   "mcap_bn": 25.13,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "医疗器械"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 31,
+   "name": "DMart",
+   "ticker": "DMART.NS",
+   "slug": "dmart",
+   "mcap_bn": 23.91,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 61,
+   "name": "Inpex",
+   "ticker": "1605.T",
+   "slug": "inpex",
+   "mcap_bn": 23.26,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 62,
+   "name": "Formosa Petrochemical",
+   "ticker": "6505.TW",
+   "slug": "formosa-petrochemical",
+   "mcap_bn": 23.26,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "石油天然气"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 24,
+   "name": "InterGlobe Aviation (IndiGo)",
+   "ticker": "INDIGO.NS",
+   "slug": "interglobe-aviation",
+   "mcap_bn": 22.98,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 26,
+   "name": "Ajinomoto",
+   "ticker": "2802.T",
+   "slug": "ajinomoto",
+   "mcap_bn": 22.8,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 42,
+   "name": "LY Corporation",
+   "ticker": "4689.T",
+   "slug": "z-holdings",
+   "mcap_bn": 21.66,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 23,
+   "name": "DLF",
+   "ticker": "DLF.NS",
+   "slug": "dlf",
+   "mcap_bn": 20.96,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 32,
+   "name": "BCE Inc.",
+   "ticker": "BCE",
+   "slug": "bce",
+   "mcap_bn": 20.64,
+   "country": "Canada",
+   "region": "加拿大",
+   "leads": [
+    "电信"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 46,
+   "name": "Z.AI",
+   "ticker": "2513.HK",
+   "slug": "z-ai",
+   "mcap_bn": 19.83,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "软件"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 28,
+   "name": "Brambles",
+   "ticker": "BXB.AX",
+   "slug": "brambles",
+   "mcap_bn": 19.7,
+   "country": "Australia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 29,
+   "name": "Air China",
+   "ticker": "601111.SS",
+   "slug": "air-china",
+   "mcap_bn": 18.84,
+   "country": "China",
+   "region": "中国 / 香港",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 64,
+   "name": "AXIA Energia SA",
+   "ticker": "AXIA3.SA",
+   "slug": "axia-energia-sa",
+   "mcap_bn": 18.68,
+   "country": "Brazil",
+   "region": "拉美",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 43,
+   "name": "Naver",
+   "ticker": "035420.KS",
+   "slug": "naver",
+   "mcap_bn": 18.29,
+   "country": "S. Korea",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "互联网"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 69,
+   "name": "KEPCO",
+   "ticker": "9503.T",
+   "slug": "kepco",
+   "mcap_bn": 17.64,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 70,
+   "name": "Tenaga Nasional",
+   "ticker": "TNABY",
+   "slug": "tenaga-nasional",
+   "mcap_bn": 17.61,
+   "country": "Malaysia",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "电力"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 51,
+   "name": "Kaspi.kz Joint Stock Company",
+   "ticker": "KKS.F",
+   "slug": "kaspi-kz",
+   "mcap_bn": 16.8,
+   "country": "Kazakhstan",
+   "region": "中东 / 非洲",
+   "leads": [
+    "软件"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 35,
+   "name": "Evergreen Marine",
+   "ticker": "2603.TW",
+   "slug": "evergreen-marine",
+   "mcap_bn": 16.29,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 35,
+   "name": "SEGRO",
+   "ticker": "SGRO.L",
+   "slug": "segro",
+   "mcap_bn": 16.04,
+   "country": "UK",
+   "region": "欧洲",
+   "leads": [
+    "房地产"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 18,
+   "name": "Fisher & Paykel Healthcare",
+   "ticker": "FPH.NZ",
+   "slug": "fisher-paykel-healthcare",
+   "mcap_bn": 15.91,
+   "country": "New Zealand",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "医疗器械"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 38,
+   "name": "ADNOC Logistics & Services",
+   "ticker": "ADNOCLS.AE",
+   "slug": "adnoc-logistics-services",
+   "mcap_bn": 15.04,
+   "country": "UAE",
+   "region": "中东 / 非洲",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 8,
+   "name": "Chow Tai Fook",
+   "ticker": "1929.HK",
+   "slug": "chow-tai-fook",
+   "mcap_bn": 14.44,
+   "country": "Hong Kong",
+   "region": "中国 / 香港",
+   "leads": [
+    "奢侈品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 7,
+   "name": "KT&G (Korea Tobacco)",
+   "ticker": "033780.KS",
+   "slug": "kt&g-(korea-tobacco)",
+   "mcap_bn": 14.2,
+   "country": "S. Korea",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "烟草"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 55,
+   "name": "Tower Semiconductor",
+   "ticker": "TSEM",
+   "slug": "tower-semiconductor",
+   "mcap_bn": 14.01,
+   "country": "Israel",
+   "region": "中东 / 非洲",
+   "leads": [
+    "半导体",
+    "科技硬件"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 24,
+   "name": "Sociedad Química y Minera",
+   "ticker": "SQM",
+   "slug": "sqm",
+   "mcap_bn": 13.91,
+   "country": "Chile",
+   "region": "拉美",
+   "leads": [
+    "化工"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 39,
+   "name": "Wilmar International",
+   "ticker": "F34.SI",
+   "slug": "wilmar",
+   "mcap_bn": 13.68,
+   "country": "Singapore",
+   "region": "澳新 / 东南亚",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 44,
+   "name": "LATAM Airlines",
+   "ticker": "LTM",
+   "slug": "latam-airlines",
+   "mcap_bn": 13.24,
+   "country": "Chile",
+   "region": "拉美",
+   "leads": [
+    "运输"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 41,
+   "name": "Uni-President Enterprises",
+   "ticker": "1216.TW",
+   "slug": "uni-president-enterprises",
+   "mcap_bn": 13.08,
+   "country": "Taiwan",
+   "region": "韩国 / 台湾",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 86,
+   "name": "The Phoenix Holdings",
+   "ticker": "PHOE.TA",
+   "slug": "the-phoenix-holdings-ltd",
+   "mcap_bn": 12.01,
+   "country": "Israel",
+   "region": "中东 / 非洲",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 88,
+   "name": "BB Seguridade Participações",
+   "ticker": "BBSE3.SA",
+   "slug": "bb-seguridade-participacoes",
+   "mcap_bn": 11.96,
+   "country": "Brazil",
+   "region": "拉美",
+   "leads": [
+    "保险"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 73,
+   "name": "SCSK Corporation",
+   "ticker": "9719.T",
+   "slug": "scsk-corp",
+   "mcap_bn": 11.3,
+   "country": "Japan",
+   "region": "日本",
+   "leads": [
+    "软件"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 53,
+   "name": "Almarai",
+   "ticker": "2280.SR",
+   "slug": "almarai",
+   "mcap_bn": 11.29,
+   "country": "S. Arabia",
+   "region": "中东 / 非洲",
+   "leads": [
+    "食品"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 61,
+   "name": "Shoprite",
+   "ticker": "SHP.JO",
+   "slug": "shoprite-holdings",
+   "mcap_bn": 10.67,
+   "country": "South Africa",
+   "region": "中东 / 非洲",
+   "leads": [
+    "零售"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  },
+  {
+   "rank": 80,
+   "name": "Coforge",
+   "ticker": "COFORGE.NS",
+   "slug": "coforge",
+   "mcap_bn": 10.23,
+   "country": "India",
+   "region": "印度",
+   "leads": [
+    "软件"
+   ],
+   "pool_key": null,
+   "onchain_vol_m": null
+  }
+ ]
+}
