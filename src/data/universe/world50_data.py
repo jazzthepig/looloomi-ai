@@ -42,7 +42,8 @@ US-GAAP 与 IFRS 两套)。与营收段同一个入口(`get_sec_concept`)、同�
 
 ## 按时点的龙头(美国部分)→ `sec_public_float` / `sec_company`(T-434 ⑤,11-25)
 
-SEC frames 的 `dei:EntityPublicFloat`:一年一页 = 当年所有 10-K 申报公司的公众流通市值(含后来退市的,没有幸存者偏差);
+SEC frames 的 `dei:EntityPublicFloat`:一年四页(Q1I–Q4I)= 当年所有 10-K 申报公司的公众流通市值(含后来退市的,没有幸存者偏差);
+另取每年一页总资产(`sec_assets`)给研究侧做第二道守卫;
 各年前 400 的公司取 submissions(名称、SIC、代码)。原样存;量级守卫与「哪年谁是龙头」在研究侧(S-915)。
 
 ## 一周一轮(`run_week`,由 `_world50_history_loop` 调)
@@ -61,12 +62,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Optional
 
 WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue", "sec_facts",
-                 "sec_public_float", "sec_company")
+                 "sec_public_float", "sec_company", "sec_assets")
 WRITES_COLUMNS = {
     "world50_mcap_weekly": ("key", "d", "mcap_usd", "shares", "source"),
     "world50_revenue": ("key", "tag", "unit", "period_start", "period_end", "filed", "revenue", "accn"),
     "sec_facts": ("key", "tag", "unit", "period_start", "period_end", "filed", "val", "accn", "form"),
     "sec_public_float": ("cik", "ccp", "period_end", "val", "entity_name", "loc", "accn"),
+    "sec_assets": ("cik", "ccp", "period_end", "val", "entity_name", "accn"),
     "sec_company": ("cik", "name", "sic", "sic_description", "tickers", "exchanges", "state_of_incorporation",
                     "fiscal_year_end", "former_names"),
     "world50_onchain_forms": ("as_of", "token_id", "key", "symbol", "name", "category", "issuer", "match_rule",
@@ -1049,31 +1051,68 @@ def company_row(sub: Any) -> Optional[dict]:
             "fiscal_year_end": sub.get("fiscalYearEnd") or None, "former_names": former or None}
 
 
+def assets_rows(frame: Any) -> list[dict]:
+    """SEC frames(us-gaap:Assets)→ sec_assets 行。纯函数。"""
+    return [{k: r[k] for k in ("cik", "ccp", "period_end", "val", "entity_name", "accn")} for r in float_rows(frame)]
+
+
+def float_year(ccp: str) -> int:
+    """`CY2015Q3I` → 2015。"""
+    return int(str(ccp)[2:6])
+
+
 async def refresh_public_float(first_year: int = FLOAT_FIRST_YEAR, top_n: int = FLOAT_TOP_N,
                                concurrency: int = FACTS_CONCURRENCY) -> dict[str, Any]:
-    """每年一页 frames → sec_public_float;各年前 top_n 的 CIK 取 submissions → sec_company。判活:
-    `select ccp, count(*) from sec_public_float group by ccp` 2011 起每年 ≥ 3,500;`select count(*) from sec_company` ≥ 900。"""
+    """每年四页 frames(Q1I–Q4I:流通市值的截至日是各公司**第二财季末**,Apple 在 3 月、Microsoft 在 12 月 —— 只取 Q2I 会漏掉它们,
+    S-915 结果 1)→ sec_public_float;每年一页总资产(Q4I)→ sec_assets(研究侧的第二道守卫);
+    各年(按截至日的日历年)前 top_n 的 CIK 取 submissions → sec_company。判活:
+    `select substr(ccp,3,4) y, count(distinct cik) from sec_public_float group by 1` 2011 起每年 ≥ 3,500;
+    `select count(*) from sec_assets` > 0;`select count(*) from sec_company` ≥ 900。"""
     from src.api.store import supabase_upsert_table
     from src.data.market import data_layer as dl
     tax, tag, unit = FLOAT_FRAME
     last_year = datetime.now(timezone.utc).year
     points: dict[str, int] = {}
-    top: set[int] = set()
+    assets_points = 0
+    by_year: dict[int, dict[int, float]] = {}
+
+    async def put(table: str, rows: list[dict]) -> Optional[str]:
+        for i in range(0, len(rows), 2000):
+            w = await supabase_upsert_table(table, rows[i:i + 2000], on_conflict="cik,ccp")
+            if not w.ok:
+                return w.why[:120]
+        return None
+
     try:
         for y in range(first_year, last_year + 1):
-            ccp = f"CY{y}Q2I"
-            rows = float_rows(await dl.get_sec_frame(tax, tag, unit, ccp))
+            n_year = 0
+            for q in (1, 2, 3, 4):
+                ccp = f"CY{y}Q{q}I"
+                rows = float_rows(await dl.get_sec_frame(tax, tag, unit, ccp))
+                await asyncio.sleep(0.15)
+                if not rows:
+                    continue
+                why = await put("sec_public_float", rows)
+                if why:
+                    return {"ok": False, "why": f"{ccp} 写入失败:{why}", "points": points}
+                n_year += len(rows)
+                for r in rows:
+                    yy = int(r["period_end"][:4])
+                    by_year.setdefault(yy, {})[r["cik"]] = max(r["val"], by_year.get(yy, {}).get(r["cik"], 0.0))
+            if n_year:
+                points[str(y)] = n_year
+            a = assets_rows(await dl.get_sec_frame("us-gaap", "Assets", "USD", f"CY{y}Q4I"))
             await asyncio.sleep(0.15)
-            if not rows:
-                continue
-            for i in range(0, len(rows), 2000):
-                w = await supabase_upsert_table("sec_public_float", rows[i:i + 2000], on_conflict="cik,ccp")
-                if not w.ok:
-                    return {"ok": False, "why": f"{ccp} 写入失败:{w.why[:120]}", "points": points}
-            points[ccp] = len(rows)
-            top |= {r["cik"] for r in sorted(rows, key=lambda r: -r["val"])[:top_n]}
-    except Exception as e:  # noqa: BLE001 — 某一年取不到 = 整段不成(按时点的名单缺一年就不能用),原因带回去
+            if a:
+                why = await put("sec_assets", a)
+                if why:
+                    return {"ok": False, "why": f"总资产 CY{y}Q4I 写入失败:{why}", "points": points}
+                assets_points += len(a)
+    except Exception as e:  # noqa: BLE001 — 某一页取不到 = 整段不成(按时点的名单缺一块就不能用),原因带回去
         return {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}", "points": points}
+    top: set[int] = set()
+    for vals in by_year.values():
+        top |= {c for c, _ in sorted(vals.items(), key=lambda kv: -kv[1])[:top_n]}
     sem = asyncio.Semaphore(concurrency)
 
     async def one(cik: int):
@@ -1093,8 +1132,9 @@ async def refresh_public_float(first_year: int = FLOAT_FIRST_YEAR, top_n: int = 
         if not w.ok:
             return {"ok": False, "why": f"sec_company 写入失败:{w.why[:120]}", "points": points}
     good_years = sum(1 for n in points.values() if n >= 1000)
-    return {"ok": good_years >= FLOAT_MIN_YEARS_OK and len(rows) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(top))),
-            "years": len(points), "points": points, "companies": len(top), "companies_ok": len(rows),
+    return {"ok": good_years >= FLOAT_MIN_YEARS_OK and assets_points > 0
+            and len(rows) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(top))),
+            "years": len(points), "points": points, "assets_points": assets_points, "companies": len(top), "companies_ok": len(rows),
             "failed": [{"key": r["cik"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
 
 
@@ -1232,8 +1272,8 @@ LOOP_NAME = "_world50_history_loop"
 #: mcap 21(10-23):行里加 shares 列 —— 下一次部署整段重写一遍,把历史行的股数填上(市值本身不变)。
 #: book 2(10-29):季内开账(OPEN_DATE 10-28)。
 PART_VERSIONS = {"prices": 6,   # 5:11-02 加轨道公司(RAIL_EQUITIES);6:11-25 加龙头网格(T-434,研究宇宙)
-                 # facts 2(11-25):加 IFRS 的「付给母公司股东的分红」标签
-                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 2, "float": 1, "book": 2, "fwd_books": 2}
+                 # facts 2(11-25):加 IFRS 的「付给母公司股东的分红」标签;float 2(11-25):每年四页 + 总资产(S-915 结果 1)
+                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 2, "float": 2, "book": 2, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -1269,7 +1309,7 @@ def _brief(name: str, r: dict) -> dict:
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer"),
             "revenue": ("companies", "companies_ok", "rows", "earliest"),
             "facts": ("companies", "companies_ok", "rows", "coverage", "not_sec_listed"),
-            "float": ("years", "points", "companies", "companies_ok"),
+            "float": ("years", "points", "assets_points", "companies", "companies_ok"),
             "book": ("waiting", "preview", "holdings_written", "nav_written", "last", "notes"),
             "fwd_books": ("waiting", "preview", "nav_written", "notes", "tom_trader")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}

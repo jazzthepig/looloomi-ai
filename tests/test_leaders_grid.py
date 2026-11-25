@@ -160,14 +160,23 @@ def test_float_rows_keep_the_raw_points_and_company_row_reads_submissions():
 
 
 def test_refresh_public_float_needs_every_year_and_asks_only_the_top(monkeypatch):
+    """S-915 结果 1:流通市值的截至日是各公司第二财季末(Apple 3 月、Microsoft 12 月)⇒ 每年取四页;年份按截至日算;
+    另取总资产一页作第二道守卫。"""
     import src.api.store as store
     import src.data.market.data_layer as dl
-    asked, written = [], {}
+    asked, written, pages = [], {}, []
 
     async def frame(tax, tag, unit, ccp):
-        y = int(ccp[2:6])
+        pages.append((tag, ccp))
+        y, q = int(ccp[2:6]), int(ccp[7])
         if y < 2011:
             return None                                       # XBRL 推行前:没有
+        if tag == "Assets":
+            return {"ccp": ccp, "data": [{"cik": 7, "end": f"{y}-12-31", "val": 1e9}]}
+        if q == 1:                                            # 「Apple」:第二财季末在 3 月,只在 Q1I 那一页
+            return {"ccp": ccp, "data": [{"cik": 5000, "end": f"{y}-03-28", "val": 9e11}]}
+        if q != 2:
+            return None
         return {"ccp": ccp, "data": [{"cik": c, "end": f"{y}-06-30", "val": float(c), "accn": "x"} for c in range(1, 1201)]}
 
     async def subs(cik):
@@ -186,9 +195,12 @@ def test_refresh_public_float_needs_every_year_and_asks_only_the_top(monkeypatch
     monkeypatch.setattr(wd.asyncio, "sleep", no_sleep)
     out = asyncio.run(wd.refresh_public_float(top_n=50))
     years = len(out["points"])
-    assert out["ok"] and years >= wd.FLOAT_MIN_YEARS_OK and "CY2010Q2I" not in out["points"]
-    assert sorted(asked) == list(range(1151, 1201)), "只给各年前 top_n 的公司取属性"
-    assert written == {"sec_public_float": 1200 * years, "sec_company": 50}
+    assert out["ok"] and years >= wd.FLOAT_MIN_YEARS_OK and "2010" not in out["points"]
+    assert {q for _, q in pages if q.startswith("CY2015")} == {"CY2015Q1I", "CY2015Q2I", "CY2015Q3I", "CY2015Q4I"}
+    assert 5000 in asked, "第二财季末在 3 月的公司(只在 Q1I)也要进前 N"
+    assert sorted(c for c in asked if c != 5000) == list(range(1152, 1201)), "只给各年前 top_n 的公司取属性"
+    assert written == {"sec_public_float": 1201 * years, "sec_assets": years, "sec_company": 50}
+    assert wd.float_year("CY2015Q3I") == 2015
 
     async def broken(tax, tag, unit, ccp):
         if ccp == "CY2018Q2I":
@@ -196,5 +208,20 @@ def test_refresh_public_float_needs_every_year_and_asks_only_the_top(monkeypatch
         return await frame(tax, tag, unit, ccp)
     monkeypatch.setattr(dl, "get_sec_frame", broken)
     out = asyncio.run(wd.refresh_public_float(top_n=50))
-    assert out["ok"] is False and "CY2018Q2I" in out["why"], "缺一年的按时点名单不能用 ⇒ 整段不成"
-    assert '("float", refresh_public_float)' in __import__("inspect").getsource(wd.run_week) and wd.PART_VERSIONS["float"] >= 1
+    assert out["ok"] is False and "CY2018Q2I" in out["why"], "缺一页的按时点名单不能用 ⇒ 整段不成"
+    assert '("float", refresh_public_float)' in __import__("inspect").getsource(wd.run_week) and wd.PART_VERSIONS["float"] >= 2
+
+
+def test_pit_us_script_shares_the_repo_tables_and_its_sql_carries_the_guards():
+    """按时点名单的研究脚本(不连库,只生成 SQL / 读结果):换主体表与仓库同一张;三道守卫与四页取数都写进了查询。"""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pit_us", ROOT / "docs" / "research" / "t434_leaders_grid" / "pit_us.py")
+    pit = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pit)
+    assert pit.PREDECESSOR == wd.PREDECESSOR_CIKS
+    q = pit.sql()
+    for needle in ("from sec_public_float where loc like 'US-%'", "rn = 1", f"{pit.ASSET_X} * a.val", f"{pit.SPIKE_X} * s.med",
+                   "union select cik, ticker from pr"):
+        assert needle in q, needle
+    assert (pit.sic_category("3674"), pit.sic_category("8731"), pit.sic_category("8742"), pit.sic_category("6022")) == \
+        ("semiconductors", "biotech", None, "banks")

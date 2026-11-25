@@ -237,6 +237,12 @@ json.dump({"as_of": "2026-11-25", "version": 2, "ledger": "S-913",
            "rules": {"primary_order": ORDER, "overrides": {k: {"to": v[0], "why": v[1]} for k, v in OVERRIDE.items()}},
            "cells": cells, "pool": sorted(pool.values(), key=lambda p: -p["mcap_bn"])},
           open(here.with_name("grid_v2.json"), "w"), ensure_ascii=False, indent=1)
+# 全体 ≥ 100 亿的公司及其主行业(⑤ 按时点名单用它给今天还在榜上的公司定行业,与网格同一套归属)
+json.dump({"as_of": "2026-11-25", "ledger": "S-915", "floor_bn": FLOOR,
+           "members": sorted(({"key": k, "ticker": info[k]["ticker"], "name": info[k]["name"], "country": info[k]["country"],
+                               "region": REG[info[k]["country"]], "category": primary[k], "site_categories": sorted(member[k]),
+                               "mcap_bn": info[k]["mcap_bn"]} for k in primary), key=lambda m: -m["mcap_bn"])},
+          open(here.with_name("members_v2.json"), "w"), ensure_ascii=False, indent=0)
 uni = here.resolve().parents[3] / "src" / "data" / "universe" / "leaders_grid.json"
 uni.write_text(json.dumps({"as_of": "2026-11-25", "ledger": "S-913", "built_by": "docs/research/t434_leaders_grid/build_grid_v2.py",
                            "names": research}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

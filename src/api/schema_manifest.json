@@ -128,6 +128,7 @@
     "santiment_slug_map",
     "scalable_book_nav",
     "scenario_ledger",
+    "sec_assets",
     "sec_company",
     "sec_facts",
     "sec_public_float",
@@ -948,6 +949,14 @@
       "sic_description",
       "state_of_incorporation",
       "tickers"
+    ],
+    "sec_assets": [
+      "accn",
+      "ccp",
+      "cik",
+      "entity_name",
+      "period_end",
+      "val"
     ]
   },
   "rpc_functions": [
