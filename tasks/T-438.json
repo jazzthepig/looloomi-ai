@@ -1,0 +1,28 @@
+{
+  "id": "T-438",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-917:同一个 S-916 脚本换成「只设结构止损、拿满 28 天」的管法再跑一遍(`--mgmt hold`)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-917(预注册,写于 T-436 结果之后、任何新计算之前)。脚本 = main 上更新过的 `docs/research/s916_jazz_4h_rules.py`(多了 `--mgmt hold` 与 `manage_hold`;默认管法与 T-436 跑的那一版逐字相同)。先 rebase 到 origin/main 拿新脚本。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-438.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s916_jazz_4h_rules.py --selftest --mgmt hold | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold > docs/research/s916_run_hold.txt 2>&1 &`,只 tail,等 WROTE(写 `s916_results_hold.json`)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|BASE|ROW|BOARD|ARMED)' docs/research/s916_run_hold.txt | cut -c1-460`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "s916_results_hold.json + s916_run_hold.txt;卡 in_review,推 lane-a/T-438(可以从 lane-a/T-436 接着开分支)。"
+  },
+  "prior_value": "S-916 里随机进场 + 同一套管法也是负的 —— 分不出是 Jazz 的进场没用,还是 4 小时 EMA7 跟踪与 2R 平一半砍掉了右尾。这一遍把两者分开。",
+  "notes": "2026-11-25T18:31:07Z Seth 开卡(S-916 结果 1 之后)。\n\n2026-11-26T03:42Z lane-a 跑完。\n\n脚本版本(要先讲清楚):origin/main 上的 s916_jazz_4h_rules.py **还没有** --mgmt hold —— Seth 的补丁还在主目录工作区没提交。我把主目录那份原样 cp 进 lane worktree 跑,一行未改;本分支里的 docs/research/s916_jazz_4h_rules.py 就是那份带 --mgmt hold 的版本(Seth 推同一份则合并无冲突)。--selftest --mgmt hold → SELFTEST OK。\n\n数据(与 T-436 同源同量):ohlcv_hourly(binance_hist) 聚 4h —— BTC/ETH 81171 小时行→20270 根 4h;SOL/BNB/XRP/ADA/AVAX/DOGE/LINK 51697→12918;NEAR 52785→13187(最后一根仍只到 2026-10-23,比其余币旧一个月);SUI 31251→7812(起点最晚)。\n\nCOUNTS: n_tested=24, **n_holds=8**;零分布 n=100 median=6.0 q95=9.0 **p_ge_real=0.19**。(同一脚本 Jazz 管法 = T-436: n_holds=0, median=0.0 q95=1.0 p=1.0)\n\nUNCOND(发现段 ≤2022-12-31 / 留出段 2023 起,均值 R,票数):LB_L +1.633(n426)/+1.321(n633);UB_S +0.019(n385)/−0.049(n782);BR_L +1.794(n795)/+0.933(n1193);BR_S +0.162(n660)/+0.029(n1129);BRF_L +2.734(n552)/+1.130(n824);BRF_S +0.338(n493)/+0.105(n823)。对照 BASE(+1)+0.548(n920)/+0.441(n1564);BASE(−1)+0.060(n924)/−0.142(n1510)。(Jazz 管法同一对照:BASE(+1)−0.127/−0.044,BASE(−1)−0.031/−0.068)\n\n站得住的 8 格:LB_L 线上·主流领、LB_L 线下·主流领、UB_S 线上·二线领、BR_L 线上·主流领、BR_L 线上·二线领、BR_S 线上·主流领、BRF_L 线上·主流领、BRF_L 线上·二线领 —— 6 多 2 空,7 格在「线上」。先不看同格同向对照时,24 格里 9 格是「发现段与留出段均值 R 都 > 0」。每格胜率 2.8%–12.9%、盈亏比 15.8–198.2(Jazz 管法:胜率 25%–47%、盈亏比 1.2–2.0);4% 风险复利资金曲线 max_dd 0.79–0.998、最长水下 68–341 张票。\n\n今日匹配板:状态格 2026-11-19 线下·主流领,home_rules_today=**LB_L**(T-436 同一格是空);11 币最后一根 4h 根全为 down。\n\n两处口径差(对照时必须看):①两遍不是同一张票集 —— tickets() 里同一币同一规则「同时只有一张票」,出场后 i=exit_i+1 才找下一张;hold 管法平均占位 168 根(28 天),Jazz 管法 90 根内出场,所以 hold 的票数比 Jazz 少 18%–23%(如 LB_L 发现段 426 vs 523)。②R 的量纲被极窄的结构止损放大:worst_r=−1.3 说明止损距离约为进价的 0.4%,28 天里 ±2 倍这个波动的 R 就到 +50、+198。\n\n零分布是同一批票、只把状态四格的时间标签平移(脚本自带 X.shifted):median 6、q95 9 —— 真值 8 落在零分布第 81 百分位(p=0.19)。\n\n产物:docs/research/s916_results_hold.json + docs/research/s916_run_hold.txt;前向预期 docs/research/scenarios/lane-a-T-438.json(8 条:开跑前先写 3 条预注册 T-438-1/2/3,实测后再加 5 条 T-438-4..8,其中 3 条 close 自动结算)。\n\n日志头两行 'loaded BTC 3099'/'loaded ETH 3099' 与 T-436 那次同样两行、同样位置;静态 import 链(s916→s881→s879/fused_knn)不打这两行(import 测试验证过),它出现在状态四格装载之后,具体哪一行代码打的没查到底。"
+}
