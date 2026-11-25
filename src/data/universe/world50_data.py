@@ -891,6 +891,8 @@ FACT_TAGS: tuple[tuple[str, str, str], ...] = (
     ("buyback", "us-gaap", "PaymentsForRepurchaseOfCommonStock"), ("buyback", "ifrs-full", "PaymentsToAcquireOrRedeemEntitysShares"),
     ("dividends", "us-gaap", "PaymentsOfDividends"), ("dividends", "us-gaap", "PaymentsOfDividendsCommonStock"),
     ("dividends", "ifrs-full", "DividendsPaidClassifiedAsFinancingActivities"),
+    # 11-25 首轮:BHP / BP / Shell / TotalEnergies / Novartis / UBS / Unilever / Vodafone / 法拉利一行分红都没有 —— IFRS 发行人常用这个
+    ("dividends", "ifrs-full", "DividendsPaidToEquityHoldersOfParentClassifiedAsFinancingActivities"),
     ("equity", "us-gaap", "StockholdersEquity"), ("equity", "ifrs-full", "EquityAttributableToOwnersOfParent"),
     ("shares", "dei", "EntityCommonStockSharesOutstanding"),
 )
@@ -1128,7 +1130,8 @@ LOOP_NAME = "_world50_history_loop"
 #: mcap 21(10-23):行里加 shares 列 —— 下一次部署整段重写一遍,把历史行的股数填上(市值本身不变)。
 #: book 2(10-29):季内开账(OPEN_DATE 10-28)。
 PART_VERSIONS = {"prices": 6,   # 5:11-02 加轨道公司(RAIL_EQUITIES);6:11-25 加龙头网格(T-434,研究宇宙)
-                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 1, "book": 2, "fwd_books": 2}
+                 # facts 2(11-25):加 IFRS 的「付给母公司股东的分红」标签
+                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 2, "book": 2, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:

@@ -769,15 +769,6 @@
    "site_ticker": "6505.TW"
   },
   {
-   "key": "AJINY",
-   "name": "Ajinomoto",
-   "code": "AJINY.US",
-   "region": "日本",
-   "industry": "食品",
-   "tier": "us_otc",
-   "site_ticker": "2802.T"
-  },
-  {
    "key": "NPSCY",
    "name": "Nippon Steel",
    "code": "NPSCY.US",
@@ -895,9 +886,9 @@
    "site_ticker": "TNABY"
   },
   {
-   "key": "2002A.TW",
+   "key": "2002.TW",
    "name": "China Steel",
-   "code": "2002A.TW",
+   "code": "2002.TW",
    "region": "韩国 / 台湾",
    "industry": "钢铁",
    "tier": "local",
@@ -911,15 +902,6 @@
    "industry": "软件",
    "tier": "us_listed",
    "site_ticker": "KKS.F"
-  },
-  {
-   "key": "ASBFY",
-   "name": "Asahi Group",
-   "code": "ASBFY.US",
-   "region": "日本",
-   "industry": "饮料",
-   "tier": "us_otc",
-   "site_ticker": "2502.T"
   },
   {
    "key": "2603.TW",

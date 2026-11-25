@@ -176,6 +176,10 @@ LINE = {
     "GMBXF": ("GMEXICOB.MX", "local", "墨西哥集团,墨西哥交易所 B 股"), "WMMVF": ("WALMEX.MX", "local", "沃尔玛墨西哥,墨西哥交易所"),
     "TNABY": ("5347.KLSE", "local", "国家能源(马来西亚),吉隆坡交易所"),
     "NZYM.VI": ("NSIS-B.CO", "local", "Novonesis 的主上市在哥本哈根(站点给的是维也纳代码)"),
+    "2002A.TW": ("2002.TW", "local", "中钢普通股;站点给的 2002A 是特别股(首轮实测:60 天里只有 12 个不同的收盘价)"),
+    # 首轮实测对不上的,撤掉,不留错的(S-913 结果 2)
+    "2802.T": (None, None, "场外 ADR AJINY 2026-05-20 之后没有成交(首轮实测),没有别的已确认美国线"),
+    "2502.T": (None, None, "场外 ADR ASBFY 的价位 ÷ 站点股价 = 2.38,不是一个简单的 ADR 比例(首轮实测),撤掉"),
 }
 def price_line(t: str) -> tuple:
     """站点代码 → (EODHD 代码 | None, 层级, 理由)。纯函数。"""
