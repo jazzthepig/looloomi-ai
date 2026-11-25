@@ -40,6 +40,11 @@
 US-GAAP 与 IFRS 两套)。与营收段同一个入口(`get_sec_concept`)、同一个已知日规则(同一期取最早报送)。原样存,派生在研究侧按时点现算。
 内部人交易(Form 4)不在这里。
 
+## 按时点的龙头(美国部分)→ `sec_public_float` / `sec_company`(T-434 ⑤,11-25)
+
+SEC frames 的 `dei:EntityPublicFloat`:一年一页 = 当年所有 10-K 申报公司的公众流通市值(含后来退市的,没有幸存者偏差);
+各年前 400 的公司取 submissions(名称、SIC、代码)。原样存;量级守卫与「哪年谁是龙头」在研究侧(S-915)。
+
 ## 一周一轮(`run_week`,由 `_world50_history_loop` 调)
 
 复权日线(`tradfi_history.run_once`)→ 历史市值 → 链上形式。三段各自报结果;**任何一段没成,整轮就不是 ok**,
@@ -55,11 +60,15 @@ import unicodedata
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Optional
 
-WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue", "sec_facts")
+WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue", "sec_facts",
+                 "sec_public_float", "sec_company")
 WRITES_COLUMNS = {
     "world50_mcap_weekly": ("key", "d", "mcap_usd", "shares", "source"),
     "world50_revenue": ("key", "tag", "unit", "period_start", "period_end", "filed", "revenue", "accn"),
     "sec_facts": ("key", "tag", "unit", "period_start", "period_end", "filed", "val", "accn", "form"),
+    "sec_public_float": ("cik", "ccp", "period_end", "val", "entity_name", "loc", "accn"),
+    "sec_company": ("cik", "name", "sic", "sic_description", "tickers", "exchanges", "state_of_incorporation",
+                    "fiscal_year_end", "former_names"),
     "world50_onchain_forms": ("as_of", "token_id", "key", "symbol", "name", "category", "issuer", "match_rule",
                               "price_usd", "mcap_usd", "volume_24h_usd"),
 }
@@ -996,6 +1005,99 @@ async def refresh_facts(candidates: Optional[list] = None, concurrency: int = FA
             "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
 
 
+# ── 按时点的龙头(美国部分):SEC frames 的公众流通市值(T-434 ⑤,台账 S-915)──────────────────────
+
+#: 10-K 封面的「非关联方持有的普通股市值」(美元,截至该公司第二财季末)。一次请求 = 当年所有 10-K 申报公司,含后来退市的。
+FLOAT_FRAME = ("dei", "EntityPublicFloat", "USD")
+FLOAT_FIRST_YEAR = 2009
+FLOAT_TOP_N = 400            # 每年按流通市值前这么多的 CIK 取公司属性(SIC 等)
+FLOAT_MIN_YEARS_OK = 12      # 至少这么多年各有 ≥ 1,000 个点,整段才算成
+
+
+def float_rows(frame: Any) -> list[dict]:
+    """SEC frames 回包 → sec_public_float 行。纯函数。原样存,不做量级守卫(守卫在研究侧,S-915 规则 3)。"""
+    ccp = str((frame or {}).get("ccp") or "")
+    out: dict[int, dict] = {}
+    for x in (frame or {}).get("data") or []:
+        try:
+            cik, v = int(x.get("cik")), float(x.get("val"))
+        except (TypeError, ValueError):
+            continue
+        end = str(x.get("end") or "")[:10]
+        if not ccp or len(end) != 10 or not math.isfinite(v) or v <= 0:
+            continue
+        out[cik] = {"cik": cik, "ccp": ccp, "period_end": end, "val": v, "entity_name": str(x.get("entityName") or "")[:200] or None,
+                    "loc": str(x.get("loc") or "") or None, "accn": str(x.get("accn") or "") or None}
+    return [out[k] for k in sorted(out)]
+
+
+def company_row(sub: Any) -> Optional[dict]:
+    """SEC submissions 回包 → sec_company 一行。纯函数。代码 / 交易所存逗号串(退市公司多半为空)。"""
+    if not isinstance(sub, dict):
+        return None
+    try:
+        cik = int(sub.get("cik"))
+    except (TypeError, ValueError):
+        return None
+    former = [{"name": f.get("name"), "from": str(f.get("from") or "")[:10] or None, "to": str(f.get("to") or "")[:10] or None}
+              for f in (sub.get("formerNames") or []) if isinstance(f, dict) and f.get("name")]
+    return {"cik": cik, "name": sub.get("name"), "sic": str(sub.get("sic") or "") or None,
+            "sic_description": sub.get("sicDescription") or None,
+            "tickers": ",".join(str(t) for t in (sub.get("tickers") or []) if t) or None,
+            "exchanges": ",".join(str(e) for e in (sub.get("exchanges") or []) if e) or None,
+            "state_of_incorporation": sub.get("stateOfIncorporation") or None,
+            "fiscal_year_end": sub.get("fiscalYearEnd") or None, "former_names": former or None}
+
+
+async def refresh_public_float(first_year: int = FLOAT_FIRST_YEAR, top_n: int = FLOAT_TOP_N,
+                               concurrency: int = FACTS_CONCURRENCY) -> dict[str, Any]:
+    """每年一页 frames → sec_public_float;各年前 top_n 的 CIK 取 submissions → sec_company。判活:
+    `select ccp, count(*) from sec_public_float group by ccp` 2011 起每年 ≥ 3,500;`select count(*) from sec_company` ≥ 900。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.market import data_layer as dl
+    tax, tag, unit = FLOAT_FRAME
+    last_year = datetime.now(timezone.utc).year
+    points: dict[str, int] = {}
+    top: set[int] = set()
+    try:
+        for y in range(first_year, last_year + 1):
+            ccp = f"CY{y}Q2I"
+            rows = float_rows(await dl.get_sec_frame(tax, tag, unit, ccp))
+            await asyncio.sleep(0.15)
+            if not rows:
+                continue
+            for i in range(0, len(rows), 2000):
+                w = await supabase_upsert_table("sec_public_float", rows[i:i + 2000], on_conflict="cik,ccp")
+                if not w.ok:
+                    return {"ok": False, "why": f"{ccp} 写入失败:{w.why[:120]}", "points": points}
+            points[ccp] = len(rows)
+            top |= {r["cik"] for r in sorted(rows, key=lambda r: -r["val"])[:top_n]}
+    except Exception as e:  # noqa: BLE001 — 某一年取不到 = 整段不成(按时点的名单缺一年就不能用),原因带回去
+        return {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}", "points": points}
+    sem = asyncio.Semaphore(concurrency)
+
+    async def one(cik: int):
+        async with sem:
+            try:
+                sub = await dl.get_sec_submissions(cik)
+                await asyncio.sleep(0.15)
+            except Exception as e:  # noqa: BLE001
+                return {"cik": cik, "ok": False, "why": f"{type(e).__name__}: {str(e)[:120]}"}
+        row = company_row(sub)
+        return {"cik": cik, "ok": row is not None, "row": row, **({} if row else {"why": "submissions 为空"})}
+
+    res = await asyncio.gather(*[one(c) for c in sorted(top)])
+    rows = [r["row"] for r in res if r.get("ok")]
+    for i in range(0, len(rows), 500):
+        w = await supabase_upsert_table("sec_company", rows[i:i + 500], on_conflict="cik")
+        if not w.ok:
+            return {"ok": False, "why": f"sec_company 写入失败:{w.why[:120]}", "points": points}
+    good_years = sum(1 for n in points.values() if n >= 1000)
+    return {"ok": good_years >= FLOAT_MIN_YEARS_OK and len(rows) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(top))),
+            "years": len(points), "points": points, "companies": len(top), "companies_ok": len(rows),
+            "failed": [{"key": r["cik"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
+
+
 # ── 链上形式 ────────────────────────────────────────────────────────────────
 
 METAL_WORDS = (("gold", "XAUUSD"), ("silver", "XAGUSD"), ("platinum", "XPTUSD"))
@@ -1131,7 +1233,7 @@ LOOP_NAME = "_world50_history_loop"
 #: book 2(10-29):季内开账(OPEN_DATE 10-28)。
 PART_VERSIONS = {"prices": 6,   # 5:11-02 加轨道公司(RAIL_EQUITIES);6:11-25 加龙头网格(T-434,研究宇宙)
                  # facts 2(11-25):加 IFRS 的「付给母公司股东的分红」标签
-                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 2, "book": 2, "fwd_books": 2}
+                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 2, "float": 1, "book": 2, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -1167,6 +1269,7 @@ def _brief(name: str, r: dict) -> dict:
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer"),
             "revenue": ("companies", "companies_ok", "rows", "earliest"),
             "facts": ("companies", "companies_ok", "rows", "coverage", "not_sec_listed"),
+            "float": ("years", "points", "companies", "companies_ok"),
             "book": ("waiting", "preview", "holdings_written", "nav_written", "last", "notes"),
             "fwd_books": ("waiting", "preview", "nav_written", "notes", "tom_trader")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
@@ -1181,7 +1284,7 @@ def _brief(name: str, r: dict) -> dict:
 
 
 def _say(name: str, r: dict) -> str:
-    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "facts": "财报事实",
+    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "facts": "财报事实", "float": "历年流通市值",
              "book": "前向账本", "fwd_books": "龙头腿 / 灵活组合"}[name]
     if r.get("skipped"):
         return label + " 跳过(6 天内已成)"
@@ -1189,6 +1292,8 @@ def _say(name: str, r: dict) -> str:
         return f"{label} 没跑起来:{str(r['why'])[:80]}"
     if name == "prices":
         return f"日线 {r.get('symbols_ok')}/{r.get('symbols')}"
+    if name == "float" and "years" in r:
+        return f"历年流通市值 {r.get('years')} 年 · 公司 {r.get('companies_ok')}/{r.get('companies')}"
     if name in ("mcap", "revenue", "facts"):
         return f"{label} {r.get('companies_ok')}/{r.get('companies')}"
     if name == "fwd_books":
@@ -1210,7 +1315,7 @@ async def run_week(force: bool = False) -> dict[str, Any]:
     from src.data.universe.forward_books import run_forward_books
     from src.data.universe.world50_book import run_book
     steps = (("prices", run_once), ("mcap", refresh_mcap), ("onchain_forms", discover_onchain_forms),
-             ("revenue", refresh_revenue), ("facts", refresh_facts), ("book", run_book), ("fwd_books", run_forward_books))
+             ("revenue", refresh_revenue), ("facts", refresh_facts), ("float", refresh_public_float), ("book", run_book), ("fwd_books", run_forward_books))
     done = set() if force else await _recent_ok_parts()
     parts: dict[str, dict] = {}
     for name, fn in steps:

@@ -927,6 +927,32 @@ async def get_sec_concept(cik: int, taxonomy: str, tag: str) -> Optional[dict]:
     return j if isinstance(j, dict) else None
 
 
+async def get_sec_frame(taxonomy: str, tag: str, unit: str, ccp: str) -> Optional[dict]:
+    """SEC XBRL `frames/{taxonomy}/{tag}/{unit}/{ccp}.json`:**一个期间里所有申报公司**的同一个事实(每家一个点)。
+    T-434 ⑤(S-915):`dei/EntityPublicFloat/USD/CY2015Q2I` = 2015 年所有 10-K 申报公司的公众流通市值,含后来退市的。
+    404 = 这个期间还没有(或从来没有)这个事实,返回 None;其他非 200 抛异常。"""
+    r = await _get_misc_client().get(f"https://data.sec.gov/api/xbrl/frames/{taxonomy}/{tag}/{unit}/{ccp}.json",
+                                     headers=_sec_headers(), timeout=60)
+    if r.status_code == 404:
+        return None
+    if r.status_code != 200:
+        raise RuntimeError(f"SEC frames {tag} {ccp} HTTP {r.status_code}")
+    j = r.json()
+    return j if isinstance(j, dict) else None
+
+
+async def get_sec_submissions(cik: int) -> Optional[dict]:
+    """SEC `submissions/CIK##########.json`:公司名、SIC、现用代码与交易所、注册地、曾用名(S-915)。404 返回 None。"""
+    r = await _get_misc_client().get(f"https://data.sec.gov/submissions/CIK{int(cik):010d}.json",
+                                     headers=_sec_headers(), timeout=30)
+    if r.status_code == 404:
+        return None
+    if r.status_code != 200:
+        raise RuntimeError(f"SEC submissions {cik} HTTP {r.status_code}")
+    j = r.json()
+    return j if isinstance(j, dict) else None
+
+
 async def get_eodhd_quarterly_history(ticker: str, exchange: str = "US") -> dict:
     """EODHD 基本面里的**历史**部分:每季 EPS(含公布日)与季度利润表(含报送日)。
     返回 {"Earnings": {"History": {...}}, "Financials": {"Income_Statement": {"quarterly": {...}}}} 的原样子树。

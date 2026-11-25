@@ -15,7 +15,9 @@
     "tasks/T-434.json",
     "migrations/2026-11-25_sec_facts.sql",
     "src/api/schema_manifest.json",
-    "scripts/preflight.sh"
+    "scripts/preflight.sh",
+    "migrations/2026-11-25_sec_public_float.sql",
+    "src/data/market/data_layer.py"
   ],
   "forbidden_paths": [
     "Shadow/",

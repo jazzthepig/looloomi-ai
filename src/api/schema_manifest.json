@@ -128,7 +128,9 @@
     "santiment_slug_map",
     "scalable_book_nav",
     "scenario_ledger",
+    "sec_company",
     "sec_facts",
+    "sec_public_float",
     "sharpe_mindshare_snap",
     "sharpe_narrative_mindshare",
     "short_paper_money",
@@ -926,6 +928,26 @@
       "tag",
       "unit",
       "val"
+    ],
+    "sec_public_float": [
+      "accn",
+      "ccp",
+      "cik",
+      "entity_name",
+      "loc",
+      "period_end",
+      "val"
+    ],
+    "sec_company": [
+      "cik",
+      "exchanges",
+      "fiscal_year_end",
+      "former_names",
+      "name",
+      "sic",
+      "sic_description",
+      "state_of_incorporation",
+      "tickers"
     ]
   },
   "rpc_functions": [

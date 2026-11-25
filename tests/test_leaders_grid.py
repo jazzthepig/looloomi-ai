@@ -5,6 +5,7 @@
 - 价格线**不猜代码**:EODHD 实测 404 的交易所(东京 / 印度 / 沙特 / 新加坡 / 米兰)不许出现在名单里;每个名字有层级。
 - 名单与研究产物(`docs/research/t434_leaders_grid/grid_v2.json`)说同一件事 —— 改名单就要重跑编表脚本。
 - 财报事实:时点值、年初至今的期间、最早一次报送、负值都按 S-913 规则 4 存;只对 SEC 代码表里有的公司发请求。
+- 按时点(⑤,S-915):历年流通市值原样存(量级守卫不在写入端);某一年取不到 = 整段不成;只给各年前 N 的公司取属性。
 """
 from __future__ import annotations
 
@@ -136,3 +137,64 @@ def test_facts_is_a_versioned_part_of_the_weekly_loop():
     assert '("facts", refresh_facts)' in inspect.getsource(wd.run_week)
     assert wd._say("facts", {"ok": True, "companies": 3, "companies_ok": 2}) == "财报事实 2/3"
     assert wd._brief("facts", {"ok": True, "companies": 3, "companies_ok": 2, "rows": 9, "coverage": {"net_income": 2}})["coverage"] == {"net_income": 2}
+
+
+def test_float_rows_keep_the_raw_points_and_company_row_reads_submissions():
+    frame = {"ccp": "CY2015Q2I", "data": [
+        {"accn": "a", "cik": 34088, "entityName": "Exxon Mobil", "loc": "US-TX", "end": "2015-06-30", "val": 346e9},
+        {"accn": "b", "cik": 1, "entityName": "Typo Inc", "loc": "US-NY", "end": "2015-06-30", "val": 7.1e17},   # 量级错:照存,研究侧守
+        {"accn": "c", "cik": 2, "entityName": "Zero", "end": "2015-06-30", "val": 0},
+        {"accn": "d", "cik": "x", "end": "2015-06-30", "val": 5}]}
+    rows = wd.float_rows(frame)
+    assert [(r["cik"], r["val"]) for r in rows] == [(1, 7.1e17), (34088, 346e9)]
+    assert set(rows[0]) == set(wd.WRITES_COLUMNS["sec_public_float"]) and rows[1]["ccp"] == "CY2015Q2I"
+    sub = {"cik": "0000040545", "name": "GE Aerospace", "sic": "3720", "sicDescription": "Aircraft & Parts", "tickers": ["GE"],
+           "exchanges": ["NYSE"], "stateOfIncorporation": "NY", "fiscalYearEnd": "1231",
+           "formerNames": [{"name": "GENERAL ELECTRIC CO", "from": "1994-03-01T00:00:00.000Z", "to": "2024-04-02T00:00:00.000Z"}]}
+    row = wd.company_row(sub)
+    assert row["cik"] == 40545 and row["sic"] == "3720" and row["tickers"] == "GE"
+    assert row["former_names"] == [{"name": "GENERAL ELECTRIC CO", "from": "1994-03-01", "to": "2024-04-02"}]
+    assert set(row) == set(wd.WRITES_COLUMNS["sec_company"])
+    assert wd.company_row({"name": "no cik"}) is None
+    assert wd.company_row({"cik": "5", "tickers": []})["tickers"] is None, "退市公司没有现用代码:空,不是空串"
+
+
+def test_refresh_public_float_needs_every_year_and_asks_only_the_top(monkeypatch):
+    import src.api.store as store
+    import src.data.market.data_layer as dl
+    asked, written = [], {}
+
+    async def frame(tax, tag, unit, ccp):
+        y = int(ccp[2:6])
+        if y < 2011:
+            return None                                       # XBRL 推行前:没有
+        return {"ccp": ccp, "data": [{"cik": c, "end": f"{y}-06-30", "val": float(c), "accn": "x"} for c in range(1, 1201)]}
+
+    async def subs(cik):
+        asked.append(cik)
+        return {"cik": str(cik), "name": f"C{cik}", "sic": "1000"}
+
+    async def upsert(table, rows, on_conflict=None):
+        written[table] = written.get(table, 0) + len(rows)
+        return StoreResult.ok_(len(rows))
+
+    async def no_sleep(_s):
+        return None
+    monkeypatch.setattr(dl, "get_sec_frame", frame)
+    monkeypatch.setattr(dl, "get_sec_submissions", subs)
+    monkeypatch.setattr(store, "supabase_upsert_table", upsert)
+    monkeypatch.setattr(wd.asyncio, "sleep", no_sleep)
+    out = asyncio.run(wd.refresh_public_float(top_n=50))
+    years = len(out["points"])
+    assert out["ok"] and years >= wd.FLOAT_MIN_YEARS_OK and "CY2010Q2I" not in out["points"]
+    assert sorted(asked) == list(range(1151, 1201)), "只给各年前 top_n 的公司取属性"
+    assert written == {"sec_public_float": 1200 * years, "sec_company": 50}
+
+    async def broken(tax, tag, unit, ccp):
+        if ccp == "CY2018Q2I":
+            raise RuntimeError("SEC frames EntityPublicFloat CY2018Q2I HTTP 503")
+        return await frame(tax, tag, unit, ccp)
+    monkeypatch.setattr(dl, "get_sec_frame", broken)
+    out = asyncio.run(wd.refresh_public_float(top_n=50))
+    assert out["ok"] is False and "CY2018Q2I" in out["why"], "缺一年的按时点名单不能用 ⇒ 整段不成"
+    assert '("float", refresh_public_float)' in __import__("inspect").getsource(wd.run_week) and wd.PART_VERSIONS["float"] >= 1

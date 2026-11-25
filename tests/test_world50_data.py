@@ -302,6 +302,10 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     async def facts():
         return {"ok": True, "companies": 150, "companies_ok": 149, "rows": 90000}
     monkeypatch.setattr(wd, "refresh_facts", facts)
+
+    async def pfloat():
+        return {"ok": True, "years": 17, "points": {}, "companies": 900, "companies_ok": 899}
+    monkeypatch.setattr(wd, "refresh_public_float", pfloat)
     import src.data.universe.world50_book as wb
 
     async def book():
