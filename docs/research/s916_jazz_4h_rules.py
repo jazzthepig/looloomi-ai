@@ -28,6 +28,7 @@ EMA7 / 20 / 50、布林 20 × 2σ、H20 / L20 = 此前 20 根(不含本根)的�
 用法(仓库根目录;环境里有只读的 SUPABASE_URL / SUPABASE_KEY):
     python3 docs/research/s916_jazz_4h_rules.py --selftest
     nohup python3 docs/research/s916_jazz_4h_rules.py > docs/research/s916_run.txt 2>&1 &      # 写 s916_results.json(含今天的匹配板)
+    nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold > docs/research/s916_run_hold.txt 2>&1 &   # S-917:只设止损、拿满 28 天
 """
 from __future__ import annotations
 
@@ -63,6 +64,11 @@ SPLIT = dt.date(2022, 12, 31)
 BB_N, BB_K, HL_N, SWING_N, RETEST_WIN, RETEST_TOL, CANCEL = 20, 2.0, 20, 10, 12, 0.003, 0.01
 BUF, DMIN, DMAX, TP_R, MAX_BARS, COST, EVERY = 0.002, 0.004, 0.08, 2.0, 90, 0.0012, 30
 MIN_N, MIN_PAYOFF, N_NULL, SEED, RISK = 20, 2.0, 100, 916, 0.04
+#: S-917:`--mgmt hold` = 只有结构止损、不平一半、不保本、不跟 EMA7,拿满 168 根(28 天)按收盘平 —— 把管法和进场分开看
+MGMT = "hold" if "--mgmt" in sys.argv and sys.argv[sys.argv.index("--mgmt") + 1] == "hold" else "jazz"
+HOLD_BARS = 168
+if MGMT == "hold":
+    OUT = "docs/research/s916_results_hold.json"
 
 
 # ── 4 小时线与指标 ─────────────────────────────────────────────────────────────
@@ -117,6 +123,8 @@ def manage(b: dict, ind: dict, i0: int, side: int, entry: float, stop: float) ->
     risk = abs(entry - stop)
     if risk <= 0:
         return None
+    if MGMT == "hold":
+        return manage_hold(b, i0, side, entry, stop, risk)
     o, h, l, c, e7 = b["o"], b["h"], b["l"], b["c"], ind["e7"]
     half_done, cur_stop, realized, size = False, stop, 0.0, 1.0
     target = entry + side * TP_R * risk
@@ -143,6 +151,24 @@ def manage(b: dict, ind: dict, i0: int, side: int, entry: float, stop: float) ->
         return None                                        # 数据不够拿满 —— 不算(样本末尾)
     realized += size * side * (c[j] - entry) / risk
     return {"r": realized - COST * entry / risk, "exit_i": j, "bars": j - i0}
+
+
+def manage_hold(b: dict, i0: int, side: int, entry: float, stop: float, risk: float) -> dict | None:
+    """S-917 的管法:只有止损(同一根先看止损、跳空按开盘),拿满 HOLD_BARS 根按收盘平;拿不满(样本末尾)不算。"""
+    o, h, l, c = b["o"], b["h"], b["l"], b["c"]
+    n = len(c)
+    for j in range(i0, min(n, i0 + HOLD_BARS + 1)):
+        first = j > i0
+        if side > 0 and l[j] <= stop:
+            px = o[j] if first and o[j] < stop else stop
+            return {"r": (px - entry) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
+        if side < 0 and h[j] >= stop:
+            px = o[j] if first and o[j] > stop else stop
+            return {"r": (entry - px) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
+    j = i0 + HOLD_BARS
+    if j >= n:
+        return None
+    return {"r": side * (c[j] - entry) / risk - COST * entry / risk, "exit_i": j, "bars": j - i0}
 
 
 def _stop_ok(entry: float, stop: float, side: int) -> float | None:
@@ -419,12 +445,16 @@ if __name__ == "__main__":
               "l": np.array([99, 89, 99, 99, 99.0]), "c": np.array([100, 95, 100, 100, 100.0])}
         ti = {"e7": np.full(5, 100.0)}
         m = manage(tb, ti, 1, 1, 100.0, 90.0)
-        assert m and abs(m["r"] - (-1 - COST * 100 / 10)) < 1e-9, m
+        assert m and abs(m["r"] - (-1 - COST * 100 / 10)) < 1e-9, m          # 两种管法都是 −1R − 成本
         tb2 = {"t": b["t"][:6], "o": np.array([100, 100, 100, 100, 100, 100.0]), "h": np.array([101, 121, 122, 123, 124, 125.0]),
                "l": np.array([99, 99, 105, 105, 105, 105.0]), "c": np.array([100, 115, 118, 104, 110, 110.0])}
         ti2 = {"e7": np.array([100, 110, 112, 112, 112, 112.0])}
-        m2 = manage(tb2, ti2, 1, 1, 100.0, 90.0)
-        assert m2 and abs(m2["r"] - (0.5 * 2 + 0.5 * 0.4 - COST * 100 / 10)) < 1e-9, m2   # +2R 平一半,之后收盘 104 < EMA7 112 全平
+        if MGMT == "jazz":
+            m2 = manage(tb2, ti2, 1, 1, 100.0, 90.0)
+            assert m2 and abs(m2["r"] - (0.5 * 2 + 0.5 * 0.4 - COST * 100 / 10)) < 1e-9, m2   # +2R 平一半,之后收盘 104 < EMA7 112 全平
+        if MGMT == "hold":
+            mh = manage_hold(tb2, 1, 1, 100.0, 90.0, 10.0)
+            assert mh is None, "拿不满 168 根的票不算"
         assert out["n_tested"] == len(RULES) * len(CELLS)
         assert sum(len(v) for v in out["per_coin"].values()) == 2 * len(RULES)
         print("SELFTEST OK")

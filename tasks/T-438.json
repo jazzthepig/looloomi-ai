@@ -1,0 +1,28 @@
+{
+  "id": "T-438",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-917:同一个 S-916 脚本换成「只设结构止损、拿满 28 天」的管法再跑一遍(`--mgmt hold`)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-917(预注册,写于 T-436 结果之后、任何新计算之前)。脚本 = main 上更新过的 `docs/research/s916_jazz_4h_rules.py`(多了 `--mgmt hold` 与 `manage_hold`;默认管法与 T-436 跑的那一版逐字相同)。先 rebase 到 origin/main 拿新脚本。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-438.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s916_jazz_4h_rules.py --selftest --mgmt hold | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold > docs/research/s916_run_hold.txt 2>&1 &`,只 tail,等 WROTE(写 `s916_results_hold.json`)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|BASE|ROW|BOARD|ARMED)' docs/research/s916_run_hold.txt | cut -c1-460`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "s916_results_hold.json + s916_run_hold.txt;卡 in_review,推 lane-a/T-438(可以从 lane-a/T-436 接着开分支)。"
+  },
+  "prior_value": "S-916 里随机进场 + 同一套管法也是负的 —— 分不出是 Jazz 的进场没用,还是 4 小时 EMA7 跟踪与 2R 平一半砍掉了右尾。这一遍把两者分开。",
+  "notes": "2026-11-25T18:31:07Z Seth 开卡(S-916 结果 1 之后)。"
+}
