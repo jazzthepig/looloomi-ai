@@ -1,0 +1,24 @@
+{
+  "id": "T-435",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "① 的市值读数加第二源:CG 停供期间 core_cap 与它下游的整条决策链(state_daily → feature_matrix → rr_matrix → allocation → anchor)不再停 —— CMC 收盘快照扩到 ① 的 24 名 + 冻结流通量 × 币安收盘兜底,标记来源,不改历史",
+  "source": "高维复盘 11-25。`_core_cap_loop` / `_cis_tilt_loop` / `_multiplier_loop` 自 2026-11-23 收盘起报错「24 个币里只有 0 个有 ≤3 天的市值」(MCAP_MAX_AGE_DAYS=3,asset_mcap_daily 最后一天 11-19/20,CG 11-21 停订)。state_daily 的 end = min(target, last_core) ⇒ 状态层停在 11-22,feature_matrix / rr_matrix / allocation / anchor 跟着停;⓪ 11-27 到期,续判时看不到当周状态。价格(binance_hist)一天没断;CMC 收盘快照(market_snapshot,close_of 11-23 / 11-24)已有 26 个名字的 market_cap 与 circulating_supply,但只覆盖 ① 的 17 / 24(缺 BCH ETC FIL LTC TRX ATOM DOGE)。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "docs/SPINE.md",
+    "tasks/T-435.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① CMC 收盘快照的名单并上 core_cap.panel_universe() 的 24 名(每天同一次请求,不加调用次数上限之外的请求)。② core_cap 的市值读法:asset_mcap_daily 缺 / 超过 MCAP_MAX_AGE_DAYS 时,依次退到 (a) market_snapshot close_of = d−1 的 market_cap,(b) 最后一次 CG 流通量 × binance_hist d−1 收盘(流通量冻结 ≤ 21 天,超过就照旧报错);每一行在 weights 旁记 mcap_source 与冻结天数。③ 只在登记的停供窗口内默认开(与 T-422 同形),窗口外关时与现在逐位相同(测试)。④ 已写的行不改;CG 回来后对重叠日量三源市值的逐名差(中位 / p99 bp)与目标权重差,写进卡 notes,再决定窗口外开不开。⑤ 测试:三种来源各一条;冻结超限报错;关闭时输出逐位不变。",
+    "expect": "规则 5b 三样:调度者(现有 _core_cap_loop,不新建循环)、判活(`select max(d) from core_cap_daily where arm='cap_a1_u'` = 昨天;`select max(d) from state_daily where feature='mom_20'` = 昨天)、第一行真实数据(部署后第一轮把 11-23 起等着的日子按兜底写出,行上带 mcap_source)。"
+  },
+  "prior_value": "① 是收益层级的底、也是下游所有账与状态层的时钟;今天它的时钟只有一个付费上游。停供五天,决策链瞎了三天(11-23 → 11-25),在吸筹 / 第二段正要分岔的一周。",
+  "notes": "2026-11-25T11:20Z Seth 开卡(高维复盘 11-25)。与 T-426(lane-b,执行计划的 BTC / ETH 收盘)、T-429(lane-a,两条状态轴的无 CG 读法)不重叠:这张只管 ① 的市值权重。"
+}

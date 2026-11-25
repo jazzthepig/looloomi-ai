@@ -1,0 +1,65 @@
+{
+  "author": "seth:high-dim",
+  "entries": [
+    {
+      "id": "HD-2026-11-25-1",
+      "scenario": "S2 第二段",
+      "statement": "2026-12-23 BTC 收盘低于 53,849(比 11-24 的 59,832 再跌 10% 以上;11-20 收盘低点 58,952)",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 53849,
+      "prob": 0.3,
+      "horizon_d": "2026-12-23"
+    },
+    {
+      "id": "HD-2026-11-25-2",
+      "scenario": "S3 反抽",
+      "statement": "2026-12-23 BTC 收盘高于 65,815(比 11-24 涨 10% 以上;仍在 200 日线 72,189 之下)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 65815,
+      "prob": 0.25,
+      "horizon_d": "2026-12-23"
+    },
+    {
+      "id": "HD-2026-11-25-3",
+      "scenario": "S2 第二段 / 信用",
+      "statement": "2026-12-23 前后高收益债利差高于 3.80(11-17 3.34 → 11-24 3.63,在扩)",
+      "variable": "macro:hy_oas",
+      "op": "gt",
+      "lo": 3.8,
+      "prob": 0.35,
+      "horizon_d": "2026-12-23"
+    },
+    {
+      "id": "HD-2026-11-25-4",
+      "scenario": "跨资产再冲击",
+      "statement": "2026-12-23 前后 VIX 高于 30(11-20 35.9 → 11-24 26.4)",
+      "variable": "macro:vix",
+      "op": "gt",
+      "lo": 30.0,
+      "prob": 0.2,
+      "horizon_d": "2026-12-23"
+    },
+    {
+      "id": "HD-2026-11-25-5",
+      "scenario": "S2 第二段",
+      "statement": "2026-12-23 前后 BTC 的 MVRV 低于 1.00(11-23 是 1.15)",
+      "variable": "macro:btc_mvrv",
+      "op": "lt",
+      "hi": 1.0,
+      "prob": 0.2,
+      "horizon_d": "2026-12-23"
+    },
+    {
+      "id": "HD-2026-11-25-6",
+      "scenario": "S1 低位磨 / 吸筹",
+      "statement": "2026-12-23 恐惧贪婪高于 25(11-25 是 13;连续 11 天 ≤ 13)",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 25,
+      "prob": 0.35,
+      "horizon_d": "2026-12-23"
+    }
+  ]
+}
