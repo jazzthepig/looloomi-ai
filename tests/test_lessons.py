@@ -113,8 +113,21 @@ _BASELINE_REACHABLE: frozenset[int] = frozenset({
 #                        resulting state is the artifact.
 _EXEMPT_UNENFORCED: dict[int, str] = {
     # The 11 live-reachable lessons (see _BASELINE_REACHABLE) are NOT in this
-    # map. Listed below are the 55 truly-unreachable lessons, each with a
+    # map. Listed below are the 54 truly-unreachable lessons, each with a
     # reason from one of the four declared categories.
+    #
+    # 11-23 (T-424) — Lesson #96 离开了这张表,原因有两层,都得写下来:
+    #   ① 它此前在这张表里的理由是**错的**:写的是「与成本稳健性一脉」,而台账的
+    #      #96 原文是「任何默认值都必须携带它被选中的原因」(REFUTATION_LEDGER.md
+    #      「教训(→ Lesson #96)」)—— 成本稳健性是它隔壁那条,不是它。
+    #   ② T-424 的新鲜度守卫给了它**可执行形式**:本地走私有台账、CI 走在仓日志,
+    #      两条路径各自带着被选中的理由(`_staleness_evidence`)。原来那句「默认值
+    #      会吞掉它本该暴露的缺陷」,现在是一条会在 main 上红的门。
+    # 顺带记一句:那张扫描器把测试文件里任何「#N」都当成「已强制执行」——所以
+    # 散文里引用一个课号,机器会当真的。T-424 自己的文件在「两个编号空间撞号」
+    # 那一段里写了裸课号,机器就把台账的 92/93/94 判成了已强制执行(双覆盖 ⇒ 门
+    # 红)。那一段讲的恰恰是「按号判会判错课」。⇒ 去哈希的是那三处散文引用,不是
+    # 豁免表 —— 台账的 92/93/94 至今没有可执行形式,这张表照旧记着。
     #
     # ⚠️ NO `#N` REFERENCES IN THESE REASONS. test_lessons.py is self-excluded
     # from the reachability scan (see _tests_blob), but a `#N` here would
@@ -232,8 +245,6 @@ _EXEMPT_UNENFORCED: dict[int, str] = {
     95: "ARCH-NO-TEST — edge passes 3-check but FAILED on cost. Project-level "
         "doctrine; cost robustness is enforced structurally by the cost-layer "
         "tests (M-108 + M-114 lineages), not by a doctrine-level guard.",
-    96: "ARCH-NO-TEST — same lineage as the cost-robustness doctrine; "
-        "structural enforcement via cost-layer tests covers the S-N instances.",
     97: "ARCH-NO-TEST — same lineage as the directional alpha shape exhaustion.",
     98: "ARCH-NO-TEST — same lineage as the directional alpha shape exhaustion.",
     99: "ARCH-NO-TEST — same lineage as the directional alpha shape exhaustion.",
