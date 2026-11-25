@@ -298,6 +298,10 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     async def revenue():
         return {"ok": True, "companies": 81, "companies_ok": 80, "rows": 9000}
     monkeypatch.setattr(wd, "refresh_revenue", revenue)
+
+    async def facts():
+        return {"ok": True, "companies": 150, "companies_ok": 149, "rows": 90000}
+    monkeypatch.setattr(wd, "refresh_facts", facts)
     import src.data.universe.world50_book as wb
 
     async def book():

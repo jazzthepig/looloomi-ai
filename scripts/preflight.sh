@@ -798,6 +798,13 @@ python3 -m pytest tests/test_cis_snapshot_layer.py -q || {
     echo "✗ preflight stage: S-909 —— 正式 CIS 第二层(收盘快照补缺)的边界红:动了已有来源的名字 / 门没拦住 / 来源没写进行 / 占比或上限被接上了" >&2
     exit 1
 }
+# 3a-vicesima-nonies. S-913 / T-434(2026-11-25,Jazz「各行各业各地区的龙头」「公开免费的就够」):龙头网格的研究宇宙进周度
+#                     整段重取、SEC 原始财报事实进同一循环。钉的是:不和 World50 撞代码、不猜代码(EODHD 404 的交易所不许出现)、
+#                     名单与研究产物一致、财报事实按预注册的规则存(时点值 / 年初至今 / 最早报送)、只对 SEC 代码表里的公司发请求。
+python3 -m pytest tests/test_leaders_grid.py -q || {
+    echo "✗ preflight stage: S-913 —— 龙头网格研究宇宙 / SEC 财报事实红:撞了候选池代码 / 名单与 grid_v2.json 不一致 / 事实的存法改了" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

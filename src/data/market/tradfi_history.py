@@ -63,10 +63,22 @@ async def refresh_one(c: Any, start: str = START) -> dict[str, Any]:
             **({} if written == len(rows) else {"why": f"只写进 {written}/{len(rows)} 行"})}
 
 
-async def run_once(start: str = START, candidates: Optional[list] = None) -> dict[str, Any]:
+def default_todo() -> list:
+    """候选池 + 对照组 + 轨道公司 + 龙头网格,按 key 去重(先到的留下:候选池的代码优先)。"""
+    from src.data.universe.leaders_grid import candidates as leaders
     from src.data.universe.world50 import BENCHMARKS, RAIL_EQUITIES, eodhd_candidates
-    # 对照组(T-099)与轨道公司(11-02,研究宇宙)一起整段重取;轨道公司某个代码 EODHD 没有 ⇒ 记进 failed,不影响整轮判定
-    todo = candidates if candidates is not None else eodhd_candidates() + list(BENCHMARKS) + list(RAIL_EQUITIES)
+    out, seen = [], set()
+    for c in eodhd_candidates() + list(BENCHMARKS) + list(RAIL_EQUITIES) + list(leaders()):
+        if c.key not in seen:
+            seen.add(c.key)
+            out.append(c)
+    return out
+
+
+async def run_once(start: str = START, candidates: Optional[list] = None) -> dict[str, Any]:
+    # 对照组(T-099)、轨道公司(11-02)与龙头网格(T-434,11-25)一起整段重取 —— 后两者是研究宇宙;
+    # 某个代码 EODHD 没有 ⇒ 记进 failed,不影响整轮判定
+    todo = candidates if candidates is not None else default_todo()
     sem = asyncio.Semaphore(CONCURRENCY)
 
     async def _guard(c):
@@ -81,7 +93,7 @@ async def run_once(start: str = START, candidates: Optional[list] = None) -> dic
     enough = len(ok) >= min(MIN_SYMBOLS_OK, len(todo))
     return {
         "ok": enough, "refused": not enough,
-        "symbols": len(todo), "symbols_ok": len(ok), "written": written, "failed": failed[:40],
+        "symbols": len(todo), "symbols_ok": len(ok), "written": written, "failed": failed[:80],
         "elapsed_s": round((datetime.now(timezone.utc) - t0).total_seconds(), 1),
         "reason": (f"{len(ok)}/{len(todo)} 个代码整段重取,写入 {written} 行" if enough
                    else f"只有 {len(ok)}/{len(todo)} 个代码取到 —— 低于 {MIN_SYMBOLS_OK},按大面积故障报"),

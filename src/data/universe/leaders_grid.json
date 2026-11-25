@@ -1,0 +1,1051 @@
+{
+ "as_of": "2026-11-25",
+ "ledger": "S-913",
+ "built_by": "docs/research/t434_leaders_grid/build_grid_v2.py",
+ "names": [
+  {
+   "key": "SPCX",
+   "name": "SpaceX",
+   "code": "SPCX.US",
+   "region": "美国",
+   "industry": "航空航天与国防",
+   "tier": "us_listed",
+   "site_ticker": "SPCX"
+  },
+  {
+   "key": "ITX.MC",
+   "name": "Inditex",
+   "code": "ITX.MC",
+   "region": "欧洲",
+   "industry": "零售",
+   "tier": "local",
+   "site_ticker": "ITX.MC"
+  },
+  {
+   "key": "300750.SHE",
+   "name": "CATL",
+   "code": "300750.SHE",
+   "region": "中国 / 香港",
+   "industry": "制造",
+   "tier": "local",
+   "site_ticker": "300750.SZ"
+  },
+  {
+   "key": "HDB",
+   "name": "HDFC Bank",
+   "code": "HDB.US",
+   "region": "印度",
+   "industry": "银行",
+   "tier": "us_listed",
+   "site_ticker": "HDB"
+  },
+  {
+   "key": "MDT",
+   "name": "Medtronic",
+   "code": "MDT.US",
+   "region": "欧洲",
+   "industry": "医疗器械",
+   "tier": "us_listed",
+   "site_ticker": "MDT"
+  },
+  {
+   "key": "SPOT",
+   "name": "Spotify",
+   "code": "SPOT.US",
+   "region": "欧洲",
+   "industry": "娱乐 / 游戏",
+   "tier": "us_listed",
+   "site_ticker": "SPOT"
+  },
+  {
+   "key": "600900.SHG",
+   "name": "China Yangtze Power",
+   "code": "600900.SHG",
+   "region": "中国 / 香港",
+   "industry": "电力",
+   "tier": "local",
+   "site_ticker": "600900.SS"
+  },
+  {
+   "key": "002594.SHE",
+   "name": "BYD",
+   "code": "002594.SHE",
+   "region": "中国 / 香港",
+   "industry": "汽车",
+   "tier": "local",
+   "site_ticker": "002594.SZ"
+  },
+  {
+   "key": "TKOMY",
+   "name": "Tokio Marine",
+   "code": "TKOMY.US",
+   "region": "日本",
+   "industry": "保险",
+   "tier": "us_otc",
+   "site_ticker": "8766.T"
+  },
+  {
+   "key": "ENB",
+   "name": "Enbridge",
+   "code": "ENB.US",
+   "region": "加拿大",
+   "industry": "石油天然气",
+   "tier": "us_listed",
+   "site_ticker": "ENB"
+  },
+  {
+   "key": "2317.TW",
+   "name": "Foxconn (Hon Hai Precision Industry)",
+   "code": "2317.TW",
+   "region": "韩国 / 台湾",
+   "industry": "科技硬件",
+   "tier": "local",
+   "site_ticker": "2317.TW"
+  },
+  {
+   "key": "NTTYY",
+   "name": "NTT (Nippon Telegraph & Telephone)",
+   "code": "NTTYY.US",
+   "region": "日本",
+   "industry": "电信",
+   "tier": "us_otc",
+   "site_ticker": "9432.T"
+  },
+  {
+   "key": "GMEXICOB.MX",
+   "name": "Grupo México",
+   "code": "GMEXICOB.MX",
+   "region": "拉美",
+   "industry": "矿业",
+   "tier": "local",
+   "site_ticker": "GMBXF"
+  },
+  {
+   "key": "AEM",
+   "name": "Agnico Eagle Mines",
+   "code": "AEM.US",
+   "region": "加拿大",
+   "industry": "矿业",
+   "tier": "us_listed",
+   "site_ticker": "AEM"
+  },
+  {
+   "key": "CP",
+   "name": "CPKC (Canadian Pacific Kansas City)",
+   "code": "CP.US",
+   "region": "加拿大",
+   "industry": "运输",
+   "tier": "us_listed",
+   "site_ticker": "CP"
+  },
+  {
+   "key": "BAM",
+   "name": "Brookfield Asset Management",
+   "code": "BAM.US",
+   "region": "加拿大",
+   "industry": "金融服务",
+   "tier": "us_listed",
+   "site_ticker": "BAM"
+  },
+  {
+   "key": "ITUB",
+   "name": "Itaú Unibanco",
+   "code": "ITUB.US",
+   "region": "拉美",
+   "industry": "银行",
+   "tier": "us_listed",
+   "site_ticker": "ITUB"
+  },
+  {
+   "key": "AMX",
+   "name": "America Movil",
+   "code": "AMX.US",
+   "region": "拉美",
+   "industry": "电信",
+   "tier": "us_listed",
+   "site_ticker": "AMX"
+  },
+  {
+   "key": "CHGCY",
+   "name": "Chugai Pharmaceutical",
+   "code": "CHGCY.US",
+   "region": "日本",
+   "industry": "制药",
+   "tier": "us_otc",
+   "site_ticker": "4519.T"
+  },
+  {
+   "key": "MELI",
+   "name": "MercadoLibre",
+   "code": "MELI.US",
+   "region": "拉美",
+   "industry": "互联网",
+   "tier": "us_listed",
+   "site_ticker": "MELI"
+  },
+  {
+   "key": "2359.HK",
+   "name": "WuXi AppTec",
+   "code": "2359.HK",
+   "region": "中国 / 香港",
+   "industry": "生物科技",
+   "tier": "local",
+   "site_ticker": "2359.HK"
+  },
+  {
+   "key": "RACE",
+   "name": "Ferrari",
+   "code": "RACE.US",
+   "region": "欧洲",
+   "industry": "汽车",
+   "tier": "us_listed",
+   "site_ticker": "RACE"
+  },
+  {
+   "key": "VIC.VN",
+   "name": "Vingroup Company",
+   "code": "VIC.VN",
+   "region": "澳新 / 东南亚",
+   "industry": "综合企业",
+   "tier": "local",
+   "site_ticker": "VIC.VN"
+  },
+  {
+   "key": "MFC",
+   "name": "Manulife Financial",
+   "code": "MFC.US",
+   "region": "加拿大",
+   "industry": "保险",
+   "tier": "us_listed",
+   "site_ticker": "MFC"
+  },
+  {
+   "key": "DHL.XETRA",
+   "name": "DHL Group (Deutsche Post)",
+   "code": "DHL.XETRA",
+   "region": "欧洲",
+   "industry": "运输",
+   "tier": "local",
+   "site_ticker": "DHL.DE"
+  },
+  {
+   "key": "APD",
+   "name": "Air Products and Chemicals",
+   "code": "APD.US",
+   "region": "美国",
+   "industry": "化工",
+   "tier": "us_listed",
+   "site_ticker": "APD"
+  },
+  {
+   "key": "DG.PA",
+   "name": "Vinci",
+   "code": "DG.PA",
+   "region": "欧洲",
+   "industry": "建筑与工程",
+   "tier": "local",
+   "site_ticker": "DG.PA"
+  },
+  {
+   "key": "NTES",
+   "name": "NetEase",
+   "code": "NTES.US",
+   "region": "中国 / 香港",
+   "industry": "娱乐 / 游戏",
+   "tier": "us_listed",
+   "site_ticker": "NTES"
+  },
+  {
+   "key": "CSL.AU",
+   "name": "CSL",
+   "code": "CSL.AU",
+   "region": "澳新 / 东南亚",
+   "industry": "制药",
+   "tier": "local",
+   "site_ticker": "CSL.AX"
+  },
+  {
+   "key": "LSEG.LSE",
+   "name": "London Stock Exchange",
+   "code": "LSEG.LSE",
+   "region": "欧洲",
+   "industry": "金融服务",
+   "tier": "local",
+   "site_ticker": "LSEG.L"
+  },
+  {
+   "key": "SHECY",
+   "name": "Shin-Etsu Chemical",
+   "code": "SHECY.US",
+   "region": "日本",
+   "industry": "化工",
+   "tier": "us_otc",
+   "site_ticker": "4063.T"
+  },
+  {
+   "key": "2881.TW",
+   "name": "Fubon Financial",
+   "code": "2881.TW",
+   "region": "韩国 / 台湾",
+   "industry": "银行",
+   "tier": "local",
+   "site_ticker": "2881.TW"
+  },
+  {
+   "key": "JAPAY",
+   "name": "Japan Tobacco",
+   "code": "JAPAY.US",
+   "region": "日本",
+   "industry": "烟草",
+   "tier": "us_otc",
+   "site_ticker": "2914.T"
+  },
+  {
+   "key": "L.TO",
+   "name": "Loblaw Companies",
+   "code": "L.TO",
+   "region": "加拿大",
+   "industry": "零售",
+   "tier": "local",
+   "site_ticker": "L.TO"
+  },
+  {
+   "key": "WES.AU",
+   "name": "Wesfarmers",
+   "code": "WES.AU",
+   "region": "澳新 / 东南亚",
+   "industry": "零售",
+   "tier": "local",
+   "site_ticker": "WES.AX"
+  },
+  {
+   "key": "0388.HK",
+   "name": "Hong Kong Exchanges & Clearing",
+   "code": "0388.HK",
+   "region": "中国 / 香港",
+   "industry": "金融服务",
+   "tier": "local",
+   "site_ticker": "0388.HK"
+  },
+  {
+   "key": "NUE",
+   "name": "Nucor",
+   "code": "NUE.US",
+   "region": "美国",
+   "industry": "钢铁",
+   "tier": "us_listed",
+   "site_ticker": "NUE"
+  },
+  {
+   "key": "373220.KO",
+   "name": "LG Energy Solution",
+   "code": "373220.KO",
+   "region": "韩国 / 台湾",
+   "industry": "制造",
+   "tier": "local",
+   "site_ticker": "373220.KS"
+  },
+  {
+   "key": "1303.TW",
+   "name": "Nan Ya Plastics",
+   "code": "1303.TW",
+   "region": "韩国 / 台湾",
+   "industry": "化工",
+   "tier": "local",
+   "site_ticker": "1303.TW"
+  },
+  {
+   "key": "005380.KO",
+   "name": "Hyundai",
+   "code": "005380.KO",
+   "region": "韩国 / 台湾",
+   "industry": "汽车",
+   "tier": "local",
+   "site_ticker": "005380.KS"
+  },
+  {
+   "key": "SGAPY",
+   "name": "Singtel",
+   "code": "SGAPY.US",
+   "region": "澳新 / 东南亚",
+   "industry": "电信",
+   "tier": "us_otc",
+   "site_ticker": "Z74.SI"
+  },
+  {
+   "key": "WALMEX.MX",
+   "name": "Walmex",
+   "code": "WALMEX.MX",
+   "region": "拉美",
+   "industry": "零售",
+   "tier": "local",
+   "site_ticker": "WMMVF"
+  },
+  {
+   "key": "600276.SHG",
+   "name": "Jiangsu Hengrui Medicine",
+   "code": "600276.SHG",
+   "region": "中国 / 香港",
+   "industry": "制药",
+   "tier": "local",
+   "site_ticker": "600276.SS"
+  },
+  {
+   "key": "TEVA",
+   "name": "Teva Pharmaceutical Industries",
+   "code": "TEVA.US",
+   "region": "中东 / 非洲",
+   "industry": "制药",
+   "tier": "us_listed",
+   "site_ticker": "TEVA"
+  },
+  {
+   "key": "2882.TW",
+   "name": "Cathay Financial Holding",
+   "code": "2882.TW",
+   "region": "韩国 / 台湾",
+   "industry": "保险",
+   "tier": "local",
+   "site_ticker": "2882.TW"
+  },
+  {
+   "key": "207940.KO",
+   "name": "Samsung Biologics",
+   "code": "207940.KO",
+   "region": "韩国 / 台湾",
+   "industry": "生物科技",
+   "tier": "local",
+   "site_ticker": "207940.KS"
+  },
+  {
+   "key": "0267.HK",
+   "name": "CITIC limited",
+   "code": "0267.HK",
+   "region": "中国 / 香港",
+   "industry": "综合企业",
+   "tier": "local",
+   "site_ticker": "0267.HK"
+  },
+  {
+   "key": "CSU.TO",
+   "name": "Constellation Software",
+   "code": "CSU.TO",
+   "region": "加拿大",
+   "industry": "软件",
+   "tier": "local",
+   "site_ticker": "CSU.TO"
+  },
+  {
+   "key": "FMX",
+   "name": "Fomento Económico Mexicano (FEMSA)",
+   "code": "FMX.US",
+   "region": "拉美",
+   "industry": "饮料",
+   "tier": "us_listed",
+   "site_ticker": "FMX"
+  },
+  {
+   "key": "MT",
+   "name": "ArcelorMittal",
+   "code": "MT.US",
+   "region": "欧洲",
+   "industry": "钢铁",
+   "tier": "us_listed",
+   "site_ticker": "MT"
+  },
+  {
+   "key": "SE",
+   "name": "Sea Limited",
+   "code": "SE.US",
+   "region": "澳新 / 东南亚",
+   "industry": "互联网",
+   "tier": "us_listed",
+   "site_ticker": "SE"
+  },
+  {
+   "key": "0016.HK",
+   "name": "Sun Hung Kai Properties",
+   "code": "0016.HK",
+   "region": "中国 / 香港",
+   "industry": "房地产",
+   "tier": "local",
+   "site_ticker": "0016.HK"
+  },
+  {
+   "key": "OLCLY",
+   "name": "Oriental Land",
+   "code": "OLCLY.US",
+   "region": "日本",
+   "industry": "娱乐 / 游戏",
+   "tier": "us_otc",
+   "site_ticker": "4661.T"
+  },
+  {
+   "key": "002714.SHE",
+   "name": "Muyuan Foods",
+   "code": "002714.SHE",
+   "region": "中国 / 香港",
+   "industry": "食品",
+   "tier": "local",
+   "site_ticker": "002714.SZ"
+  },
+  {
+   "key": "DHI",
+   "name": "D. R. Horton",
+   "code": "DHI.US",
+   "region": "美国",
+   "industry": "建筑与工程",
+   "tier": "us_listed",
+   "site_ticker": "DHI"
+  },
+  {
+   "key": "CHT",
+   "name": "Chunghwa Telecom",
+   "code": "CHT.US",
+   "region": "韩国 / 台湾",
+   "industry": "电信",
+   "tier": "us_listed",
+   "site_ticker": "CHT"
+  },
+  {
+   "key": "JBS",
+   "name": "JBS N.V.",
+   "code": "JBS.US",
+   "region": "拉美",
+   "industry": "食品",
+   "tier": "us_listed",
+   "site_ticker": "JBS"
+  },
+  {
+   "key": "GMG.AU",
+   "name": "Goodman Group",
+   "code": "GMG.AU",
+   "region": "澳新 / 东南亚",
+   "industry": "房地产",
+   "tier": "local",
+   "site_ticker": "GMG.AX"
+  },
+  {
+   "key": "WDS",
+   "name": "Woodside Energy",
+   "code": "WDS.US",
+   "region": "澳新 / 东南亚",
+   "industry": "石油天然气",
+   "tier": "us_listed",
+   "site_ticker": "WDS"
+  },
+  {
+   "key": "TEAM",
+   "name": "Atlassian",
+   "code": "TEAM.US",
+   "region": "澳新 / 东南亚",
+   "industry": "软件",
+   "tier": "us_listed",
+   "site_ticker": "TEAM"
+  },
+  {
+   "key": "068270.KO",
+   "name": "Celltrion",
+   "code": "068270.KO",
+   "region": "韩国 / 台湾",
+   "industry": "制药",
+   "tier": "local",
+   "site_ticker": "068270.KS"
+  },
+  {
+   "key": "QSR",
+   "name": "Restaurant Brands International",
+   "code": "QSR.US",
+   "region": "加拿大",
+   "industry": "食品",
+   "tier": "us_listed",
+   "site_ticker": "QSR"
+  },
+  {
+   "key": "300760.SHE",
+   "name": "Mindray",
+   "code": "300760.SHE",
+   "region": "中国 / 香港",
+   "industry": "医疗器械",
+   "tier": "local",
+   "site_ticker": "300760.SZ"
+  },
+  {
+   "key": "600309.SHG",
+   "name": "Wanhua Chemical",
+   "code": "600309.SHG",
+   "region": "中国 / 香港",
+   "industry": "化工",
+   "tier": "local",
+   "site_ticker": "600309.SS"
+  },
+  {
+   "key": "028260.KO",
+   "name": "Samsung C&T Corporation",
+   "code": "028260.KO",
+   "region": "韩国 / 台湾",
+   "industry": "建筑与工程",
+   "tier": "local",
+   "site_ticker": "028260.KS"
+  },
+  {
+   "key": "BSP",
+   "name": "Bending Spoons",
+   "code": "BSP.US",
+   "region": "欧洲",
+   "industry": "互联网",
+   "tier": "us_listed",
+   "site_ticker": "BSP"
+  },
+  {
+   "key": "ESLT",
+   "name": "Elbit Systems",
+   "code": "ESLT.US",
+   "region": "中东 / 非洲",
+   "industry": "航空航天与国防",
+   "tier": "us_listed",
+   "site_ticker": "ESLT"
+  },
+  {
+   "key": "FTS",
+   "name": "Fortis",
+   "code": "FTS.US",
+   "region": "加拿大",
+   "industry": "电力",
+   "tier": "us_listed",
+   "site_ticker": "FTS"
+  },
+  {
+   "key": "ITSA3.SA",
+   "name": "Itaúsa",
+   "code": "ITSA3.SA",
+   "region": "拉美",
+   "industry": "综合企业",
+   "tier": "local",
+   "site_ticker": "ITSA3.SA"
+  },
+  {
+   "key": "0992.HK",
+   "name": "Lenovo",
+   "code": "0992.HK",
+   "region": "中国 / 香港",
+   "industry": "科技硬件",
+   "tier": "local",
+   "site_ticker": "0992.HK"
+  },
+  {
+   "key": "NSIS-B.CO",
+   "name": "Novonesis",
+   "code": "NSIS-B.CO",
+   "region": "欧洲",
+   "industry": "生物科技",
+   "tier": "local",
+   "site_ticker": "NZYM.VI"
+  },
+  {
+   "key": "MITEY",
+   "name": "Mitsubishi Estate",
+   "code": "MITEY.US",
+   "region": "日本",
+   "industry": "房地产",
+   "tier": "us_otc",
+   "site_ticker": "8802.T"
+  },
+  {
+   "key": "EJPRY",
+   "name": "East Japan Railway",
+   "code": "EJPRY.US",
+   "region": "日本",
+   "industry": "运输",
+   "tier": "us_otc",
+   "site_ticker": "9020.T"
+  },
+  {
+   "key": "TDY",
+   "name": "Teledyne Technologies",
+   "code": "TDY.US",
+   "region": "美国",
+   "industry": "综合企业",
+   "tier": "us_listed",
+   "site_ticker": "TDY"
+  },
+  {
+   "key": "601668.SHG",
+   "name": "China State Construction Engineering",
+   "code": "601668.SHG",
+   "region": "中国 / 香港",
+   "industry": "建筑与工程",
+   "tier": "local",
+   "site_ticker": "601668.SS"
+  },
+  {
+   "key": "NPSNY",
+   "name": "Naspers",
+   "code": "NPSNY.US",
+   "region": "中东 / 非洲",
+   "industry": "互联网",
+   "tier": "us_otc",
+   "site_ticker": "NPSNY"
+  },
+  {
+   "key": "FLEX",
+   "name": "Flex",
+   "code": "FLEX.US",
+   "region": "澳新 / 东南亚",
+   "industry": "制造",
+   "tier": "us_listed",
+   "site_ticker": "FLEX"
+  },
+  {
+   "key": "CLS",
+   "name": "Celestica",
+   "code": "CLS.US",
+   "region": "加拿大",
+   "industry": "制造",
+   "tier": "us_listed",
+   "site_ticker": "CLS"
+  },
+  {
+   "key": "QBE.AU",
+   "name": "QBE Insurance",
+   "code": "QBE.AU",
+   "region": "澳新 / 东南亚",
+   "industry": "保险",
+   "tier": "local",
+   "site_ticker": "QBE.AX"
+  },
+  {
+   "key": "ALL.AU",
+   "name": "Aristocrat",
+   "code": "ALL.AU",
+   "region": "澳新 / 东南亚",
+   "industry": "娱乐 / 游戏",
+   "tier": "local",
+   "site_ticker": "ALL.AX"
+  },
+  {
+   "key": "TRUMY",
+   "name": "Terumo",
+   "code": "TRUMY.US",
+   "region": "日本",
+   "industry": "医疗器械",
+   "tier": "us_otc",
+   "site_ticker": "4543.T"
+  },
+  {
+   "key": "012450.KO",
+   "name": "Hanwha Aerospace",
+   "code": "012450.KO",
+   "region": "韩国 / 台湾",
+   "industry": "航空航天与国防",
+   "tier": "local",
+   "site_ticker": "012450.KS"
+  },
+  {
+   "key": "KAOOY",
+   "name": "Kaō",
+   "code": "KAOOY.US",
+   "region": "日本",
+   "industry": "消费品 / 日化",
+   "tier": "us_otc",
+   "site_ticker": "4452.T"
+  },
+  {
+   "key": "IPXHY",
+   "name": "Inpex",
+   "code": "IPXHY.US",
+   "region": "日本",
+   "industry": "石油天然气",
+   "tier": "us_otc",
+   "site_ticker": "1605.T"
+  },
+  {
+   "key": "6505.TW",
+   "name": "Formosa Petrochemical",
+   "code": "6505.TW",
+   "region": "韩国 / 台湾",
+   "industry": "石油天然气",
+   "tier": "local",
+   "site_ticker": "6505.TW"
+  },
+  {
+   "key": "AJINY",
+   "name": "Ajinomoto",
+   "code": "AJINY.US",
+   "region": "日本",
+   "industry": "食品",
+   "tier": "us_otc",
+   "site_ticker": "2802.T"
+  },
+  {
+   "key": "NPSCY",
+   "name": "Nippon Steel",
+   "code": "NPSCY.US",
+   "region": "日本",
+   "industry": "钢铁",
+   "tier": "us_otc",
+   "site_ticker": "5401.T"
+  },
+  {
+   "key": "BCE",
+   "name": "BCE Inc.",
+   "code": "BCE.US",
+   "region": "加拿大",
+   "industry": "电信",
+   "tier": "us_listed",
+   "site_ticker": "BCE"
+  },
+  {
+   "key": "600019.SHG",
+   "name": "Baosteel",
+   "code": "600019.SHG",
+   "region": "中国 / 香港",
+   "industry": "钢铁",
+   "tier": "local",
+   "site_ticker": "600019.SS"
+  },
+  {
+   "key": "BBD-B.TO",
+   "name": "Bombardier",
+   "code": "BBD-B.TO",
+   "region": "加拿大",
+   "industry": "航空航天与国防",
+   "tier": "local",
+   "site_ticker": "BBD-B.TO"
+  },
+  {
+   "key": "2513.HK",
+   "name": "Z.AI",
+   "code": "2513.HK",
+   "region": "中国 / 香港",
+   "industry": "软件",
+   "tier": "local",
+   "site_ticker": "2513.HK"
+  },
+  {
+   "key": "BXB.AU",
+   "name": "Brambles",
+   "code": "BXB.AU",
+   "region": "澳新 / 东南亚",
+   "industry": "运输",
+   "tier": "local",
+   "site_ticker": "BXB.AX"
+  },
+  {
+   "key": "601111.SHG",
+   "name": "Air China",
+   "code": "601111.SHG",
+   "region": "中国 / 香港",
+   "industry": "运输",
+   "tier": "local",
+   "site_ticker": "601111.SS"
+  },
+  {
+   "key": "600760.SHG",
+   "name": "AVIC Shenyang Aircraft Company Limited",
+   "code": "600760.SHG",
+   "region": "中国 / 香港",
+   "industry": "航空航天与国防",
+   "tier": "local",
+   "site_ticker": "600760.SS"
+  },
+  {
+   "key": "AXIA3.SA",
+   "name": "AXIA Energia SA",
+   "code": "AXIA3.SA",
+   "region": "拉美",
+   "industry": "电力",
+   "tier": "local",
+   "site_ticker": "AXIA3.SA"
+  },
+  {
+   "key": "035420.KO",
+   "name": "Naver",
+   "code": "035420.KO",
+   "region": "韩国 / 台湾",
+   "industry": "互联网",
+   "tier": "local",
+   "site_ticker": "035420.KS"
+  },
+  {
+   "key": "DWAHY",
+   "name": "Daiwa House",
+   "code": "DWAHY.US",
+   "region": "日本",
+   "industry": "建筑与工程",
+   "tier": "us_otc",
+   "site_ticker": "1925.T"
+  },
+  {
+   "key": "KAEPY",
+   "name": "KEPCO",
+   "code": "KAEPY.US",
+   "region": "日本",
+   "industry": "电力",
+   "tier": "us_otc",
+   "site_ticker": "9503.T"
+  },
+  {
+   "key": "5347.KLSE",
+   "name": "Tenaga Nasional",
+   "code": "5347.KLSE",
+   "region": "澳新 / 东南亚",
+   "industry": "电力",
+   "tier": "local",
+   "site_ticker": "TNABY"
+  },
+  {
+   "key": "2002A.TW",
+   "name": "China Steel",
+   "code": "2002A.TW",
+   "region": "韩国 / 台湾",
+   "industry": "钢铁",
+   "tier": "local",
+   "site_ticker": "2002A.TW"
+  },
+  {
+   "key": "KSPI",
+   "name": "Kaspi.kz Joint Stock Company",
+   "code": "KSPI.US",
+   "region": "中东 / 非洲",
+   "industry": "软件",
+   "tier": "us_listed",
+   "site_ticker": "KKS.F"
+  },
+  {
+   "key": "ASBFY",
+   "name": "Asahi Group",
+   "code": "ASBFY.US",
+   "region": "日本",
+   "industry": "饮料",
+   "tier": "us_otc",
+   "site_ticker": "2502.T"
+  },
+  {
+   "key": "2603.TW",
+   "name": "Evergreen Marine",
+   "code": "2603.TW",
+   "region": "韩国 / 台湾",
+   "industry": "运输",
+   "tier": "local",
+   "site_ticker": "2603.TW"
+  },
+  {
+   "key": "SGRO.LSE",
+   "name": "SEGRO",
+   "code": "SGRO.LSE",
+   "region": "欧洲",
+   "industry": "房地产",
+   "tier": "local",
+   "site_ticker": "SGRO.L"
+  },
+  {
+   "key": "1929.HK",
+   "name": "Chow Tai Fook",
+   "code": "1929.HK",
+   "region": "中国 / 香港",
+   "industry": "奢侈品",
+   "tier": "local",
+   "site_ticker": "1929.HK"
+  },
+  {
+   "key": "033780.KO",
+   "name": "KT&G (Korea Tobacco)",
+   "code": "033780.KO",
+   "region": "韩国 / 台湾",
+   "industry": "烟草",
+   "tier": "local",
+   "site_ticker": "033780.KS"
+  },
+  {
+   "key": "TSEM",
+   "name": "Tower Semiconductor",
+   "code": "TSEM.US",
+   "region": "中东 / 非洲",
+   "industry": "半导体",
+   "tier": "us_listed",
+   "site_ticker": "TSEM"
+  },
+  {
+   "key": "SQM",
+   "name": "Sociedad Química y Minera",
+   "code": "SQM.US",
+   "region": "拉美",
+   "industry": "化工",
+   "tier": "us_listed",
+   "site_ticker": "SQM"
+  },
+  {
+   "key": "WLMIY",
+   "name": "Wilmar International",
+   "code": "WLMIY.US",
+   "region": "澳新 / 东南亚",
+   "industry": "食品",
+   "tier": "us_otc",
+   "site_ticker": "F34.SI"
+  },
+  {
+   "key": "LTM",
+   "name": "LATAM Airlines",
+   "code": "LTM.US",
+   "region": "拉美",
+   "industry": "运输",
+   "tier": "us_listed",
+   "site_ticker": "LTM"
+  },
+  {
+   "key": "1216.TW",
+   "name": "Uni-President Enterprises",
+   "code": "1216.TW",
+   "region": "韩国 / 台湾",
+   "industry": "食品",
+   "tier": "local",
+   "site_ticker": "1216.TW"
+  },
+  {
+   "key": "EMBJ",
+   "name": "Embraer",
+   "code": "EMBJ.US",
+   "region": "拉美",
+   "industry": "航空航天与国防",
+   "tier": "us_listed",
+   "site_ticker": "EMBJ"
+  },
+  {
+   "key": "BBSE3.SA",
+   "name": "BB Seguridade Participações",
+   "code": "BBSE3.SA",
+   "region": "拉美",
+   "industry": "保险",
+   "tier": "local",
+   "site_ticker": "BBSE3.SA"
+  },
+  {
+   "key": "KEP",
+   "name": "Korea Electric Power",
+   "code": "KEP.US",
+   "region": "韩国 / 台湾",
+   "industry": "电力",
+   "tier": "us_listed",
+   "site_ticker": "KEP"
+  },
+  {
+   "key": "180640.KO",
+   "name": "Hanjin Kal",
+   "code": "180640.KO",
+   "region": "韩国 / 台湾",
+   "industry": "综合企业",
+   "tier": "local",
+   "site_ticker": "180640.KS"
+  },
+  {
+   "key": "SRGHY",
+   "name": "Shoprite",
+   "code": "SRGHY.US",
+   "region": "中东 / 非洲",
+   "industry": "零售",
+   "tier": "us_otc",
+   "site_ticker": "SHP.JO"
+  }
+ ]
+}

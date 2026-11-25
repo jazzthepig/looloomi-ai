@@ -34,6 +34,12 @@
 - 对不上的也写进表(key 为空),方便查漏配。
 **这只是「有没有链上形式、成交多少」;发行结构(追踪凭证还是 1:1 托管)、谁能买(地域限制)要另外核 —— 资格规则由 Jazz 定。**
 
+## SEC 原始财报事实 → `sec_facts`(T-434 ④,11-25)
+
+候选池 + 轨道公司 + 龙头网格里美国代码、在 SEC 申报的公司:利润、经营现金流、资本开支、回购、分红、权益、封面股数(`FACT_TAGS`,
+US-GAAP 与 IFRS 两套)。与营收段同一个入口(`get_sec_concept`)、同一个已知日规则(同一期取最早报送)。原样存,派生在研究侧按时点现算。
+内部人交易(Form 4)不在这里。
+
 ## 一周一轮(`run_week`,由 `_world50_history_loop` 调)
 
 复权日线(`tradfi_history.run_once`)→ 历史市值 → 链上形式。三段各自报结果;**任何一段没成,整轮就不是 ok**,
@@ -49,10 +55,11 @@ import unicodedata
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Optional
 
-WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue")
+WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue", "sec_facts")
 WRITES_COLUMNS = {
     "world50_mcap_weekly": ("key", "d", "mcap_usd", "shares", "source"),
     "world50_revenue": ("key", "tag", "unit", "period_start", "period_end", "filed", "revenue", "accn"),
+    "sec_facts": ("key", "tag", "unit", "period_start", "period_end", "filed", "val", "accn", "form"),
     "world50_onchain_forms": ("as_of", "token_id", "key", "symbol", "name", "category", "issuer", "match_rule",
                               "price_usd", "mcap_usd", "volume_24h_usd"),
 }
@@ -870,6 +877,123 @@ async def refresh_revenue(candidates: Optional[list] = None, concurrency: int = 
             "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
 
 
+# ── SEC 原始财报事实(T-434 ④,台账 S-913)────────────────────────────────────────────────────
+
+#: 小股东待遇与盈利的几样(CIS v2 的核心维度 = 小股东待遇,10-22):利润、经营现金流、资本开支、回购、分红、权益、封面股数。
+#: US-GAAP 与 IFRS 两套标签都取(20-F 用 IFRS 报的外国公司只在 ifrs-full 里);原样存,不在这里合并或派生。
+FACT_TAGS: tuple[tuple[str, str, str], ...] = (
+    ("net_income", "us-gaap", "NetIncomeLoss"), ("net_income", "ifrs-full", "ProfitLoss"),
+    ("net_income", "ifrs-full", "ProfitLossAttributableToOwnersOfParent"),
+    ("op_cash_flow", "us-gaap", "NetCashProvidedByUsedInOperatingActivities"),
+    ("op_cash_flow", "ifrs-full", "CashFlowsFromUsedInOperatingActivities"),
+    ("capex", "us-gaap", "PaymentsToAcquirePropertyPlantAndEquipment"),
+    ("capex", "ifrs-full", "PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities"),
+    ("buyback", "us-gaap", "PaymentsForRepurchaseOfCommonStock"), ("buyback", "ifrs-full", "PaymentsToAcquireOrRedeemEntitysShares"),
+    ("dividends", "us-gaap", "PaymentsOfDividends"), ("dividends", "us-gaap", "PaymentsOfDividendsCommonStock"),
+    ("dividends", "ifrs-full", "DividendsPaidClassifiedAsFinancingActivities"),
+    ("equity", "us-gaap", "StockholdersEquity"), ("equity", "ifrs-full", "EquityAttributableToOwnersOfParent"),
+    ("shares", "dei", "EntityCommonStockSharesOutstanding"),
+)
+#: 期间值收这几种长度(天):一季、半年、九个月、一年 —— 10-Q 的现金流量表是年初至今,只收一季会把现金流全丢掉
+FACT_SPANS = ((80, 100), (170, 190), (260, 280), (350, 380))
+FACTS_CONCURRENCY = 3        # SEC 限速 10 次 / 秒;3 路 × 每次后歇 0.15 秒 ≈ 7 次 / 秒,和股本 / 营收两段不同时跑
+
+
+def fact_rows(key: str, tag: str, concept: Any) -> list[dict]:
+    """SEC companyconcept(可以是多个 CIK 的列表)→ sec_facts 行。纯函数。
+    时点值(没有 start):period_start = period_end;期间值只收 FACT_SPANS 里的长度。同一期间多次报送取**最早**的(当时的原始报告)。
+    值可以是负的(亏损、经营现金流为负),非有限数丢掉;封面股数必须 > 0。"""
+    concepts = concept if isinstance(concept, list) else [concept]
+    best: dict[tuple, dict] = {}
+    for c in concepts:
+        for unit, facts in (((c or {}).get("units")) or {}).items():
+            for f in facts if isinstance(facts, list) else []:
+                st, en, fi = (str(f.get(k) or "")[:10] for k in ("start", "end", "filed"))
+                v = _num(f.get("val"))
+                if len(en) != 10 or len(fi) != 10 or v is None or not math.isfinite(v):
+                    continue
+                if tag.endswith("SharesOutstanding") and v <= 0:
+                    continue
+                if st:
+                    try:
+                        days = (datetime.strptime(en, "%Y-%m-%d") - datetime.strptime(st, "%Y-%m-%d")).days
+                    except ValueError:
+                        continue
+                    if len(st) != 10 or not any(a <= days <= b for a, b in FACT_SPANS):
+                        continue
+                else:
+                    st = en
+                k = (unit, st, en)
+                if k not in best or fi < best[k]["filed"]:
+                    best[k] = {"key": key, "tag": tag, "unit": unit, "period_start": st, "period_end": en,
+                               "filed": fi, "val": v, "accn": str(f.get("accn") or "") or None,
+                               "form": str(f.get("form") or "") or None}
+    return [best[k] for k in sorted(best)]
+
+
+def facts_pool() -> list:
+    """候选池的公司 + 轨道公司 + 龙头网格里美国代码的公司,按 key 去重。在不在 SEC 申报,由 SEC 的代码表说了算。"""
+    from src.data.universe.leaders_grid import candidates as leaders
+    from src.data.universe.world50 import CANDIDATES, RAIL_EQUITIES
+    out, seen = [], set()
+    for c in [c for c in CANDIDATES if c.cls == "equity"] + list(RAIL_EQUITIES) + list(leaders()):
+        if c.code.endswith(".US") and c.key not in seen:
+            seen.add(c.key)
+            out.append(c)
+    return out
+
+
+async def refresh_facts(candidates: Optional[list] = None, concurrency: int = FACTS_CONCURRENCY) -> dict[str, Any]:
+    """在 SEC 申报的公司(含旧 CIK)的原始财报事实 → sec_facts。判活:
+    `select count(distinct key) from sec_facts where tag in ('us-gaap:NetIncomeLoss', 'ifrs-full:ProfitLoss',
+    'ifrs-full:ProfitLossAttributableToOwnersOfParent')` ≥ 在 SEC 申报的公司数的 60%;loop_attempt 里 facts 段 ok。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.market import data_layer as dl
+    todo = candidates if candidates is not None else facts_pool()
+    try:
+        ciks = await dl.get_sec_ticker_ciks()
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "why": f"SEC 代码表读不到:{type(e).__name__}: {str(e)[:160]}"}
+    filers = [c for c in todo if ciks.get(c.key.upper()) is not None]
+    sem = asyncio.Semaphore(concurrency)
+
+    async def one(c):
+        cik = ciks[c.key.upper()]
+        rows: list[dict] = []
+        have: set[str] = set()
+        async with sem:
+            try:
+                for group, tax, tag in FACT_TAGS:
+                    got = []
+                    for k_cik in PREDECESSOR_CIKS.get(c.key, []) + [cik]:
+                        g = await dl.get_sec_concept(k_cik, tax, tag)
+                        await asyncio.sleep(0.15)
+                        if g:
+                            got.append(g)
+                    if got:
+                        r = fact_rows(c.key, f"{tax}:{tag}", got)
+                        rows += r
+                        if r:
+                            have.add(group)
+            except Exception as e:  # noqa: BLE001 — 一家取不到不连坐整轮,原因带回去
+                return {"key": c.key, "ok": False, "why": f"{type(e).__name__}: {str(e)[:140]}"}
+        if not rows:
+            return {"key": c.key, "ok": False, "why": "这几种标签一个都没有"}
+        for i in range(0, len(rows), 2000):
+            w = await supabase_upsert_table("sec_facts", rows[i:i + 2000], on_conflict="key,tag,unit,period_start,period_end")
+            if not w.ok:
+                return {"key": c.key, "ok": False, "why": f"写入失败:{w.why[:120]}"}
+        return {"key": c.key, "ok": True, "rows": len(rows), "groups": sorted(have)}
+
+    res = await asyncio.gather(*[one(c) for c in filers])
+    ok = [r for r in res if r.get("ok")]
+    cover = {g: sum(1 for r in ok if g in r["groups"]) for g, _, _ in FACT_TAGS}
+    return {"ok": len(ok) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(filers))), "companies": len(filers),
+            "companies_ok": len(ok), "rows": sum(r["rows"] for r in ok), "coverage": cover,
+            "not_sec_listed": sorted(c.key for c in todo if c not in filers),
+            "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
+
+
 # ── 链上形式 ────────────────────────────────────────────────────────────────
 
 METAL_WORDS = (("gold", "XAUUSD"), ("silver", "XAGUSD"), ("platinum", "XPTUSD"))
@@ -1003,8 +1127,8 @@ LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
 #: mcap 21(10-23):行里加 shares 列 —— 下一次部署整段重写一遍,把历史行的股数填上(市值本身不变)。
 #: book 2(10-29):季内开账(OPEN_DATE 10-28)。
-PART_VERSIONS = {"prices": 5,   # 5:11-02 加轨道公司(RAIL_EQUITIES)
-                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "book": 2, "fwd_books": 2}
+PART_VERSIONS = {"prices": 6,   # 5:11-02 加轨道公司(RAIL_EQUITIES);6:11-25 加龙头网格(T-434,研究宇宙)
+                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "facts": 1, "book": 2, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -1039,6 +1163,7 @@ def _brief(name: str, r: dict) -> dict:
                      "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer"),
             "revenue": ("companies", "companies_ok", "rows", "earliest"),
+            "facts": ("companies", "companies_ok", "rows", "coverage", "not_sec_listed"),
             "book": ("waiting", "preview", "holdings_written", "nav_written", "last", "notes"),
             "fwd_books": ("waiting", "preview", "nav_written", "notes", "tom_trader")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
@@ -1046,21 +1171,22 @@ def _brief(name: str, r: dict) -> dict:
         out["skipped"] = r["skipped"]
     fails = r.get("failed") or r.get("issuer_failed")
     if fails:
-        out["failed"] = fails[:10]
+        out["failed"] = fails[:60]   # 11-25:龙头网格进来后要能在回执里看全哪些代码对不上(T-434 ②)
     if r.get("why") or (not r.get("ok") and r.get("reason")):
         out["why"] = str(r.get("why") or r.get("reason"))[:200]
     return out
 
 
 def _say(name: str, r: dict) -> str:
-    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "book": "前向账本", "fwd_books": "龙头腿 / 灵活组合"}[name]
+    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "facts": "财报事实",
+             "book": "前向账本", "fwd_books": "龙头腿 / 灵活组合"}[name]
     if r.get("skipped"):
         return label + " 跳过(6 天内已成)"
     if not r.get("ok") and r.get("why") and not any(k in r for k in ("symbols_ok", "companies_ok", "tokens")):
         return f"{label} 没跑起来:{str(r['why'])[:80]}"
     if name == "prices":
         return f"日线 {r.get('symbols_ok')}/{r.get('symbols')}"
-    if name in ("mcap", "revenue"):
+    if name in ("mcap", "revenue", "facts"):
         return f"{label} {r.get('companies_ok')}/{r.get('companies')}"
     if name == "fwd_books":
         if r.get("waiting"):
@@ -1081,7 +1207,7 @@ async def run_week(force: bool = False) -> dict[str, Any]:
     from src.data.universe.forward_books import run_forward_books
     from src.data.universe.world50_book import run_book
     steps = (("prices", run_once), ("mcap", refresh_mcap), ("onchain_forms", discover_onchain_forms),
-             ("revenue", refresh_revenue), ("book", run_book), ("fwd_books", run_forward_books))
+             ("revenue", refresh_revenue), ("facts", refresh_facts), ("book", run_book), ("fwd_books", run_forward_books))
     done = set() if force else await _recent_ok_parts()
     parts: dict[str, dict] = {}
     for name, fn in steps:
