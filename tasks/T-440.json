@@ -1,0 +1,28 @@
+{
+  "id": "T-440",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-919:同一脚本换两种「让利润奔跑」的管法再跑两遍(`--mgmt ema50` 与 `--mgmt atr3`,都带 `--dmin 0.01 --cap 20`)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-919(预注册,写于 T-439 结果之后、新计算之前)。脚本 = main 上更新过的 `docs/research/s916_jazz_4h_rules.py`(`--mgmt` 多了 ema50 / atr3,多了 ATR14 与 `manage_atr`;默认、hold 两条路径与之前逐字相同)。先 fetch,从 origin/main 开分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-440.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 两条都先 `--selftest`:`python3 docs/research/s916_jazz_4h_rules.py --selftest --mgmt ema50 --dmin 0.01 --cap 20 | tail -1` 与 `... --mgmt atr3 ...`,都见 SELFTEST OK(不认 `--mgmt ema50` 说明脚本是旧的,停下报告)。② 依次跑(不要并行,取数会互相挤):`nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt ema50 --dmin 0.01 --cap 20 > docs/research/s916_run_ema50_d1c20.txt 2>&1`,等 WROTE(`s916_results_ema50_d1c20.json`);再 `--mgmt atr3 ... > docs/research/s916_run_atr3_d1c20.txt`,等 WROTE(`s916_results_atr3_d1c20.json`)。③ 最终回复只贴两份的 `grep -E '^(COUNTS|UNCOND|BASE|ROW.*HOLDS|BOARD|WROTE)' <run 文件> | cut -c1-420`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "两份 results + run;卡 in_review,推 lane-a/T-440。"
+  },
+  "prior_value": "S-916 – S-918:问题在管法 —— 4 小时 EMA7 砍右尾,拿满又是胜率一成。中间那一档有没有,决定晨报里能不能给 Jazz 一句具体的改法。",
+  "notes": "2026-11-25T20:17:22Z Seth 开卡(S-918 结果之后)。\n2026-11-26 lane-a 跑完两遍。① 脚本来源要记一笔:`--mgmt ema50/atr3` 的那版脚本**不在 origin/main 上** —— origin/main(e281e41d)的 s916_jazz_4h_rules.py 只认 hold/jazz,`--mgmt ema50` 会被当成 jazz 静默跑成同一份。本卡要求的那版只存在于 Seth 主仓工作区(未提交的 `M docs/research/s916_jazz_4h_rules.py`,+52/−11,含 ATR14、manage_atr、ema50 分支与 assert)。我把它**逐字节**复制进本分支(cmp 一致:CPY_IDENTICAL),随 PR 一起交付;若 Seth 自己那份另有改动,以 Seth 的为准(PR 可能冲突)。② 两条 `--selftest` 都打印 SELFTEST OK(ema50 与 atr3)。③ 依次跑(未并行):ema50 ≈ 8 分钟 → `docs/research/s916_results_ema50_d1c20.json`;atr3 ≈ 9 分钟 → `docs/research/s916_results_atr3_d1c20.json`;run 日志 `s916_run_ema50_d1c20.txt` / `s916_run_atr3_d1c20.txt`。④ 实测(同一脚本、同一 --dmin 0.01 --cap 20):\n· ema50:COUNTS n_tested 24 / n_holds **2** / 零分布 中位 1.0、q95 3.0、**p=0.43**;站住的 2 格 = LB_L 线上·主流领、BRF_L 线上·主流领;看板 home: -(今天线下·主流领没有规则站住)。\n· atr3:COUNTS n_tested 24 / n_holds **6** / 零分布 中位 3.0、q95 5.05、**p=0.05**;站住的 6 格 = LB_L 线上·主流领、UB_S 线上·二线领、BR_L 线上·主流领、BR_S 线下·二线领、BRF_L 线上·主流领、BRF_L 线下·主流领;看板 home: **BRF_L**。\n· 参照(同一脚本 S-918 的 hold 管法):n_holds 5 / 中位 2、q95 5、p=0.09。\n· 三版形态:hold = 胜率 0.05–0.13、赔率 5.5–13.5(极少数大单);atr3 = 胜率 0.11–0.28、赔率 4–9;ema50 = 胜率 0.32–0.39、赔率 1.5–2.5(高频小利)。ema50 是三版里最弱的。\n⑤ 读法提醒:run 输出里的 `disc` / `hold` 两段是**样本的前半/后半**(SPLIT=2022-12-31),不是两套管法;三版之间只有「hold」那一段可横向比。⑥ 看板的 home: BRF_L 属同一样本内的回顾,不是前向证据 —— 前向预期另写 `docs/research/scenarios/lane-a-T-440.json`(5 条:3 条人工 + close:BTC + macro:fng)。"
+}
