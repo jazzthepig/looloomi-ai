@@ -9,8 +9,10 @@ S-902(11-23):T-056 把台账 R 段的逐字快照与五份策略报告合进了�
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +20,7 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.check_pr_scope import GLOBAL_FORBIDDEN  # noqa: E402
 from scripts.seth_bot.seth_bot import DENY  # noqa: E402
+from tests._git_env import scrub_git_env  # noqa: E402
 from tests._private_docs import (LEDGER_HEADING, LEDGER_HEADINGS_LIMIT, PRIVATE_DERIVED, PRIVATE_DOCS,  # noqa: E402
                                  PRIVATE_NAME_PARTS)
 
@@ -28,6 +31,36 @@ def _tracked() -> set[str]:
     return set(out.splitlines())
 
 
+def _ignored(rel: str) -> tuple[bool, str]:
+    """`.gitignore` 必须忽略 rel —— 但 git 拒绝穿过软链。
+
+    合并用的临时 worktree 里,`docs/strategy_sources/sidecars/` 是 seth_bot 从主目录软链过去的
+    (LOCAL_ONLY),于是 `check-ignore docs/strategy_sources/sidecars/x/REPORT.md` 报
+    「beyond a symbolic link」并退出 128 —— 规则明明在,检查却红。2026-11-25 T-424 的合并
+    就是被这一行挡在 preflight 门外的(`.gitignore 没有忽略 docs/strategy_sources/sidecars/x/REPORT.md`)。
+
+    遇到这种情况就把仓库的 `.gitignore` 原样搬进一个空临时仓库,在那里问同一个问题:规则本身
+    够不够,与本机那个目录是软链还是真目录无关。软链是**合并机器**的形状,不是规则的问题。
+    """
+    r = subprocess.run(["git", "--no-optional-locks", "check-ignore", "-q", "--no-index", "--", rel],
+                       cwd=ROOT, capture_output=True, text=True)
+    if r.returncode == 0:
+        return True, "仓库内直接判定:已忽略"
+    err = (r.stderr or "").strip()
+    if "symbolic link" not in err:
+        return False, err or f"check-ignore 退出码 {r.returncode}"
+    with tempfile.TemporaryDirectory() as td:
+        tdp = Path(td)
+        scrub_git_env()  # S-903:临时仓库里的 git init 不能被 GIT_DIR 指到别处
+        shutil.copyfile(ROOT / ".gitignore", tdp / ".gitignore")
+        subprocess.run(["git", "init", "-q", "."], cwd=tdp, check=True, capture_output=True)
+        r2 = subprocess.run(["git", "--no-optional-locks", "check-ignore", "-q", "--no-index", "--", rel],
+                            cwd=tdp, capture_output=True, text=True)
+        if r2.returncode == 0:
+            return True, "本机是软链 ⇒ 在临时仓库里复核同一份 .gitignore:已忽略"
+        return False, (r2.stderr or "").strip() or f"临时仓库里 check-ignore 退出码 {r2.returncode}"
+
+
 def test_private_docs_are_not_tracked() -> None:
     leaked = sorted(set(PRIVATE_DOCS) & _tracked())
     assert not leaked, f"这些文件被 git 跟踪 —— 推送即公开:{leaked}。git rm --cached(内容留在本机)"
@@ -35,8 +68,8 @@ def test_private_docs_are_not_tracked() -> None:
 
 def test_private_docs_are_ignored() -> None:
     for rel in PRIVATE_DOCS:
-        r = subprocess.run(["git", "--no-optional-locks", "check-ignore", "-q", "--no-index", "--", rel], cwd=ROOT)
-        assert r.returncode == 0, f".gitignore 没有忽略 {rel}"
+        ok, detail = _ignored(rel)
+        assert ok, f".gitignore 没有忽略 {rel}({detail})"
 
 
 def test_every_gate_refuses_them() -> None:
@@ -60,8 +93,8 @@ def test_derived_copies_are_ignored_and_every_gate_refuses_them() -> None:
     from scripts.seth_bot.seth_bot import LOCAL_ONLY, path_problems
     for rel in PRIVATE_DERIVED:
         probe = rel + "x/REPORT.md" if rel.endswith("/") else rel
-        r = subprocess.run(["git", "--no-optional-locks", "check-ignore", "-q", "--no-index", "--", probe], cwd=ROOT)
-        assert r.returncode == 0, f".gitignore 没有忽略 {probe}"
+        ok, detail = _ignored(probe)
+        assert ok, f".gitignore 没有忽略 {probe}({detail})"
         assert path_problems([probe]), f"seth_bot 会提交 {probe}"
         assert any(_under(probe, g) or probe.startswith(g) for g in GLOBAL_FORBIDDEN), f"check_pr_scope 的全局禁区没挡 {probe}"
         assert rel.rstrip("/") in LOCAL_ONLY, f"合并用的临时 worktree 里读不到 {rel}(策略向量的 smoke 会红)"
