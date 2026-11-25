@@ -1,0 +1,1873 @@
+{
+ "n_tested": 24,
+ "n_holds": 0,
+ "null": {
+  "n": 100,
+  "median": 0.0,
+  "q95": 1.0,
+  "p_ge_real": 1.0
+ },
+ "unconditional": {
+  "LB_L": {
+   "disc": {
+    "n": 523,
+    "mean_r": -0.223,
+    "win": 0.319,
+    "payoff": 1.53,
+    "pf": 0.72,
+    "worst_r": -3.29
+   },
+   "hold": {
+    "n": 818,
+    "mean_r": -0.062,
+    "win": 0.336,
+    "payoff": 1.82,
+    "pf": 0.92,
+    "worst_r": -1.3
+   },
+   "curve": {
+    "final": 0.0,
+    "max_dd": 1.0,
+    "longest_under_n": 1340
+   }
+  },
+  "UB_S": {
+   "disc": {
+    "n": 466,
+    "mean_r": -0.144,
+    "win": 0.337,
+    "payoff": 1.61,
+    "pf": 0.82,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 1003,
+    "mean_r": -0.162,
+    "win": 0.366,
+    "payoff": 1.36,
+    "pf": 0.79,
+    "worst_r": -1.3
+   },
+   "curve": {
+    "final": 0.0,
+    "max_dd": 1.0,
+    "longest_under_n": 1456
+   }
+  },
+  "BR_L": {
+   "disc": {
+    "n": 1060,
+    "mean_r": -0.123,
+    "win": 0.314,
+    "payoff": 1.82,
+    "pf": 0.84,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 1640,
+    "mean_r": -0.039,
+    "win": 0.332,
+    "payoff": 1.9,
+    "pf": 0.95,
+    "worst_r": -1.3
+   },
+   "curve": {
+    "final": 0.0,
+    "max_dd": 1.0,
+    "longest_under_n": 2335
+   }
+  },
+  "BR_S": {
+   "disc": {
+    "n": 864,
+    "mean_r": -0.093,
+    "win": 0.334,
+    "payoff": 1.74,
+    "pf": 0.87,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 1449,
+    "mean_r": -0.084,
+    "win": 0.334,
+    "payoff": 1.77,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "curve": {
+    "final": 0.0,
+    "max_dd": 1.0,
+    "longest_under_n": 2285
+   }
+  },
+  "BRF_L": {
+   "disc": {
+    "n": 757,
+    "mean_r": -0.037,
+    "win": 0.337,
+    "payoff": 1.87,
+    "pf": 0.95,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 1149,
+    "mean_r": 0.021,
+    "win": 0.337,
+    "payoff": 2.03,
+    "pf": 1.03,
+    "worst_r": -1.3
+   },
+   "curve": {
+    "final": 0.004,
+    "max_dd": 1.0,
+    "longest_under_n": 1566
+   }
+  },
+  "BRF_S": {
+   "disc": {
+    "n": 638,
+    "mean_r": -0.086,
+    "win": 0.335,
+    "payoff": 1.75,
+    "pf": 0.88,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 1070,
+    "mean_r": -0.077,
+    "win": 0.33,
+    "payoff": 1.82,
+    "pf": 0.9,
+    "worst_r": -1.3
+   },
+   "curve": {
+    "final": 0.0,
+    "max_dd": 1.0,
+    "longest_under_n": 1688
+   }
+  }
+ },
+ "baseline": {
+  "1": {
+   "disc": {
+    "n": 1376,
+    "mean_r": -0.127,
+    "win": 0.303,
+    "payoff": 1.9,
+    "pf": 0.83,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 2407,
+    "mean_r": -0.044,
+    "win": 0.328,
+    "payoff": 1.92,
+    "pf": 0.94,
+    "worst_r": -1.3
+   }
+  },
+  "-1": {
+   "disc": {
+    "n": 1396,
+    "mean_r": -0.031,
+    "win": 0.351,
+    "payoff": 1.77,
+    "pf": 0.95,
+    "worst_r": -1.53
+   },
+   "hold": {
+    "n": 2392,
+    "mean_r": -0.068,
+    "win": 0.332,
+    "payoff": 1.82,
+    "pf": 0.9,
+    "worst_r": -1.3
+   }
+  }
+ },
+ "per_coin": {
+  "BTC": {
+   "LB_L": 222,
+   "UB_S": 165,
+   "BR_L": 372,
+   "BR_S": 299,
+   "BRF_L": 270,
+   "BRF_S": 210
+  },
+  "ETH": {
+   "LB_L": 202,
+   "UB_S": 176,
+   "BR_L": 403,
+   "BR_S": 273,
+   "BRF_L": 292,
+   "BRF_S": 193
+  },
+  "SOL": {
+   "LB_L": 117,
+   "UB_S": 108,
+   "BR_L": 231,
+   "BR_S": 203,
+   "BRF_L": 176,
+   "BRF_S": 157
+  },
+  "BNB": {
+   "LB_L": 141,
+   "UB_S": 85,
+   "BR_L": 253,
+   "BR_S": 186,
+   "BRF_L": 190,
+   "BRF_S": 130
+  },
+  "XRP": {
+   "LB_L": 96,
+   "UB_S": 149,
+   "BR_L": 197,
+   "BR_S": 194,
+   "BRF_L": 123,
+   "BRF_S": 151
+  },
+  "ADA": {
+   "LB_L": 113,
+   "UB_S": 144,
+   "BR_L": 212,
+   "BR_S": 218,
+   "BRF_L": 142,
+   "BRF_S": 162
+  },
+  "AVAX": {
+   "LB_L": 105,
+   "UB_S": 134,
+   "BR_L": 227,
+   "BR_S": 195,
+   "BRF_L": 156,
+   "BRF_S": 149
+  },
+  "DOGE": {
+   "LB_L": 78,
+   "UB_S": 144,
+   "BR_L": 172,
+   "BR_S": 181,
+   "BRF_L": 112,
+   "BRF_S": 138
+  },
+  "LINK": {
+   "LB_L": 109,
+   "UB_S": 124,
+   "BR_L": 269,
+   "BR_S": 205,
+   "BRF_L": 185,
+   "BRF_S": 155
+  },
+  "NEAR": {
+   "LB_L": 103,
+   "UB_S": 150,
+   "BR_L": 251,
+   "BR_S": 223,
+   "BRF_L": 182,
+   "BRF_S": 160
+  },
+  "SUI": {
+   "LB_L": 55,
+   "UB_S": 90,
+   "BR_L": 113,
+   "BR_S": 136,
+   "BRF_L": 78,
+   "BRF_S": 103
+  }
+ },
+ "rows": [
+  {
+   "rule": "LB_L",
+   "cell": "线上·主流领",
+   "full": {
+    "n": 355,
+    "mean_r": -0.054,
+    "win": 0.344,
+    "payoff": 1.78,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 57,
+    "mean_r": -0.07,
+    "win": 0.333,
+    "payoff": 1.82,
+    "pf": 0.91,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 298,
+    "mean_r": -0.051,
+    "win": 0.346,
+    "payoff": 1.77,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 163,
+    "mean_r": -0.275,
+    "win": 0.252,
+    "payoff": 1.93,
+    "pf": 0.65,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 868,
+    "mean_r": -0.077,
+    "win": 0.319,
+    "payoff": 1.91,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.143,
+    "max_dd": 0.913,
+    "longest_under_n": 323
+   }
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线上·二线领",
+   "full": {
+    "n": 406,
+    "mean_r": -0.15,
+    "win": 0.313,
+    "payoff": 1.78,
+    "pf": 0.81,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 116,
+    "mean_r": -0.082,
+    "win": 0.31,
+    "payoff": 1.98,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 290,
+    "mean_r": -0.178,
+    "win": 0.314,
+    "payoff": 1.7,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 183,
+    "mean_r": -0.133,
+    "win": 0.311,
+    "payoff": 1.8,
+    "pf": 0.82,
+    "worst_r": -1.25
+   },
+   "base_hold": {
+    "n": 499,
+    "mean_r": -0.261,
+    "win": 0.267,
+    "payoff": 1.82,
+    "pf": 0.66,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.029,
+    "max_dd": 0.993,
+    "longest_under_n": 367
+   }
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线下·主流领",
+   "full": {
+    "n": 218,
+    "mean_r": 0.05,
+    "win": 0.335,
+    "payoff": 2.11,
+    "pf": 1.06,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 80,
+    "mean_r": -0.275,
+    "win": 0.35,
+    "payoff": 1.19,
+    "pf": 0.64,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 138,
+    "mean_r": 0.239,
+    "win": 0.326,
+    "payoff": 2.67,
+    "pf": 1.29,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 437,
+    "mean_r": -0.166,
+    "win": 0.288,
+    "payoff": 1.92,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 720,
+    "mean_r": 0.194,
+    "win": 0.393,
+    "payoff": 2.01,
+    "pf": 1.3,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.404,
+    "max_dd": 0.864,
+    "longest_under_n": 121
+   }
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线下·二线领",
+   "full": {
+    "n": 192,
+    "mean_r": -0.307,
+    "win": 0.339,
+    "payoff": 1.18,
+    "pf": 0.61,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 100,
+    "mean_r": -0.417,
+    "win": 0.29,
+    "payoff": 1.23,
+    "pf": 0.5,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 92,
+    "mean_r": -0.189,
+    "win": 0.391,
+    "payoff": 1.15,
+    "pf": 0.74,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 196,
+    "mean_r": -0.045,
+    "win": 0.357,
+    "payoff": 1.68,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 313,
+    "mean_r": -0.162,
+    "win": 0.294,
+    "payoff": 1.88,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.07,
+    "max_dd": 0.931,
+    "longest_under_n": 190
+   }
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线上·主流领",
+   "full": {
+    "n": 427,
+    "mean_r": -0.205,
+    "win": 0.356,
+    "payoff": 1.33,
+    "pf": 0.74,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 59,
+    "mean_r": -0.306,
+    "win": 0.254,
+    "payoff": 1.93,
+    "pf": 0.66,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 368,
+    "mean_r": -0.189,
+    "win": 0.372,
+    "payoff": 1.27,
+    "pf": 0.75,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 190,
+    "mean_r": 0.093,
+    "win": 0.395,
+    "payoff": 1.76,
+    "pf": 1.15,
+    "worst_r": -1.53
+   },
+   "base_hold": {
+    "n": 873,
+    "mean_r": 0.003,
+    "win": 0.353,
+    "payoff": 1.84,
+    "pf": 1.0,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.014,
+    "max_dd": 0.992,
+    "longest_under_n": 422
+   }
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线上·二线领",
+   "full": {
+    "n": 165,
+    "mean_r": 0.159,
+    "win": 0.442,
+    "payoff": 1.57,
+    "pf": 1.24,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 34,
+    "mean_r": 0.174,
+    "win": 0.471,
+    "payoff": 1.44,
+    "pf": 1.28,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 131,
+    "mean_r": 0.155,
+    "win": 0.435,
+    "payoff": 1.6,
+    "pf": 1.23,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 219,
+    "mean_r": -0.14,
+    "win": 0.32,
+    "payoff": 1.71,
+    "pf": 0.81,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 514,
+    "mean_r": 0.02,
+    "win": 0.354,
+    "payoff": 1.88,
+    "pf": 1.03,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 1.834,
+    "max_dd": 0.62,
+    "longest_under_n": 51
+   }
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线下·主流领",
+   "full": {
+    "n": 547,
+    "mean_r": -0.107,
+    "win": 0.36,
+    "payoff": 1.53,
+    "pf": 0.86,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 183,
+    "mean_r": -0.026,
+    "win": 0.344,
+    "payoff": 1.84,
+    "pf": 0.97,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 364,
+    "mean_r": -0.148,
+    "win": 0.368,
+    "payoff": 1.38,
+    "pf": 0.8,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 380,
+    "mean_r": 0.155,
+    "win": 0.405,
+    "payoff": 1.83,
+    "pf": 1.25,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 688,
+    "mean_r": -0.334,
+    "win": 0.259,
+    "payoff": 1.64,
+    "pf": 0.57,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.027,
+    "max_dd": 0.983,
+    "longest_under_n": 545
+   }
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线下·二线领",
+   "full": {
+    "n": 218,
+    "mean_r": -0.304,
+    "win": 0.317,
+    "payoff": 1.35,
+    "pf": 0.63,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 78,
+    "mean_r": -0.087,
+    "win": 0.385,
+    "payoff": 1.41,
+    "pf": 0.88,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 140,
+    "mean_r": -0.424,
+    "win": 0.279,
+    "payoff": 1.32,
+    "pf": 0.51,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 189,
+    "mean_r": -0.161,
+    "win": 0.317,
+    "payoff": 1.67,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 313,
+    "mean_r": 0.189,
+    "win": 0.403,
+    "payoff": 1.92,
+    "pf": 1.29,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.046,
+    "max_dd": 0.959,
+    "longest_under_n": 216
+   }
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线上·主流领",
+   "full": {
+    "n": 793,
+    "mean_r": -0.097,
+    "win": 0.328,
+    "payoff": 1.78,
+    "pf": 0.87,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 161,
+    "mean_r": -0.292,
+    "win": 0.255,
+    "payoff": 1.87,
+    "pf": 0.64,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 632,
+    "mean_r": -0.048,
+    "win": 0.347,
+    "payoff": 1.76,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 163,
+    "mean_r": -0.275,
+    "win": 0.252,
+    "payoff": 1.93,
+    "pf": 0.65,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 868,
+    "mean_r": -0.077,
+    "win": 0.319,
+    "payoff": 1.91,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.008,
+    "max_dd": 0.996,
+    "longest_under_n": 793
+   }
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线上·二线领",
+   "full": {
+    "n": 557,
+    "mean_r": -0.081,
+    "win": 0.309,
+    "payoff": 2.0,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 199,
+    "mean_r": -0.085,
+    "win": 0.307,
+    "payoff": 2.0,
+    "pf": 0.88,
+    "worst_r": -1.29
+   },
+   "hold": {
+    "n": 358,
+    "mean_r": -0.079,
+    "win": 0.31,
+    "payoff": 2.0,
+    "pf": 0.9,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 183,
+    "mean_r": -0.133,
+    "win": 0.311,
+    "payoff": 1.8,
+    "pf": 0.82,
+    "worst_r": -1.25
+   },
+   "base_hold": {
+    "n": 499,
+    "mean_r": -0.261,
+    "win": 0.267,
+    "payoff": 1.82,
+    "pf": 0.66,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.041,
+    "max_dd": 0.994,
+    "longest_under_n": 515
+   }
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线下·主流领",
+   "full": {
+    "n": 674,
+    "mean_r": -0.072,
+    "win": 0.312,
+    "payoff": 2.0,
+    "pf": 0.91,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 236,
+    "mean_r": -0.39,
+    "win": 0.267,
+    "payoff": 1.42,
+    "pf": 0.52,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 438,
+    "mean_r": 0.1,
+    "win": 0.336,
+    "payoff": 2.24,
+    "pf": 1.13,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 437,
+    "mean_r": -0.166,
+    "win": 0.288,
+    "payoff": 1.92,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 720,
+    "mean_r": 0.194,
+    "win": 0.393,
+    "payoff": 2.01,
+    "pf": 1.3,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.023,
+    "max_dd": 0.995,
+    "longest_under_n": 673
+   }
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线下·二线领",
+   "full": {
+    "n": 351,
+    "mean_r": -0.289,
+    "win": 0.305,
+    "payoff": 1.42,
+    "pf": 0.62,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 141,
+    "mean_r": -0.388,
+    "win": 0.277,
+    "payoff": 1.32,
+    "pf": 0.51,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 210,
+    "mean_r": -0.222,
+    "win": 0.324,
+    "payoff": 1.47,
+    "pf": 0.7,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 196,
+    "mean_r": -0.045,
+    "win": 0.357,
+    "payoff": 1.68,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 313,
+    "mean_r": -0.162,
+    "win": 0.294,
+    "payoff": 1.88,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.01,
+    "max_dd": 0.991,
+    "longest_under_n": 350
+   }
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线上·主流领",
+   "full": {
+    "n": 660,
+    "mean_r": 0.038,
+    "win": 0.35,
+    "payoff": 1.95,
+    "pf": 1.05,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 108,
+    "mean_r": -0.058,
+    "win": 0.324,
+    "payoff": 1.92,
+    "pf": 0.92,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 552,
+    "mean_r": 0.056,
+    "win": 0.355,
+    "payoff": 1.96,
+    "pf": 1.08,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 190,
+    "mean_r": 0.093,
+    "win": 0.395,
+    "payoff": 1.76,
+    "pf": 1.15,
+    "worst_r": -1.53
+   },
+   "base_hold": {
+    "n": 873,
+    "mean_r": 0.003,
+    "win": 0.353,
+    "payoff": 1.84,
+    "pf": 1.0,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.399,
+    "max_dd": 0.965,
+    "longest_under_n": 422
+   }
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线上·二线领",
+   "full": {
+    "n": 351,
+    "mean_r": -0.176,
+    "win": 0.305,
+    "payoff": 1.76,
+    "pf": 0.77,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 85,
+    "mean_r": -0.185,
+    "win": 0.353,
+    "payoff": 1.34,
+    "pf": 0.73,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 266,
+    "mean_r": -0.173,
+    "win": 0.289,
+    "payoff": 1.92,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 219,
+    "mean_r": -0.14,
+    "win": 0.32,
+    "payoff": 1.71,
+    "pf": 0.81,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 514,
+    "mean_r": 0.02,
+    "win": 0.354,
+    "payoff": 1.88,
+    "pf": 1.03,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.036,
+    "max_dd": 0.979,
+    "longest_under_n": 328
+   }
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线下·主流领",
+   "full": {
+    "n": 747,
+    "mean_r": -0.221,
+    "win": 0.308,
+    "payoff": 1.6,
+    "pf": 0.71,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 328,
+    "mean_r": -0.159,
+    "win": 0.302,
+    "payoff": 1.83,
+    "pf": 0.79,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 419,
+    "mean_r": -0.269,
+    "win": 0.313,
+    "payoff": 1.43,
+    "pf": 0.65,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 380,
+    "mean_r": 0.155,
+    "win": 0.405,
+    "payoff": 1.83,
+    "pf": 1.25,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 688,
+    "mean_r": -0.334,
+    "win": 0.259,
+    "payoff": 1.64,
+    "pf": 0.57,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.0,
+    "max_dd": 1.0,
+    "longest_under_n": 746
+   }
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线下·二线领",
+   "full": {
+    "n": 335,
+    "mean_r": 0.106,
+    "win": 0.391,
+    "payoff": 1.8,
+    "pf": 1.16,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 128,
+    "mean_r": 0.194,
+    "win": 0.398,
+    "payoff": 1.95,
+    "pf": 1.29,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 207,
+    "mean_r": 0.052,
+    "win": 0.386,
+    "payoff": 1.71,
+    "pf": 1.08,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 189,
+    "mean_r": -0.161,
+    "win": 0.317,
+    "payoff": 1.67,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 313,
+    "mean_r": 0.189,
+    "win": 0.403,
+    "payoff": 1.92,
+    "pf": 1.29,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 1.837,
+    "max_dd": 0.773,
+    "longest_under_n": 156
+   }
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线上·主流领",
+   "full": {
+    "n": 564,
+    "mean_r": -0.07,
+    "win": 0.324,
+    "payoff": 1.89,
+    "pf": 0.91,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 121,
+    "mean_r": -0.179,
+    "win": 0.264,
+    "payoff": 2.15,
+    "pf": 0.77,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 443,
+    "mean_r": -0.04,
+    "win": 0.341,
+    "payoff": 1.83,
+    "pf": 0.95,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 163,
+    "mean_r": -0.275,
+    "win": 0.252,
+    "payoff": 1.93,
+    "pf": 0.65,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 868,
+    "mean_r": -0.077,
+    "win": 0.319,
+    "payoff": 1.91,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.054,
+    "max_dd": 0.98,
+    "longest_under_n": 543
+   }
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线上·二线领",
+   "full": {
+    "n": 463,
+    "mean_r": -0.054,
+    "win": 0.311,
+    "payoff": 2.06,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 159,
+    "mean_r": 0.041,
+    "win": 0.346,
+    "payoff": 2.0,
+    "pf": 1.06,
+    "worst_r": -1.29
+   },
+   "hold": {
+    "n": 304,
+    "mean_r": -0.103,
+    "win": 0.293,
+    "payoff": 2.1,
+    "pf": 0.87,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 183,
+    "mean_r": -0.133,
+    "win": 0.311,
+    "payoff": 1.8,
+    "pf": 0.82,
+    "worst_r": -1.25
+   },
+   "base_hold": {
+    "n": 499,
+    "mean_r": -0.261,
+    "win": 0.267,
+    "payoff": 1.82,
+    "pf": 0.66,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.109,
+    "max_dd": 0.981,
+    "longest_under_n": 366
+   }
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线下·主流领",
+   "full": {
+    "n": 403,
+    "mean_r": 0.008,
+    "win": 0.33,
+    "payoff": 2.05,
+    "pf": 1.01,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 133,
+    "mean_r": -0.307,
+    "win": 0.293,
+    "payoff": 1.45,
+    "pf": 0.6,
+    "worst_r": -1.28
+   },
+   "hold": {
+    "n": 270,
+    "mean_r": 0.163,
+    "win": 0.348,
+    "payoff": 2.29,
+    "pf": 1.22,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 437,
+    "mean_r": -0.166,
+    "win": 0.288,
+    "payoff": 1.92,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 720,
+    "mean_r": 0.194,
+    "win": 0.393,
+    "payoff": 2.01,
+    "pf": 1.3,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.303,
+    "max_dd": 0.897,
+    "longest_under_n": 403
+   }
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线下·二线领",
+   "full": {
+    "n": 233,
+    "mean_r": -0.05,
+    "win": 0.339,
+    "payoff": 1.81,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 101,
+    "mean_r": -0.406,
+    "win": 0.257,
+    "payoff": 1.44,
+    "pf": 0.5,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 132,
+    "mean_r": 0.221,
+    "win": 0.402,
+    "payoff": 1.99,
+    "pf": 1.34,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 196,
+    "mean_r": -0.045,
+    "win": 0.357,
+    "payoff": 1.68,
+    "pf": 0.93,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 313,
+    "mean_r": -0.162,
+    "win": 0.294,
+    "payoff": 1.88,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.309,
+    "max_dd": 0.849,
+    "longest_under_n": 214
+   }
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线上·主流领",
+   "full": {
+    "n": 490,
+    "mean_r": 0.087,
+    "win": 0.351,
+    "payoff": 2.08,
+    "pf": 1.12,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 85,
+    "mean_r": -0.109,
+    "win": 0.329,
+    "payoff": 1.73,
+    "pf": 0.85,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 405,
+    "mean_r": 0.128,
+    "win": 0.356,
+    "payoff": 2.14,
+    "pf": 1.18,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 190,
+    "mean_r": 0.093,
+    "win": 0.395,
+    "payoff": 1.76,
+    "pf": 1.15,
+    "worst_r": -1.53
+   },
+   "base_hold": {
+    "n": 873,
+    "mean_r": 0.003,
+    "win": 0.353,
+    "payoff": 1.84,
+    "pf": 1.0,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 1.115,
+    "max_dd": 0.946,
+    "longest_under_n": 201
+   }
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线上·二线领",
+   "full": {
+    "n": 184,
+    "mean_r": -0.08,
+    "win": 0.326,
+    "payoff": 1.84,
+    "pf": 0.89,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 43,
+    "mean_r": -0.142,
+    "win": 0.326,
+    "payoff": 1.66,
+    "pf": 0.8,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 141,
+    "mean_r": -0.061,
+    "win": 0.326,
+    "payoff": 1.9,
+    "pf": 0.92,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 219,
+    "mean_r": -0.14,
+    "win": 0.32,
+    "payoff": 1.71,
+    "pf": 0.81,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 514,
+    "mean_r": 0.02,
+    "win": 0.354,
+    "payoff": 1.88,
+    "pf": 1.03,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.322,
+    "max_dd": 0.842,
+    "longest_under_n": 184
+   }
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线下·主流领",
+   "full": {
+    "n": 626,
+    "mean_r": -0.21,
+    "win": 0.307,
+    "payoff": 1.64,
+    "pf": 0.73,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 275,
+    "mean_r": -0.109,
+    "win": 0.309,
+    "payoff": 1.91,
+    "pf": 0.86,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 351,
+    "mean_r": -0.29,
+    "win": 0.305,
+    "payoff": 1.42,
+    "pf": 0.62,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 380,
+    "mean_r": 0.155,
+    "win": 0.405,
+    "payoff": 1.83,
+    "pf": 1.25,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 688,
+    "mean_r": -0.334,
+    "win": 0.259,
+    "payoff": 1.64,
+    "pf": 0.57,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.002,
+    "max_dd": 0.999,
+    "longest_under_n": 625
+   }
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线下·二线领",
+   "full": {
+    "n": 260,
+    "mean_r": -0.04,
+    "win": 0.354,
+    "payoff": 1.73,
+    "pf": 0.94,
+    "worst_r": -1.3
+   },
+   "disc": {
+    "n": 92,
+    "mean_r": 0.09,
+    "win": 0.391,
+    "payoff": 1.76,
+    "pf": 1.13,
+    "worst_r": -1.3
+   },
+   "hold": {
+    "n": 168,
+    "mean_r": -0.111,
+    "win": 0.333,
+    "payoff": 1.7,
+    "pf": 0.85,
+    "worst_r": -1.3
+   },
+   "base_disc": {
+    "n": 189,
+    "mean_r": -0.161,
+    "win": 0.317,
+    "payoff": 1.67,
+    "pf": 0.78,
+    "worst_r": -1.3
+   },
+   "base_hold": {
+    "n": 313,
+    "mean_r": 0.189,
+    "win": 0.403,
+    "payoff": 1.92,
+    "pf": 1.29,
+    "worst_r": -1.3
+   },
+   "holds": false,
+   "curve": {
+    "final": 0.364,
+    "max_dd": 0.852,
+    "longest_under_n": 194
+   }
+  }
+ ],
+ "board": {
+  "as_of_cell_day": "2026-11-19",
+  "cell_today": "线下·主流领",
+  "home_rules_today": [],
+  "coins": [
+   {
+    "coin": "BTC",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 58640.34,
+    "trend": "down",
+    "ema50": 61825.953732,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 62581.174498,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 58768.51,
+      "broke_at": "2026-11-25T04:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       58768.51,
+       58592.20447
+      ],
+      "cancel_if_close_beyond": 59356.1951,
+      "wait_bars_left": 11,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 58768.51,
+      "broke_at": "2026-11-25T04:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       58768.51,
+       58592.20447
+      ],
+      "cancel_if_close_beyond": 59356.1951,
+      "wait_bars_left": 11,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "ETH",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 1638.83,
+    "trend": "down",
+    "ema50": 1738.0097,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 1765.38364,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 1648.35,
+      "broke_at": "2026-11-25T04:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       1648.35,
+       1643.40495
+      ],
+      "cancel_if_close_beyond": 1664.8335,
+      "wait_bars_left": 11,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 1648.35,
+      "broke_at": "2026-11-25T04:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       1648.35,
+       1643.40495
+      ],
+      "cancel_if_close_beyond": 1664.8335,
+      "wait_bars_left": 11,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "SOL",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 67.55,
+    "trend": "down",
+    "ema50": 71.864082,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 74.405341,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 68.5,
+      "broke_at": "2026-11-25T04:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       68.5,
+       68.2945
+      ],
+      "cancel_if_close_beyond": 69.185,
+      "wait_bars_left": 11,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 68.5,
+      "broke_at": "2026-11-25T04:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       68.5,
+       68.2945
+      ],
+      "cancel_if_close_beyond": 69.185,
+      "wait_bars_left": 11,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "BNB",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 538.94,
+    "trend": "down",
+    "ema50": 565.831184,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 567.463691,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "XRP",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 0.909,
+    "trend": "down",
+    "ema50": 0.947762,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 0.967742,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 0.9093,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.9093,
+       0.906572
+      ],
+      "cancel_if_close_beyond": 0.918393,
+      "wait_bars_left": 12,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 0.9093,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.9093,
+       0.906572
+      ],
+      "cancel_if_close_beyond": 0.918393,
+      "wait_bars_left": 12,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "ADA",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 0.1399,
+    "trend": "down",
+    "ema50": 0.1486,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 0.151422,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 0.1409,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.1409,
+       0.140477
+      ],
+      "cancel_if_close_beyond": 0.142309,
+      "wait_bars_left": 12,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 0.1409,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.1409,
+       0.140477
+      ],
+      "cancel_if_close_beyond": 0.142309,
+      "wait_bars_left": 12,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "AVAX",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 6.407,
+    "trend": "down",
+    "ema50": 6.851042,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 6.957464,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 6.423,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       6.423,
+       6.403731
+      ],
+      "cancel_if_close_beyond": 6.48723,
+      "wait_bars_left": 12,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 6.423,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       6.423,
+       6.403731
+      ],
+      "cancel_if_close_beyond": 6.48723,
+      "wait_bars_left": 12,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "DOGE",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 0.05367,
+    "trend": "down",
+    "ema50": 0.056928,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 0.057644,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 0.05376,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.05376,
+       0.053599
+      ],
+      "cancel_if_close_beyond": 0.054298,
+      "wait_bars_left": 12,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 0.05376,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.05376,
+       0.053599
+      ],
+      "cancel_if_close_beyond": 0.054298,
+      "wait_bars_left": 12,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "LINK",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 8.602,
+    "trend": "down",
+    "ema50": 8.969936,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 9.19633,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "NEAR",
+    "bar": "2026-10-23T04:00:00+00:00",
+    "close": 4.925,
+    "trend": "down",
+    "ema50": 5.017325,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 5.364856,
+      "stop": 5.461902,
+      "stop_dist": 0.0181,
+      "valid": true,
+      "notional_pct_of_equity_at_4pct_risk": 2.21,
+      "home_today": false
+     }
+    ]
+   },
+   {
+    "coin": "SUI",
+    "bar": "2026-11-25T08:00:00+00:00",
+    "close": 0.6291,
+    "trend": "down",
+    "ema50": 0.680838,
+    "armed": [
+     {
+      "rule": "UB_S",
+      "limit": 0.69589,
+      "valid": false,
+      "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂",
+      "home_today": false
+     },
+     {
+      "rule": "BR_S",
+      "level": 0.6337,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.6337,
+       0.631799
+      ],
+      "cancel_if_close_beyond": 0.640037,
+      "wait_bars_left": 12,
+      "home_today": false
+     },
+     {
+      "rule": "BRF_S",
+      "level": 0.6337,
+      "broke_at": "2026-11-25T08:00:00+00:00",
+      "valid": true,
+      "retest_zone": [
+       0.6337,
+       0.631799
+      ],
+      "cancel_if_close_beyond": 0.640037,
+      "wait_bars_left": 12,
+      "home_today": false
+     }
+    ]
+   }
+  ]
+ }
+}

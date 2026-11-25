@@ -1,0 +1,28 @@
+{
+  "id": "T-436",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-916:Jazz 自己的 4 小时线两种进场单(低吸边界单 / 突破回踩确认单)× 状态四格 + 今天的匹配板 —— 只跑 Seth 写好的脚本",
+  "source": "台账 S-916(预注册)。脚本 `docs/research/s916_jazz_4h_rules.py`(import `s881_setup_mining.py` 取状态四格、`s851_watch_base_rate.py` 只读取数,都不改)。数据 = `ohlcv_hourly`(binance_hist)11 个币,约 52 万行小时线,按页取需要几分钟。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-436.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s916_jazz_4h_rules.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s916_jazz_4h_rules.py > docs/research/s916_run.txt 2>&1 &`,只 tail,等 WROTE(取小时线翻页约 10 分钟)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|BASE|ROW|BOARD|ARMED|loaded)' docs/research/s916_run.txt | cut -c1-460`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s916_results.json + s916_run.txt;卡 in_review,推 lane-a/T-436。先于手上别的卡。"
+  },
+  "prior_value": "Jazz 的框架写着「回测只想测自己的规则」;他最常用的两种单在 4 小时线上从没量过 —— 台账里站住的形态都是日线、都是我们定义的。",
+  "notes": "2026-11-25T18:01:05Z Seth 开卡(Jazz 11-26「overnight 做一下策略和交易的挖掘和匹配」)。\n\n2026-11-26T03:40Z lane-a 跑完(Seth 03:01 写的脚本,原样复制未改一行;--selftest → SELFTEST OK)。数据 = ohlcv_hourly(binance_hist) 聚 4h:BTC/ETH 81171 小时行→20270 根 4h;SOL/BNB/XRP/ADA/AVAX/DOGE/LINK 51697→12918;NEAR 52785→13187(但最后一根只到 2026-10-23,比其余币旧一个月);SUI 31251→7812(起点最晚)。行数用 count=exact 逐币核对,与脚本 loaded 行数一致(全表 608257 行)。COUNTS: n_tested=24, n_holds=0;零分布 n=100, median 0.0, q95 1.0, p_ge_real=1.0。UNCOND(发现段<=2022-12-31 / 留出段2023起,均值 R,票数): LB_L -0.223(n523)/-0.062(n818); UB_S -0.144(n466)/-0.162(n1003); BR_L -0.123(n1060)/-0.039(n1640); BR_S -0.093(n864)/-0.084(n1449); BRF_L -0.037(n757)/+0.021(n1149); BRF_S -0.086(n638)/-0.077(n1070)。对照 BASE(+1) -0.127(n1376)/-0.044(n2407);BASE(-1) -0.031(n1396)/-0.068(n2392)。4% 风险复利资金曲线:六条规则 final≈0.0、maxDD=1.0(100%),最长水下 1340-2335 张票。今日匹配板: 状态格 2026-11-19 线下·主流领,home_rules_today 为空(没有一个格子站得住 => 无推荐规则);11 币最后一根 4h 根全为 down;armed: BTC 58768.51、ETH 1648.35、SOL 68.5、XRP 0.9093、ADA 0.1409、AVAX 6.423、DOGE 0.05376、SUI 0.6337 上挂 BR_S/BRF_S(破位回抽确认空),NEAR 仅 UB_S 挂单 5.364856(stop 5.461902)。产物: docs/research/s916_results.json + docs/research/s916_run.txt;前向预期 docs/research/scenarios/lane-a-T-436.json(4 条,3 条 close 自动结算)。注意: s916_run.txt 第 1-2 行('loaded BTC 3099'/'loaded ETH 3099')是另一个进程(Seth 03:01 版脚本,打印格式只到币名+一个数)写进同一文件的残行;我这次跑的 11 行是完整格式(loaded <coin> <n> hourly -> <m> 4h)。"
+}
