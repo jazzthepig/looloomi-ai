@@ -1,0 +1,8 @@
+{
+  "voided_by": "seth",
+  "note": "第二批作废(T-427 机制)。2026-11-25 Seth 写,来源 lane-c T-436(原记 T-435)编码筛查 B 组;入库前 SQL 核过:T-357-3 在 scenario_ledger(op=gt lo=1,horizon 2026-12-15)、scenario_scores 0 行;接替条 T-358-1 在台账(op=lt hi=2,同 horizon)、0 行。A 组 11 条差一档、D 组 T-268-4 保留不作废;C 组 T-234-7 不是错配(check 钉的是 json 字段 c_non_event_turning_share,小数口径,0.15 = 15%)。",
+  "voids": [
+    {"id": "T-357-3", "reason": "superseded",
+     "evidence": "statement「R ≥ 10 的不超过 1 张」而台账 op=gt lo=1 ⇒ 判反(≥2 张才判真);T-358-1 已按 statement 原意改写为 op=lt hi=2、同窗口同 horizon(scenarios/lane-a-T-358.json:6 自述「照 T-357-3 的 statement 原意改写方向」)", "superseded_by": "T-358-1"}
+  ]
+}
