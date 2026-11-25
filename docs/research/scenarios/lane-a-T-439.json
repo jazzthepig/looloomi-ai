@@ -1,0 +1,68 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-439-1",
+      "scenario": "S-918 稳健检验(--mgmt hold --dmin 0.01 --cap 20)",
+      "statement": "结算日 state_daily 的 panel.breadth_above_ma50 ≤ 0.30",
+      "variable": "state:breadth_above_ma50",
+      "op": "lt",
+      "hi": 0.3,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15",
+      "basis": "本卡实测:该 feature 近 120 个交易日里 ≤0.30 的占 34.2%、≤0.50 占 47.5%、等于 0 占 11.7%;且 2026-11-03 → 11-22 的 20 个交易日全在 0–0.042 之间(连续走弱)。近端读数与 120 日分布给的方向相反,两者大致抵消 ⇒ 给 0.50 附近的弱先验,不做方向性押注。",
+      "note": "只登记可机器核的宽度读数,不写任何收益承诺。"
+    },
+    {
+      "id": "T-439-2",
+      "scenario": "S-918 稳健检验(--mgmt hold --dmin 0.01 --cap 20)",
+      "statement": "结算日 ohlcv_daily 的 BTC 收盘落在 [54000, 65000]",
+      "variable": "close:BTC",
+      "op": "between",
+      "lo": 54000,
+      "hi": 65000,
+      "prob": 0.7,
+      "horizon_d": "2026-12-15",
+      "basis": "本卡实测:11-24 的 ohlcv_daily BTC 收盘 59832;匹配板最后一根 4h(11-25T08:00)收盘 58640.34。区间 ±8%–9% 包住近端读数与其一个多月的常态波动 ⇒ 给 0.70 的偏宽区间先验,不给方向。",
+      "note": "区间是波动包络,不是价格目标;这是登记用的可核量。"
+    },
+    {
+      "id": "T-439-3",
+      "scenario": "S-918 稳健检验(--mgmt hold --dmin 0.01 --cap 20)",
+      "statement": "结算日 ohlcv_daily 的 SOL 收盘 < 68.50",
+      "variable": "close:SOL",
+      "op": "lt",
+      "hi": 68.5,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15",
+      "basis": "本卡实测:11-24 的 ohlcv_daily SOL 收盘 69.69;匹配板最后一根 4h 收盘 67.55;BR_S 的结构位 68.50 已跌破(破于 11-25T04:00)。两个读数分别落在阈值两侧 ⇒ 先验 0.50,不为结构位方向加码。",
+      "note": "阈值取自本卡匹配板输出的 BR_S 结构位,不是事后挑的价位。"
+    },
+    {
+      "id": "T-439-4",
+      "scenario": "S-918 稳健检验(--mgmt hold --dmin 0.01 --cap 20)",
+      "statement": "结算日 ohlcv_daily 的 ETH 收盘 < 1648.35",
+      "variable": "close:ETH",
+      "op": "lt",
+      "hi": 1648.35,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15",
+      "basis": "本卡实测:11-24 的 ohlcv_daily ETH 收盘 1680.11;匹配板最后一根 4h 收盘 1638.83;BR_S 结构位 1648.35 已跌破。两侧读数并存 ⇒ 0.50。",
+      "note": "阈值取自本卡匹配板输出的 BR_S 结构位。"
+    },
+    {
+      "id": "T-439-5",
+      "scenario": "S-918 稳健检验(--mgmt hold --dmin 0.01 --cap 20)",
+      "statement": "把同一脚本 --mgmt hold --dmin 0.01 --cap 20 在更长的数据窗口上重跑一次,站得住的格子数(24 格中 n_holds)≥ 4(本卡实测 5)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 4,
+      "hi": 24,
+      "prob": 0.5,
+      "horizon_d": "2026-12-20",
+      "basis": "本卡实测 n_holds=5 / 24,零分布 median=2、q95=5、p_ge_real=0.09。5 个站住的格子中有 4 个的 x5(去掉最好 5 张后的均值)转负 ⇒ 对「格子数会随窗口延长而保持」不给高先验,给 0.50。",
+      "note": "manual:结算人跑一次同参数脚本、把 n_holds 作为观测值交回;判定由登记时的 op/lo/hi 算。"
+    }
+  ],
+  "note": "本卡交付的是 S-918 的稳健性重跑(同脚本、--dmin 0.01 --cap 20),不是收益结论;这里只登记可机器核的前向命题,不写收益承诺。概率只用了本卡实测到的读数(11-24 日收盘、11-25 匹配板结构位、近 120 日 breadth 分布)与本卡自己的 n_holds,未做新的统计检验 —— 基率脚本 docs/research/_t439_base_rates.py 因上下文预算未能跑完,若日后补跑,应回头校准这五条的 prob。"
+}

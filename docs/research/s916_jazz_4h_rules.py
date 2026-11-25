@@ -29,6 +29,7 @@ EMA7 / 20 / 50、布林 20 × 2σ、H20 / L20 = 此前 20 根(不含本根)的�
     python3 docs/research/s916_jazz_4h_rules.py --selftest
     nohup python3 docs/research/s916_jazz_4h_rules.py > docs/research/s916_run.txt 2>&1 &      # 写 s916_results.json(含今天的匹配板)
     nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold > docs/research/s916_run_hold.txt 2>&1 &   # S-917:只设止损、拿满 28 天
+    nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold --dmin 0.01 --cap 20 > docs/research/s916_run_hold_d1c20.txt 2>&1 &   # S-918
 """
 from __future__ import annotations
 
@@ -69,6 +70,14 @@ MGMT = "hold" if "--mgmt" in sys.argv and sys.argv[sys.argv.index("--mgmt") + 1]
 HOLD_BARS = 168
 if MGMT == "hold":
     OUT = "docs/research/s916_results_hold.json"
+#: S-918:`--dmin 0.01` 止损下限;`--cap 20` 单张 R 的上截断(亏损不截)。默认不变(0.4%、不截)
+def _arg(name: str, default: float) -> float:
+    return float(sys.argv[sys.argv.index(name) + 1]) if name in sys.argv else default
+DMIN = _arg("--dmin", DMIN)
+CAP = _arg("--cap", float("inf"))
+if "--dmin" in sys.argv or "--cap" in sys.argv:
+    OUT = OUT.replace(".json", f"_d{int(round(DMIN * 100))}c{'inf' if math.isinf(CAP) else int(CAP)}.json")
+STALE_BARS = 12                       # 匹配板:最后一根比最新的币旧 2 天以上 ⇒ 跳过(NEAR 的小时线停在 10-23)
 
 
 # ── 4 小时线与指标 ─────────────────────────────────────────────────────────────
@@ -227,7 +236,7 @@ def tickets(b: dict, ind: dict, rule: str) -> list:
         m = manage(b, ind, j0, side, entry, stop) if rule in ("LB_L", "UB_S") else _manage_from_close(b, ind, j0, side, entry, stop)
         if m is None:
             break
-        out.append((b["t"][j0], side, m["r"], m["bars"]))
+        out.append((b["t"][j0], side, min(m["r"], CAP), m["bars"]))
         i = m["exit_i"] + 1
     return out
 
@@ -249,7 +258,7 @@ def baseline(b: dict, ind: dict, side: int) -> list:
         m = manage(b, ind, i + 1, side, entry, stop)
         if m is None:
             break
-        out.append((b["t"][i + 1], side, m["r"], m["bars"]))
+        out.append((b["t"][i + 1], side, min(m["r"], CAP), m["bars"]))
         i = max(m["exit_i"] + 1, i + EVERY)
     return out
 
@@ -262,7 +271,9 @@ def summ(rs: list) -> dict:
     r = np.array(rs)
     w, ls = r[r > 0], r[r <= 0]
     avg_l = float(-ls.mean()) if len(ls) else 0.0
-    return {"n": len(r), "mean_r": round(float(r.mean()), 3), "win": round(float((r > 0).mean()), 3),
+    top5 = np.sort(r)[:-5] if len(r) > 5 else r[:0]
+    return {"n": len(r), "mean_r": round(float(r.mean()), 3), "median_r": round(float(np.median(r)), 3),
+            "mean_ex_top5": round(float(top5.mean()), 3) if len(top5) else None, "win": round(float((r > 0).mean()), 3),
             "payoff": round(float(w.mean() / avg_l), 2) if len(w) and avg_l > 0 else (99.0 if len(w) else 0.0),
             "pf": round(float(w.sum() / -ls.sum()), 2) if len(ls) and ls.sum() < 0 else 99.0, "worst_r": round(float(r.min()), 2)}
 
@@ -336,11 +347,15 @@ def board(bars: dict, cell: dict, rows: list) -> dict:
     today = cell[last_day]
     home = sorted({x["rule"] for x in rows if x["holds"] and x["cell"] == today})
     out = []
+    newest = max(b["t"][-1] for b in bars.values())
     for coin, b in bars.items():
+        if (newest - b["t"][-1]).total_seconds() > STALE_BARS * 4 * 3600:
+            out.append({"coin": coin, "bar": b["t"][-1].isoformat(), "stale": True, "armed": []})
+            continue
         ind = indicators(b)
         i = len(b["c"]) - 1
         c = b["c"][i]
-        info = {"coin": coin, "bar": b["t"][i].isoformat(), "close": round(float(c), 6),
+        info = {"coin": coin, "bar": b["t"][i].isoformat(), "stale": False, "close": round(float(c), 6),
                 "trend": "up" if ind["e20"][i] > ind["e50"][i] else "down", "ema50": round(float(ind["e50"][i]), 6)}
         armed = []
         for rule in RULES:
@@ -415,7 +430,8 @@ if __name__ == "__main__":
     bars, cell = synthetic() if selftest else load_live()
     out = run(bars, cell, n_null=(6 if selftest else N_NULL))
     out["board"] = board(bars, cell, out["rows"])
-    f = lambda s: f"n{s.get('n')} r{s.get('mean_r')} win{s.get('win')} pay{s.get('payoff')} w{s.get('worst_r')}" if s.get("n") else "n0"  # noqa: E731
+    f = lambda s: (f"n{s.get('n')} r{s.get('mean_r')} med{s.get('median_r')} x5{s.get('mean_ex_top5')} win{s.get('win')} pay{s.get('payoff')} "  # noqa: E731
+                   f"w{s.get('worst_r')}") if s.get("n") else "n0"
     print("COUNTS", json.dumps({k: out[k] for k in ("n_tested", "n_holds", "null")}, ensure_ascii=False), flush=True)
     for r, v in out["unconditional"].items():
         print("UNCOND", r, "| disc", f(v["disc"]), "| hold", f(v["hold"]), "| curve", json.dumps(v["curve"]), flush=True)
@@ -427,7 +443,8 @@ if __name__ == "__main__":
     bd = out["board"]
     print("BOARD", bd["as_of_cell_day"], bd["cell_today"], "home:", ",".join(bd["home_rules_today"]) or "-", flush=True)
     for cinfo in bd["coins"]:
-        print("ARMED", cinfo["coin"], cinfo["bar"], cinfo["trend"], json.dumps([a for a in cinfo["armed"]], ensure_ascii=False)[:400], flush=True)
+        print("ARMED", cinfo["coin"], cinfo["bar"], "STALE" if cinfo.get("stale") else cinfo["trend"],
+              json.dumps([a for a in cinfo["armed"]], ensure_ascii=False)[:400], flush=True)
     if selftest:
         b = bars["AAA"]
         ind = indicators(b)
@@ -455,6 +472,8 @@ if __name__ == "__main__":
         if MGMT == "hold":
             mh = manage_hold(tb2, 1, 1, 100.0, 90.0, 10.0)
             assert mh is None, "拿不满 168 根的票不算"
+        if not math.isinf(CAP):
+            assert max(x[2] for r in RULES for x in tickets(b, ind, r)) <= CAP + 1e-12, "截断没生效"
         assert out["n_tested"] == len(RULES) * len(CELLS)
         assert sum(len(v) for v in out["per_coin"].values()) == 2 * len(RULES)
         print("SELFTEST OK")

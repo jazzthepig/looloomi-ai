@@ -1,0 +1,28 @@
+{
+  "id": "T-439",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-918:S-917 的稳健检验 —— 同一脚本 `--mgmt hold --dmin 0.01 --cap 20`(止损下限 1%、单张 R 截在 +20)再跑一遍 —— 只跑 Seth 写好的脚本",
+  "source": "台账 S-918(预注册,写于 T-438 结果之后、新计算之前)。脚本 = main 上更新过的 `docs/research/s916_jazz_4h_rules.py`(多了 `--dmin` / `--cap`,输出多了中位 R 与去掉最好 5 张后的均值;匹配板跳过最后一根旧于 2 天的币)。先 fetch,从 origin/main 开分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-439.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s916_jazz_4h_rules.py --selftest --mgmt hold --dmin 0.01 --cap 20 | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s916_jazz_4h_rules.py --mgmt hold --dmin 0.01 --cap 20 > docs/research/s916_run_hold_d1c20.txt 2>&1 &`,只 tail,等 WROTE(应写 `s916_results_hold_d1c20.json`;写成别的名字说明脚本是旧的,停下报告)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|BASE|ROW|BOARD|ARMED|WROTE)' docs/research/s916_run_hold_d1c20.txt | cut -c1-500`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "s916_results_hold_d1c20.json + s916_run_hold_d1c20.txt;卡 in_review,推 lane-a/T-439。"
+  },
+  "prior_value": "S-917 的正号靠胜率不到一成的少数大赢家,而 R 口径放大窄止损的票 —— 过不了这一道的格子不配进给 Jazz 的匹配板。",
+  "notes": "2026-11-25T19:12:22Z Seth 开卡(S-917 结果 1 之后)。2026-11-26 lane-a 执行完毕(分支 lane-a/T-439,基于 origin/main 285aba8f)。① 脚本:origin/main 上的 s916_jazz_4h_rules.py 仍无 --dmin/--cap(grep dmin = 0 命中),带参数的那一版在主仓库工作区未提交;按卡上「main 上更新过的脚本」把那一份拷进分支(25 insertions / 6 deletions,只增 --dmin/--cap、中位 R、x5、STALE_BARS 三处),脚本本体不改一行逻辑。② selftest:`--selftest --mgmt hold --dmin 0.01 --cap 20` 最后一行 = SELFTEST OK。③ 正式跑:产物 docs/research/s916_results_hold_d1c20.json(39,507 B)+ docs/research/s916_run_hold_d1c20.txt(12,941 B),WROTE 行写的正是 s916_results_hold_d1c20.json(名字正确 ⇒ 脚本是新版)。④ 测得的关键数(与 T-438 / S-917 同口径对照):COUNTS n_tested=24, n_holds=5(T-438 为 8),null median=2.0 / q95=5.0 / p_ge_real=0.09(T-438 为 median 6 / q95 9 / p 0.19)—— 换成 1% 止损下限 + 单张 R 截 +20 之后,站得住的格子从 8 降到 5,但零分布中位数同步从 6 降到 2,显著性反而更接近零分布的中位(p 0.19→0.09),换句话说「站住 5 格」不再显著高于随机平移。⑤ 稳健性(卡上 prior_value 问的那道):24 格里 hold 腿的 x5(去掉最好 5 张后的均值)为正的只有 5 格 ⇒ 站住的 5 格里 med 全在 −1.05…−1.12 附近、中位 R 为负,正号仍主要靠少数大赢家;x5 转正且 med 仍为负的格子没有一个。⑥ 匹配板:cell_today=2026-11-19 线下·主流领,home_rules_today=[] (T-438 那一跑 home 为 LB_L)—— 今天这一格没有可挂的 home 规则。NEAR 因最后一根 4h 停在 10-23(比最新币旧 >2 天)被标 STALE 并跳过,其余 10 币在 11-25T08:00,均 trend=down,BR_S/BRF_S 的结构位(BTC 58768.51 / ETH 1648.35 / SOL 68.50 / XRP 0.9093 / ADA 0.1409 / AVAX 6.423 / DOGE 0.05376 / SUI 0.6337)已跌破待回测。⑦ 前向预期:docs/research/scenarios/lane-a-T-439.json,5 条(含 4 条自动 + 1 条 manual),概率只用本卡实测到的读数(11-24 日收盘、11-25 匹配板结构位、近 120 日 panel.breadth_above_ma50 分布、本卡 n_holds)与基率,未写收益承诺。⑧ 未完成:docs/research/_t439_base_rates.py(BTC/SOL 未来 14 天路径基率)与 docs/research/_t438_run_hold_ref.txt(T-438 日志对照)因上下文预算被拦未跑/仅作对照用,未随分支提交,留在工作区未追踪;若日后补跑,应回头校准那 5 条情景的 prob。脚本改动已随分支提交(在 allowed_paths 内)。"
+}
