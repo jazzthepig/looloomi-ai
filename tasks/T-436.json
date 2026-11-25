@@ -1,0 +1,28 @@
+{
+  "id": "T-436",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-25",
+  "verified": null,
+  "title": "S-916:Jazz 自己的 4 小时线两种进场单(低吸边界单 / 突破回踩确认单)× 状态四格 + 今天的匹配板 —— 只跑 Seth 写好的脚本",
+  "source": "台账 S-916(预注册)。脚本 `docs/research/s916_jazz_4h_rules.py`(import `s881_setup_mining.py` 取状态四格、`s851_watch_base_rate.py` 只读取数,都不改)。数据 = `ohlcv_hourly`(binance_hist)11 个币,约 52 万行小时线,按页取需要几分钟。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-436.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s916_jazz_4h_rules.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s916_jazz_4h_rules.py > docs/research/s916_run.txt 2>&1 &`,只 tail,等 WROTE(取小时线翻页约 10 分钟)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|BASE|ROW|BOARD|ARMED|loaded)' docs/research/s916_run.txt | cut -c1-460`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s916_results.json + s916_run.txt;卡 in_review,推 lane-a/T-436。先于手上别的卡。"
+  },
+  "prior_value": "Jazz 的框架写着「回测只想测自己的规则」;他最常用的两种单在 4 小时线上从没量过 —— 台账里站住的形态都是日线、都是我们定义的。",
+  "notes": "2026-11-25T18:01:05Z Seth 开卡(Jazz 11-26「overnight 做一下策略和交易的挖掘和匹配」)。"
+}
