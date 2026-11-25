@@ -1,0 +1,59 @@
+loaded BTC 3099
+loaded ETH 3099
+loaded BTC 81176 hourly → 20272 4h
+loaded ETH 81176 hourly → 20272 4h
+loaded SOL 51702 hourly → 12920 4h
+loaded BNB 51702 hourly → 12920 4h
+loaded XRP 51702 hourly → 12920 4h
+loaded ADA 51702 hourly → 12920 4h
+loaded AVAX 51702 hourly → 12920 4h
+loaded DOGE 51702 hourly → 12920 4h
+loaded LINK 51702 hourly → 12920 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31256 hourly → 7814 4h
+COUNTS {"n_tested": 24, "n_holds": 2, "null": {"n": 100, "median": 1.0, "q95": 3.0, "p_ge_real": 0.43}}
+UNCOND LB_L | disc n445 r0.069 med-1.062 x5-0.126 win0.36 pay1.96 w-2.8 | hold n682 r0.06 med-1.077 x5-0.078 win0.37 pay1.85 w-1.12 | curve {"final": 0.227, "max_dd": 0.973, "longest_under_n": 860}
+UNCOND UB_S | disc n408 r-0.038 med-1.066 x5-0.148 win0.38 pay1.54 w-1.12 | hold n821 r-0.046 med-1.092 x5-0.13 win0.389 pay1.47 w-1.12 | curve {"final": 0.007, "max_dd": 0.997, "longest_under_n": 1219}
+UNCOND BR_L | disc n911 r0.124 med-1.043 x50.014 win0.318 pay2.5 w-1.12 | hold n1411 r0.093 med-1.054 x50.022 win0.343 pay2.16 w-1.12 | curve {"final": 0.575, "max_dd": 1.0, "longest_under_n": 2007}
+UNCOND BR_S | disc n775 r-0.043 med-1.039 x5-0.13 win0.339 pay1.83 w-1.12 | hold n1323 r-0.101 med-1.054 x5-0.16 win0.354 pay1.56 w-1.12 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 2053}
+UNCOND BRF_L | disc n634 r0.349 med-1.036 x50.193 win0.35 pay2.79 w-1.12 | hold n972 r0.143 med-1.05 x50.04 win0.343 pay2.3 w-1.12 | curve {"final": 447.634, "max_dd": 0.997, "longest_under_n": 1348}
+UNCOND BRF_S | disc n572 r-0.031 med-1.041 x5-0.149 win0.339 pay1.86 w-1.12 | hold n977 r-0.114 med-1.054 x5-0.185 win0.348 pay1.57 w-1.12 | curve {"final": 0.0, "max_dd": 1.0, "longest_under_n": 1515}
+BASE 1 | disc n1246 r0.083 med-1.026 x50.002 win0.313 pay2.45 w-2.52 | hold n2204 r-0.016 med-1.03 x5-0.061 win0.324 pay2.04 w-1.12
+BASE -1 | disc n1284 r-0.019 med-1.028 x5-0.081 win0.336 pay1.92 w-1.44 | hold n2139 r-0.038 med-1.028 x5-0.064 win0.342 pay1.82 w-1.12
+ROW LB_L 线上·主流领 | disc n49 r0.338 med-1.048 x5-0.403 win0.388 pay2.38 w-1.12 vs n155 r-0.244 med-1.027 x5-0.492 win0.239 pay2.21 w-1.12 | hold n256 r0.23 med-1.062 x5-0.098 win0.398 pay2.04 w-1.12 vs n757 r-0.108 med-1.03 x5-0.224 win0.301 pay1.98 w-1.12 | HOLDS
+ROW LB_L 线上·二线领 | disc n95 r0.237 med-1.034 x5-0.353 win0.337 pay2.63 w-1.12 vs n167 r0.442 med-1.018 x50.022 win0.371 pay2.84 w-1.12 | hold n234 r-0.116 med-1.076 x5-0.337 win0.338 pay1.65 w-1.12 vs n472 r-0.191 med-1.03 x5-0.272 win0.292 pay1.8 w-1.12 
+ROW LB_L 线下·主流领 | disc n73 r0.041 med-1.087 x5-0.368 win0.411 pay1.52 w-1.12 vs n421 r-0.027 med-1.03 x5-0.188 win0.299 pay2.26 w-1.12 | hold n115 r0.127 med-1.103 x5-0.328 win0.339 pay2.29 w-1.12 vs n665 r0.27 med-1.031 x50.125 win0.373 pay2.36 w-1.12 
+ROW LB_L 线下·二线领 | disc n90 r-0.327 med-1.08 x5-0.503 win0.344 pay1.04 w-1.12 vs n172 r-0.03 med-1.027 x5-0.146 win0.378 pay1.57 w-1.12 | hold n77 r-0.067 med-1.09 x5-0.297 win0.416 pay1.26 w-1.12 vs n307 r-0.138 med-1.031 x5-0.223 win0.322 pay1.7 w-1.12 
+ROW UB_S 线上·主流领 | disc n54 r-0.155 med-1.076 x5-0.509 win0.352 pay1.44 w-1.12 vs n176 r0.068 med-1.024 x5-0.048 win0.381 pay1.8 w-1.44 | hold n317 r-0.071 med-1.085 x5-0.193 win0.42 pay1.23 w-1.12 vs n808 r0.043 med-1.027 x5-0.024 win0.354 pay1.94 w-1.12 
+ROW UB_S 线上·二线领 | disc n32 r0.14 med-1.039 x5-0.427 win0.438 pay1.58 w-1.12 vs n212 r-0.161 med-1.026 x5-0.27 win0.302 pay1.81 w-1.12 | hold n104 r0.311 med-1.08 x5-0.053 win0.452 pay1.83 w-1.12 vs n487 r0.047 med-1.023 x5-0.013 win0.386 pay1.7 w-1.12 
+ROW UB_S 线下·主流领 | disc n155 r0.079 med-1.063 x5-0.12 win0.394 pay1.72 w-1.12 vs n347 r0.084 med-1.025 x5-0.054 win0.369 pay1.92 w-1.12 | hold n285 r-0.13 med-1.101 x5-0.295 win0.361 pay1.44 w-1.12 vs n589 r-0.247 med-1.037 x5-0.311 win0.295 pay1.6 w-1.12 
+ROW UB_S 线下·二线领 | disc n69 r-0.119 med-1.059 x5-0.364 win0.42 pay1.12 w-1.12 vs n162 r0.062 med-1.021 x5-0.074 win0.377 pay1.81 w-1.12 | hold n115 r-0.092 med-1.12 x5-0.477 win0.313 pay1.93 w-1.12 vs n255 r0.029 med-1.03 x5-0.127 win0.329 pay2.12 w-1.12 
+ROW BR_L 线上·主流领 | disc n139 r-0.009 med-1.045 x5-0.414 win0.259 pay2.83 w-1.12 vs n155 r-0.244 med-1.027 x5-0.492 win0.239 pay2.21 w-1.12 | hold n543 r0.08 med-1.05 x5-0.091 win0.352 pay2.05 w-1.12 vs n757 r-0.108 med-1.03 x5-0.224 win0.301 pay1.98 w-1.12 
+ROW BR_L 线上·二线领 | disc n176 r0.206 med-1.029 x5-0.245 win0.307 pay2.9 w-1.12 vs n167 r0.442 med-1.018 x50.022 win0.371 pay2.84 w-1.12 | hold n278 r-0.013 med-1.046 x5-0.23 win0.313 pay2.16 w-1.12 vs n472 r-0.191 med-1.03 x5-0.272 win0.292 pay1.8 w-1.12 
+ROW BR_L 线下·主流领 | disc n221 r-0.29 med-1.057 x5-0.469 win0.285 pay1.57 w-1.12 vs n421 r-0.027 med-1.03 x5-0.188 win0.299 pay2.26 w-1.12 | hold n399 r0.348 med-1.069 x50.114 win0.356 pay2.7 w-1.12 vs n665 r0.27 med-1.031 x50.125 win0.373 pay2.36 w-1.12 
+ROW BR_L 线下·二线领 | disc n130 r-0.421 med-1.054 x5-0.591 win0.269 pay1.26 w-1.12 vs n172 r-0.03 med-1.027 x5-0.146 win0.378 pay1.57 w-1.12 | hold n189 r-0.242 med-1.053 x5-0.4 win0.339 pay1.29 w-1.12 vs n307 r-0.138 med-1.031 x5-0.223 win0.322 pay1.7 w-1.12 
+ROW BR_S 线上·主流领 | disc n101 r-0.163 med-1.031 x5-0.438 win0.307 pay1.76 w-1.12 vs n176 r0.068 med-1.024 x5-0.048 win0.381 pay1.8 w-1.44 | hold n520 r-0.031 med-1.047 x5-0.134 win0.373 pay1.6 w-1.12 vs n808 r0.043 med-1.027 x5-0.024 win0.354 pay1.94 w-1.12 
+ROW BR_S 线上·二线领 | disc n83 r-0.148 med-1.024 x5-0.412 win0.361 pay1.38 w-1.12 vs n212 r-0.161 med-1.026 x5-0.27 win0.302 pay1.81 w-1.12 | hold n255 r-0.252 med-1.06 x5-0.367 win0.318 pay1.42 w-1.12 vs n487 r0.047 med-1.023 x5-0.013 win0.386 pay1.7 w-1.12 
+ROW BR_S 线下·主流领 | disc n282 r-0.072 med-1.046 x5-0.271 win0.309 pay2.03 w-1.12 vs n347 r0.084 med-1.025 x5-0.054 win0.369 pay1.92 w-1.12 | hold n354 r-0.303 med-1.065 x5-0.379 win0.336 pay1.15 w-1.12 vs n589 r-0.247 med-1.037 x5-0.311 win0.295 pay1.6 w-1.12 
+ROW BR_S 线下·二线领 | disc n115 r0.189 med-1.04 x5-0.112 win0.409 pay1.87 w-1.12 vs n162 r0.062 med-1.021 x5-0.074 win0.377 pay1.81 w-1.12 | hold n187 r0.332 med-1.055 x5-0.044 win0.401 pay2.25 w-1.12 vs n255 r0.029 med-1.03 x5-0.127 win0.329 pay2.12 w-1.12 
+ROW BRF_L 线上·主流领 | disc n102 r0.305 med-1.042 x5-0.343 win0.275 pay3.68 w-1.12 vs n155 r-0.244 med-1.027 x5-0.492 win0.239 pay2.21 w-1.12 | hold n369 r0.207 med-1.046 x5-0.044 win0.355 pay2.36 w-1.12 vs n757 r-0.108 med-1.03 x5-0.224 win0.301 pay1.98 w-1.12 | HOLDS
+ROW BRF_L 线上·二线领 | disc n137 r0.406 med-1.026 x5-0.171 win0.343 pay3.03 w-1.12 vs n167 r0.442 med-1.018 x50.022 win0.371 pay2.84 w-1.12 | hold n239 r-0.037 med-1.049 x5-0.299 win0.297 pay2.25 w-1.12 vs n472 r-0.191 med-1.03 x5-0.272 win0.292 pay1.8 w-1.12 
+ROW BRF_L 线下·主流领 | disc n121 r-0.082 med-1.047 x5-0.402 win0.331 pay1.8 w-1.12 vs n421 r-0.027 med-1.03 x5-0.188 win0.299 pay2.26 w-1.12 | hold n248 r0.265 med-1.072 x5-0.042 win0.339 pay2.67 w-1.12 vs n665 r0.27 med-1.031 x50.125 win0.373 pay2.36 w-1.12 
+ROW BRF_L 线下·二线领 | disc n95 r-0.423 med-1.053 x5-0.652 win0.253 pay1.4 w-1.12 vs n172 r-0.03 med-1.027 x5-0.146 win0.378 pay1.57 w-1.12 | hold n116 r0.048 med-1.041 x5-0.239 win0.405 pay1.58 w-1.12 vs n307 r-0.138 med-1.031 x5-0.223 win0.322 pay1.7 w-1.12 
+ROW BRF_S 线上·主流领 | disc n79 r-0.315 med-1.031 x5-0.545 win0.304 pay1.32 w-1.12 vs n176 r0.068 med-1.024 x5-0.048 win0.381 pay1.8 w-1.44 | hold n382 r0.016 med-1.043 x5-0.11 win0.377 pay1.69 w-1.12 vs n808 r0.043 med-1.027 x5-0.024 win0.354 pay1.94 w-1.12 
+ROW BRF_S 线上·二线领 | disc n42 r-0.042 med-1.025 x5-0.561 win0.333 pay1.88 w-1.12 vs n212 r-0.161 med-1.026 x5-0.27 win0.302 pay1.81 w-1.12 | hold n135 r-0.203 med-1.059 x5-0.403 win0.333 pay1.44 w-1.12 vs n487 r0.047 med-1.023 x5-0.013 win0.386 pay1.7 w-1.12 
+ROW BRF_S 线下·主流领 | disc n240 r0.025 med-1.046 x5-0.208 win0.329 pay2.11 w-1.12 vs n347 r0.084 med-1.025 x5-0.054 win0.369 pay1.92 w-1.12 | hold n299 r-0.379 med-1.065 x5-0.451 win0.321 pay1.03 w-1.12 vs n589 r-0.247 med-1.037 x5-0.311 win0.295 pay1.6 w-1.12 
+ROW BRF_S 线下·二线领 | disc n84 r-0.01 med-1.034 x5-0.361 win0.381 pay1.6 w-1.12 vs n162 r0.062 med-1.021 x5-0.074 win0.377 pay1.81 w-1.12 | hold n154 r0.202 med-1.058 x5-0.192 win0.357 pay2.32 w-1.12 vs n255 r0.029 med-1.03 x5-0.127 win0.329 pay2.12 w-1.12 
+BOARD 2026-11-19 线下·主流领 home: -
+ARMED BTC 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 62608.306759, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED ETH 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 1765.710462, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED SOL 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 74.489385, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED BNB 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 567.844908, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED XRP 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 0.969364, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED ADA 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 0.151793, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED AVAX 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 6.969621, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED DOGE 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 0.057754, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+ARMED LINK 2026-11-25T16:00:00+00:00 down []
+ARMED NEAR 2026-10-23T04:00:00+00:00 STALE []
+ARMED SUI 2026-11-25T16:00:00+00:00 down [{"rule": "UB_S", "limit": 0.697131, "valid": false, "why": "边界在结构位之外(挂了就是破位成交)或止损 > 8%:规则不挂", "home_today": false}]
+WROTE docs/research/s916_results_ema50_d1c20.json
