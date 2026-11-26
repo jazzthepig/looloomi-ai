@@ -1,0 +1,78 @@
+{
+ "window": [
+  "2022-06-24",
+  "2026-11-24"
+ ],
+ "n_days": 1615,
+ "hold": {
+  "total": 1.8346,
+  "cagr": 0.2659,
+  "max_dd": 0.5298,
+  "longest_underwater_d": 414,
+  "underwater_now_d": 414
+ },
+ "rules": {
+  "A_halve": {
+   "avg_w": 0.887,
+   "share_days_cut": 0.225,
+   "turnover_per_yr": 12.55,
+   "rule": {
+    "total": 1.7493,
+    "cagr": 0.2572,
+    "max_dd": 0.5426,
+    "longest_underwater_d": 468,
+    "underwater_now_d": 468
+   },
+   "static_same_avg": {
+    "total": 1.6487,
+    "cagr": 0.2466,
+    "max_dd": 0.4838,
+    "longest_underwater_d": 414,
+    "underwater_now_d": 414
+   },
+   "M_all": 0.0084,
+   "M_first": 0.0989,
+   "M_second": -0.0706,
+   "null_median": -0.0233,
+   "null_q95": 0.0546,
+   "pct": 0.749,
+   "criteria": {
+    "M_both_halves_gt_0": false,
+    "pct_ge_0.95": false,
+    "dd_lt_static": false
+   },
+   "recommend_wire_in": false
+  },
+  "B_linear": {
+   "avg_w": 0.709,
+   "share_days_cut": 0.816,
+   "turnover_per_yr": 19.87,
+   "rule": {
+    "total": 1.5969,
+    "cagr": 0.2411,
+    "max_dd": 0.4634,
+    "longest_underwater_d": 468,
+    "underwater_now_d": 468
+   },
+   "static_same_avg": {
+    "total": 1.3192,
+    "cagr": 0.2097,
+    "max_dd": 0.4045,
+    "longest_underwater_d": 414,
+    "underwater_now_d": 414
+   },
+   "M_all": 0.0256,
+   "M_first": 0.0968,
+   "M_second": -0.0354,
+   "null_median": -0.0312,
+   "null_q95": 0.0706,
+   "pct": 0.848,
+   "criteria": {
+    "M_both_halves_gt_0": false,
+    "pct_ge_0.95": false,
+    "dd_lt_static": false
+   },
+   "recommend_wire_in": false
+  }
+ }
+}
