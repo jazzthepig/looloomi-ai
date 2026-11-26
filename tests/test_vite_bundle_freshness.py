@@ -210,11 +210,14 @@ def _build_into(out_dir: Path) -> tuple[bool, str]:
     return True, ""
 
 
-def _measure_content() -> tuple[bool, str] | None:
+def _measure_content() -> tuple[bool | None, str]:
     """量「当前 src 编出来的产物」与「已提交的 dashboard/dist」是不是同一份。
 
-    返回 (一致?, 说明);返回 None = **量不到**(没有 node / 没有 node_modules /
+    返回 (一致?, 说明);第一项是 None = **量不到**(没有 node / 没有 node_modules /
     构建失败)⇒ 调用方退回旧尺子(提交时间比较),而不是假绿。
+
+    11-26(lane-a T-443 报的):这里一直返回 `(None, why)`,调用方却判 `measured is None` ——
+    退回旧尺子那段从没走到过,没有 node_modules 的机器(沙盒、只 pip install 的 CI)一律红。
     """
     # dist 有未提交改动 ⇒ 线上的那一份(committed)与工作树不是同一份,
     # 量工作树没有意义;这种情况本身就该被看见(产物改了没提交 ⇒ 别推)。
@@ -277,7 +280,7 @@ def test_committed_bundle_matches_current_src() -> None:
 
     # ── 尺子 B:量内容(尺子 C 不可量时的下面是旧尺子)───────────────────────
     measured = _measure_content()
-    if measured is None:
+    if measured is None or measured[0] is None:
         # 量不到 ⇒ 旧尺子(S-433b):最后一次改 src 的提交 ≤ 最后一次改 dist 的提交。
         committed = _committed_freshness()
         if committed is None:

@@ -1,0 +1,29 @@
+{
+  "id": "T-444",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-26",
+  "verified": null,
+  "title": "S-924:S-920 / S-923 做空一侧的盲复算 —— 照书面口径自己写特征拼装、走步、模型、七条判据(不读 A 的脚本)",
+  "source": "台账 S-924(预注册)。A 道在 T-441 / T-443 用 Seth 的脚本跑出了做空一侧两格站住;这张卡是另写一遍,抓特征里用了未来数据、as-of 错一天这类 bug。先 fetch,从 origin/main 开分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-444.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "spec": "**不要读** docs/research/s920_meta_label.py、s923_cluster_null.py、s920_results.json、s923_results.json、_s920_*.txt/py、台账里 S-920 – S-923 的数字 —— 照下面写,自己实现。第一层可以直接 import `docs/research/s916_jazz_4h_rules.py`(先把 sys.argv 设成 `[x, '--mgmt', 'atr3', '--dmin', '0.01', '--cap', '20']` 再 import):`load_live()` 取 11 个币的 4 小时线,`indicators(b)` 给 e20 / e50 / atr / bu / bl,`tickets(b, ind, 'BR_S')` 给 (进场时间, _, R, 持有根数)。① 每张票:决定根 k = 进场那根的下标 − 1;平仓时间 = 进场时间 + 4 小时 × 持有根数;标签 = R > 0。② 16 个特征(k 那根收盘为止):dist_e50 = c[k]/e50[k] − 1;e20_e50 = e20[k]/e50[k] − 1;atr_pct = atr[k]/c[k];bbw = (bu[k] − bl[k])/c[k];ret_6 = c[k]/c[k−6] − 1;ret_42 = c[k]/c[k−42] − 1;dist200_coin = c[k] / mean(c[k−1199 … k]) − 1;ret_30d = c[k]/c[k−180] − 1(不够长 = 缺)。日线类一律取 D − 1 及以前最近的一天、且距 D − 1 不超过 3 天(D = 进场时间的 UTC 日期),否则缺:fund7 = `funding_daily`(symbol, d, funding_rate)按币的 7 日滚动均值 × 3 × 365;市场 6 个 = `feature_matrix_daily` 的 f 里的 dist_200、style_rel_majors_30d、stable_supply_30d、funding_7d_ann_binance、pos:btc_crowd_ln、taker_buy_share_30d;joint_z = `joint_forecast_daily` 的 z。③ 走步:测试年 2022 / 2023 / 2024 / 2025(2025 含 2026 至今);训练 = 平仓时间早于测试年 1 月 1 日 − 30 天的票,少于 150 张跳过;评估 = 2023 / 2024 / 2025 三折合并。④ 模型参数写死:逻辑回归 = 训练段中位数填缺(整列缺填 0)→ 按训练段均值 / 标准差标准化(标准差 0 当 1)→ sklearn LogisticRegression(C=0.1, max_iter=2000);提升树 = HistGradientBoostingClassifier(max_depth=3, learning_rate=0.05, max_iter=200, min_samples_leaf=50, l2_regularization=1.0, random_state=920),缺失原样喂,训练段整列缺失的列在训练与测试里都置 0。⑤ 折内三档:按预测概率稳定排序,第 rank 名(从 0 起)归档 min(2, rank × 3 // n),2 = 上一档。⑥ 七条判据:[S-920] 合并增量(上一档均值 − 全部均值)≥ 0.15;折内逐张打乱预测 1,000 次(种子 920)的分位 ≥ 0.95;三个评估年里上一档 > 全部的年数 ≥ 2;合并 AUC(标签 R > 0)≥ 0.55。[S-923] 每折按进场时间排好、预测整体循环平移 o 张(o 在 [n // 10, 9n // 10) 均匀取,1,000 次,种子 923)的分位 ≥ 0.95;按天等权(同一天的票先天内平均再对天平均)上一档 − 全部 ≥ 0.15;11 个币逐个从评估里拿掉(不重训)的最小增量 > 0。",
+  "acceptance": {
+    "check": "① 新脚本 `docs/research/s924_blind_short.py`,带 `--selftest`(合成数据上跑通 + 至少一条「截短序列后特征不变」的未来数据检查)。② `nohup python3 docs/research/s924_blind_short.py > docs/research/s924_run.txt 2>&1 &`。③ 输出每格一行:`CELL short|logit` / `CELL short|hgb`,带 n_candidates、n_eval、all_r、top_r、lift、perm_pct、years_top_beats_all、auc、shift_pct、day_lift、loco_min、七条判据真假;再一行 `FEAT` = 评估样本前 5 张票(按进场时间)的币、进场时间与 16 个特征值(给 Seth 逐值对 A)。④ 最终回复只贴 `grep -E '^(loaded|CELL|FEAT|WROTE)' docs/research/s924_run.txt | cut -c1-900`;不下结论。⑤ 报错贴最后 15 行、停下报告,不打补丁。",
+    "expect": "s924_blind_short.py + s924_results.json + s924_run.txt;卡 in_review,推 lane-b/T-444。这张卡不登情景(盲复算不是前向命题)。"
+  },
+  "prior_value": "前向写入端要照 S-920 的特征建 —— 建之前另写一遍,别在一个 bug 上建生产通路。",
+  "notes": "2026-11-26T10:57:54Z Seth 开卡(S-923 结果之后)。"
+}
