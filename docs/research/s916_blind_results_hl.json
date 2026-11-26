@@ -1,0 +1,475 @@
+{
+ "card": "T-437",
+ "variant": "口径B: H20/L20 与结构位用高低价",
+ "rows": [
+  {
+   "rule": "LB_L",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 56,
+    "mean_R": 0.0266,
+    "payoff": 2.0159,
+    "ctrl_mean_R": -0.0309,
+    "pass": true
+   },
+   "hold": {
+    "n": 296,
+    "mean_R": 0.0932,
+    "payoff": 2.1326,
+    "ctrl_mean_R": -0.1292,
+    "pass": true
+   },
+   "holds": true
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 116,
+    "mean_R": -0.0035,
+    "payoff": 2.212,
+    "ctrl_mean_R": -0.0073,
+    "pass": false
+   },
+   "hold": {
+    "n": 290,
+    "mean_R": -0.0787,
+    "payoff": 1.9726,
+    "ctrl_mean_R": -0.2931,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 79,
+    "mean_R": -0.0556,
+    "payoff": 1.6888,
+    "ctrl_mean_R": -0.2486,
+    "pass": false
+   },
+   "hold": {
+    "n": 138,
+    "mean_R": 0.326,
+    "payoff": 2.8942,
+    "ctrl_mean_R": 0.0133,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 97,
+    "mean_R": -0.3217,
+    "payoff": 1.4275,
+    "ctrl_mean_R": -0.0221,
+    "pass": false
+   },
+   "hold": {
+    "n": 92,
+    "mean_R": -0.101,
+    "payoff": 1.3378,
+    "ctrl_mean_R": -0.2551,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 59,
+    "mean_R": -0.0595,
+    "payoff": 2.7377,
+    "ctrl_mean_R": 0.2807,
+    "pass": false
+   },
+   "hold": {
+    "n": 366,
+    "mean_R": -0.0407,
+    "payoff": 1.5815,
+    "ctrl_mean_R": -0.1452,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 34,
+    "mean_R": 0.3988,
+    "payoff": 1.8569,
+    "ctrl_mean_R": -0.3283,
+    "pass": false
+   },
+   "hold": {
+    "n": 131,
+    "mean_R": 0.2889,
+    "payoff": 1.8617,
+    "ctrl_mean_R": -0.0619,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 183,
+    "mean_R": 0.1164,
+    "payoff": 2.1892,
+    "ctrl_mean_R": 0.1196,
+    "pass": false
+   },
+   "hold": {
+    "n": 364,
+    "mean_R": -0.0397,
+    "payoff": 1.6258,
+    "ctrl_mean_R": -0.3793,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 78,
+    "mean_R": 0.0586,
+    "payoff": 1.7301,
+    "ctrl_mean_R": -0.2909,
+    "pass": false
+   },
+   "hold": {
+    "n": 139,
+    "mean_R": -0.3708,
+    "payoff": 1.528,
+    "ctrl_mean_R": 0.2285,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 160,
+    "mean_R": -0.2863,
+    "payoff": 1.8699,
+    "ctrl_mean_R": -0.0309,
+    "pass": false
+   },
+   "hold": {
+    "n": 622,
+    "mean_R": -0.0633,
+    "payoff": 1.7396,
+    "ctrl_mean_R": -0.1292,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 195,
+    "mean_R": -0.0796,
+    "payoff": 2.008,
+    "ctrl_mean_R": -0.0073,
+    "pass": false
+   },
+   "hold": {
+    "n": 354,
+    "mean_R": -0.0845,
+    "payoff": 2.0275,
+    "ctrl_mean_R": -0.2931,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 237,
+    "mean_R": -0.3846,
+    "payoff": 1.41,
+    "ctrl_mean_R": -0.2486,
+    "pass": false
+   },
+   "hold": {
+    "n": 453,
+    "mean_R": 0.1179,
+    "payoff": 2.2276,
+    "ctrl_mean_R": 0.0133,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 140,
+    "mean_R": -0.3973,
+    "payoff": 1.3363,
+    "ctrl_mean_R": -0.0221,
+    "pass": false
+   },
+   "hold": {
+    "n": 208,
+    "mean_R": -0.2177,
+    "payoff": 1.461,
+    "ctrl_mean_R": -0.2551,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 109,
+    "mean_R": -0.1103,
+    "payoff": 1.9632,
+    "ctrl_mean_R": 0.2807,
+    "pass": false
+   },
+   "hold": {
+    "n": 556,
+    "mean_R": 0.0504,
+    "payoff": 1.9508,
+    "ctrl_mean_R": -0.1452,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 82,
+    "mean_R": -0.1533,
+    "payoff": 1.3424,
+    "ctrl_mean_R": -0.3283,
+    "pass": false
+   },
+   "hold": {
+    "n": 269,
+    "mean_R": -0.1768,
+    "payoff": 1.9011,
+    "ctrl_mean_R": -0.0619,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 324,
+    "mean_R": -0.172,
+    "payoff": 1.8161,
+    "ctrl_mean_R": 0.1196,
+    "pass": false
+   },
+   "hold": {
+    "n": 410,
+    "mean_R": -0.2517,
+    "payoff": 1.4609,
+    "ctrl_mean_R": -0.3793,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 127,
+    "mean_R": 0.2041,
+    "payoff": 1.949,
+    "ctrl_mean_R": -0.2909,
+    "pass": false
+   },
+   "hold": {
+    "n": 208,
+    "mean_R": 0.011,
+    "payoff": 1.6928,
+    "ctrl_mean_R": 0.2285,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 121,
+    "mean_R": -0.1791,
+    "payoff": 2.1548,
+    "ctrl_mean_R": -0.0309,
+    "pass": false
+   },
+   "hold": {
+    "n": 437,
+    "mean_R": -0.0466,
+    "payoff": 1.809,
+    "ctrl_mean_R": -0.1292,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 155,
+    "mean_R": 0.0656,
+    "payoff": 1.9914,
+    "ctrl_mean_R": -0.0073,
+    "pass": false
+   },
+   "hold": {
+    "n": 301,
+    "mean_R": -0.107,
+    "payoff": 2.1245,
+    "ctrl_mean_R": -0.2931,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 132,
+    "mean_R": -0.3005,
+    "payoff": 1.451,
+    "ctrl_mean_R": -0.2486,
+    "pass": false
+   },
+   "hold": {
+    "n": 278,
+    "mean_R": 0.175,
+    "payoff": 2.2768,
+    "ctrl_mean_R": 0.0133,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 102,
+    "mean_R": -0.4126,
+    "payoff": 1.4372,
+    "ctrl_mean_R": -0.0221,
+    "pass": false
+   },
+   "hold": {
+    "n": 131,
+    "mean_R": 0.2285,
+    "payoff": 1.9854,
+    "ctrl_mean_R": -0.2551,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 86,
+    "mean_R": -0.1545,
+    "payoff": 1.7251,
+    "ctrl_mean_R": 0.2807,
+    "pass": false
+   },
+   "hold": {
+    "n": 410,
+    "mean_R": 0.1261,
+    "payoff": 2.1289,
+    "ctrl_mean_R": -0.1452,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 42,
+    "mean_R": -0.1212,
+    "payoff": 1.6567,
+    "ctrl_mean_R": -0.3283,
+    "pass": false
+   },
+   "hold": {
+    "n": 142,
+    "mean_R": -0.0715,
+    "payoff": 1.8886,
+    "ctrl_mean_R": -0.0619,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 272,
+    "mean_R": -0.1459,
+    "payoff": 1.8751,
+    "ctrl_mean_R": 0.1196,
+    "pass": false
+   },
+   "hold": {
+    "n": 343,
+    "mean_R": -0.289,
+    "payoff": 1.4408,
+    "ctrl_mean_R": -0.3793,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 92,
+    "mean_R": 0.1457,
+    "payoff": 1.8139,
+    "ctrl_mean_R": -0.2909,
+    "pass": false
+   },
+   "hold": {
+    "n": 169,
+    "mean_R": -0.1198,
+    "payoff": 1.6971,
+    "ctrl_mean_R": 0.2285,
+    "pass": false
+   },
+   "holds": false
+  }
+ ],
+ "ticket_counts": {
+  "LB_L": 1334,
+  "UB_S": 1466,
+  "BR_L": 2692,
+  "BR_S": 2304,
+  "BRF_L": 1898,
+  "BRF_S": 1703
+ },
+ "ctrl_counts": {
+  "1": 2110,
+  "-1": 2097
+ },
+ "built_at": "2026-11-25T18:43:31.065792+00:00"
+}

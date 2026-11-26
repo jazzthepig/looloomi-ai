@@ -1,0 +1,557 @@
+{
+ "card": "T-437",
+ "built_at": "2026-11-25T18:19:23.367214+00:00",
+ "spec_from": "tasks/T-437.json(S-916 规格全文,盲复算)",
+ "data": {
+  "bars": "/Volumes/CometCloudAI/cometcloud-local/research/t437/bars4h.json",
+  "hourly_source": "ohlcv_hourly(source=binance_hist)",
+  "bucket": "UTC 00/04/08/12/16/20,四根齐",
+  "symbols": [
+   "BTC",
+   "ETH",
+   "SOL",
+   "BNB",
+   "XRP",
+   "ADA",
+   "AVAX",
+   "DOGE",
+   "LINK",
+   "NEAR",
+   "SUI"
+  ],
+  "cell_source": "s881_setup_mining.load_live() 的 cell(进场那根 UTC 日的前一天)"
+ },
+ "params": {
+  "start_bar": 60,
+  "max_hold": 90,
+  "cost": 0.0012,
+  "min_stop": 0.004,
+  "max_stop": 0.08,
+  "min_n": 20,
+  "min_payoff": 2.0,
+  "ctrl_every": 30,
+  "br_wait": 12,
+  "split": "2022-12-31"
+ },
+ "assumptions": [
+  "H20/L20 与结构位都按「收盘」算(卡上『指标只用到该根收盘』统辖这四项)。",
+  "LB 的限价单只在第 i+1 根当根有效(卡上没给撤单窗口,BR 才有『12 根』)。",
+  "限价成交那根也管票:先看止损,再看 +2R;BR 的进场根不管(从下一根开始管)。",
+  "+2R 平一半后止损移到进场价;EMA7 反穿全平不在 +2R 成交那一根生效。",
+  "止损距离 <0.4% 按 0.4% 放宽;>8% 或方向不对 ⇒ 不做(对照票同一套)。",
+  "样本末尾还没了结的票(拿不满 90 根)不算。",
+  "对照的 30 根网格从第 60 根起;平仓后至少隔 30 根。",
+  "状态格取「进场那根所在 UTC 日的前一天」;没有格子的票不进任何格。"
+ ],
+ "counts": {
+  "LB_L": {
+   "total": 647,
+   "no_cell": 80,
+   "disc": 159,
+   "hold": 408
+  },
+  "UB_S": {
+   "total": 722,
+   "no_cell": 64,
+   "disc": 138,
+   "hold": 520
+  },
+  "BR_L": {
+   "total": 3822,
+   "no_cell": 444,
+   "disc": 1080,
+   "hold": 2298
+  },
+  "BR_S": {
+   "total": 3849,
+   "no_cell": 365,
+   "disc": 1042,
+   "hold": 2442
+  },
+  "BRF_L": {
+   "total": 2588,
+   "no_cell": 321,
+   "disc": 715,
+   "hold": 1552
+  },
+  "BRF_S": {
+   "total": 2793,
+   "no_cell": 253,
+   "disc": 764,
+   "hold": 1776
+  }
+ },
+ "ctrl_counts": {
+  "long": {
+   "total": 2031,
+   "no_cell": 216,
+   "disc": 553,
+   "hold": 1262
+  },
+  "short": {
+   "total": 1986,
+   "no_cell": 223,
+   "disc": 529,
+   "hold": 1234
+  }
+ },
+ "n_holds": 1,
+ "rows": [
+  {
+   "rule": "LB_L",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 29,
+    "mean_R": -0.1713,
+    "payoff": 2.1376,
+    "ctrl_mean_R": -0.2997,
+    "pass": false
+   },
+   "hold": {
+    "n": 154,
+    "mean_R": -0.1677,
+    "payoff": 2.1822,
+    "ctrl_mean_R": -0.0802,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 47,
+    "mean_R": -0.4798,
+    "payoff": 1.6465,
+    "ctrl_mean_R": -0.0844,
+    "pass": false
+   },
+   "hold": {
+    "n": 148,
+    "mean_R": -0.1849,
+    "payoff": 1.8091,
+    "ctrl_mean_R": -0.1802,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 30,
+    "mean_R": -0.1476,
+    "payoff": 1.9408,
+    "ctrl_mean_R": -0.2866,
+    "pass": false
+   },
+   "hold": {
+    "n": 65,
+    "mean_R": 0.2199,
+    "payoff": 3.0045,
+    "ctrl_mean_R": 0.0564,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "LB_L",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 53,
+    "mean_R": -0.5173,
+    "payoff": 1.1084,
+    "ctrl_mean_R": 0.0766,
+    "pass": false
+   },
+   "hold": {
+    "n": 41,
+    "mean_R": -0.246,
+    "payoff": 1.2108,
+    "ctrl_mean_R": -0.3004,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 10,
+    "mean_R": -1.3,
+    "payoff": null,
+    "ctrl_mean_R": 0.0636,
+    "pass": false
+   },
+   "hold": {
+    "n": 189,
+    "mean_R": -0.0939,
+    "payoff": 1.968,
+    "ctrl_mean_R": -0.1956,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 15,
+    "mean_R": 0.3935,
+    "payoff": 2.272,
+    "ctrl_mean_R": -0.1849,
+    "pass": false
+   },
+   "hold": {
+    "n": 63,
+    "mean_R": 0.0668,
+    "payoff": 1.3678,
+    "ctrl_mean_R": -0.2406,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 78,
+    "mean_R": -0.1106,
+    "payoff": 2.0975,
+    "ctrl_mean_R": -0.1302,
+    "pass": false
+   },
+   "hold": {
+    "n": 201,
+    "mean_R": 0.1244,
+    "payoff": 1.7563,
+    "ctrl_mean_R": -0.1783,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "UB_S",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 35,
+    "mean_R": 0.5236,
+    "payoff": 2.5264,
+    "ctrl_mean_R": -0.4649,
+    "pass": true
+   },
+   "hold": {
+    "n": 67,
+    "mean_R": -0.2137,
+    "payoff": 1.1466,
+    "ctrl_mean_R": 0.0267,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 219,
+    "mean_R": -0.1028,
+    "payoff": 1.7549,
+    "ctrl_mean_R": -0.2997,
+    "pass": false
+   },
+   "hold": {
+    "n": 882,
+    "mean_R": -0.0086,
+    "payoff": 1.9971,
+    "ctrl_mean_R": -0.0802,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 278,
+    "mean_R": 0.1415,
+    "payoff": 1.9149,
+    "ctrl_mean_R": -0.0844,
+    "pass": false
+   },
+   "hold": {
+    "n": 502,
+    "mean_R": -0.0006,
+    "payoff": 2.0043,
+    "ctrl_mean_R": -0.1802,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 384,
+    "mean_R": -0.3119,
+    "payoff": 1.7481,
+    "ctrl_mean_R": -0.2866,
+    "pass": false
+   },
+   "hold": {
+    "n": 627,
+    "mean_R": 0.2482,
+    "payoff": 1.977,
+    "ctrl_mean_R": 0.0564,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_L",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 199,
+    "mean_R": -0.017,
+    "payoff": 1.7215,
+    "ctrl_mean_R": 0.0766,
+    "pass": false
+   },
+   "hold": {
+    "n": 287,
+    "mean_R": -0.1141,
+    "payoff": 1.4761,
+    "ctrl_mean_R": -0.3004,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 184,
+    "mean_R": -0.2369,
+    "payoff": 1.3568,
+    "ctrl_mean_R": 0.0636,
+    "pass": false
+   },
+   "hold": {
+    "n": 886,
+    "mean_R": 0.0659,
+    "payoff": 1.852,
+    "ctrl_mean_R": -0.1956,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 215,
+    "mean_R": -0.2035,
+    "payoff": 1.4196,
+    "ctrl_mean_R": -0.1849,
+    "pass": false
+   },
+   "hold": {
+    "n": 504,
+    "mean_R": -0.0578,
+    "payoff": 1.4766,
+    "ctrl_mean_R": -0.2406,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 457,
+    "mean_R": 0.2062,
+    "payoff": 1.9516,
+    "ctrl_mean_R": -0.1302,
+    "pass": false
+   },
+   "hold": {
+    "n": 726,
+    "mean_R": -0.1893,
+    "payoff": 1.417,
+    "ctrl_mean_R": -0.1783,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BR_S",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 186,
+    "mean_R": 0.424,
+    "payoff": 2.0059,
+    "ctrl_mean_R": -0.4649,
+    "pass": true
+   },
+   "hold": {
+    "n": 326,
+    "mean_R": 0.2674,
+    "payoff": 2.2602,
+    "ctrl_mean_R": 0.0267,
+    "pass": true
+   },
+   "holds": true
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 145,
+    "mean_R": 0.1377,
+    "payoff": 1.8677,
+    "ctrl_mean_R": -0.2997,
+    "pass": false
+   },
+   "hold": {
+    "n": 606,
+    "mean_R": 0.0189,
+    "payoff": 2.0219,
+    "ctrl_mean_R": -0.0802,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 217,
+    "mean_R": 0.3223,
+    "payoff": 1.975,
+    "ctrl_mean_R": -0.0844,
+    "pass": false
+   },
+   "hold": {
+    "n": 414,
+    "mean_R": 0.033,
+    "payoff": 2.0243,
+    "ctrl_mean_R": -0.1802,
+    "pass": true
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 216,
+    "mean_R": -0.2389,
+    "payoff": 1.7725,
+    "ctrl_mean_R": -0.2866,
+    "pass": false
+   },
+   "hold": {
+    "n": 366,
+    "mean_R": 0.3117,
+    "payoff": 1.9735,
+    "ctrl_mean_R": 0.0564,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_L",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 137,
+    "mean_R": -0.1036,
+    "payoff": 1.4321,
+    "ctrl_mean_R": 0.0766,
+    "pass": false
+   },
+   "hold": {
+    "n": 166,
+    "mean_R": -0.0904,
+    "payoff": 1.4569,
+    "ctrl_mean_R": -0.3004,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线上·主流领",
+   "disc": {
+    "n": 138,
+    "mean_R": -0.2452,
+    "payoff": 1.3249,
+    "ctrl_mean_R": 0.0636,
+    "pass": false
+   },
+   "hold": {
+    "n": 650,
+    "mean_R": 0.1518,
+    "payoff": 1.9779,
+    "ctrl_mean_R": -0.1956,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线上·二线领",
+   "disc": {
+    "n": 116,
+    "mean_R": -0.1964,
+    "payoff": 1.3098,
+    "ctrl_mean_R": -0.1849,
+    "pass": false
+   },
+   "hold": {
+    "n": 286,
+    "mean_R": -0.0048,
+    "payoff": 1.4981,
+    "ctrl_mean_R": -0.2406,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线下·主流领",
+   "disc": {
+    "n": 381,
+    "mean_R": 0.2095,
+    "payoff": 1.9682,
+    "ctrl_mean_R": -0.1302,
+    "pass": false
+   },
+   "hold": {
+    "n": 598,
+    "mean_R": -0.2406,
+    "payoff": 1.5009,
+    "ctrl_mean_R": -0.1783,
+    "pass": false
+   },
+   "holds": false
+  },
+  {
+   "rule": "BRF_S",
+   "cell": "线下·二线领",
+   "disc": {
+    "n": 129,
+    "mean_R": 0.3842,
+    "payoff": 1.9141,
+    "ctrl_mean_R": -0.4649,
+    "pass": false
+   },
+   "hold": {
+    "n": 242,
+    "mean_R": 0.224,
+    "payoff": 2.2673,
+    "ctrl_mean_R": 0.0267,
+    "pass": true
+   },
+   "holds": false
+  }
+ ]
+}

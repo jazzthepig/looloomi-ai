@@ -1,0 +1,778 @@
+{
+ "built_at": "2026-11-25T18:47:56.113212+00:00",
+ "ref_on_my_data": {
+  "n_holds": 0,
+  "rows": [
+   {
+    "rule": "LB_L",
+    "cell": "线上·主流领",
+    "ref_mine": {
+     "n_disc": 57,
+     "n_hold": 298,
+     "mean_disc": -0.07,
+     "mean_hold": -0.051,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 57,
+     "n_hold": 298,
+     "mean_disc": -0.07,
+     "mean_hold": -0.051,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 56,
+     "n_hold": 296,
+     "mean_disc": 0.0266,
+     "mean_hold": 0.0932,
+     "holds": true
+    },
+    "mine_a": {
+     "n_disc": 29,
+     "n_hold": 154,
+     "mean_disc": -0.1713,
+     "mean_hold": -0.1677,
+     "holds": false
+    }
+   },
+   {
+    "rule": "LB_L",
+    "cell": "线上·二线领",
+    "ref_mine": {
+     "n_disc": 116,
+     "n_hold": 290,
+     "mean_disc": -0.082,
+     "mean_hold": -0.178,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 116,
+     "n_hold": 290,
+     "mean_disc": -0.082,
+     "mean_hold": -0.178,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 116,
+     "n_hold": 290,
+     "mean_disc": -0.0035,
+     "mean_hold": -0.0787,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 47,
+     "n_hold": 148,
+     "mean_disc": -0.4798,
+     "mean_hold": -0.1849,
+     "holds": false
+    }
+   },
+   {
+    "rule": "LB_L",
+    "cell": "线下·主流领",
+    "ref_mine": {
+     "n_disc": 80,
+     "n_hold": 138,
+     "mean_disc": -0.275,
+     "mean_hold": 0.239,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 80,
+     "n_hold": 138,
+     "mean_disc": -0.275,
+     "mean_hold": 0.239,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 79,
+     "n_hold": 138,
+     "mean_disc": -0.0556,
+     "mean_hold": 0.326,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 30,
+     "n_hold": 65,
+     "mean_disc": -0.1476,
+     "mean_hold": 0.2199,
+     "holds": false
+    }
+   },
+   {
+    "rule": "LB_L",
+    "cell": "线下·二线领",
+    "ref_mine": {
+     "n_disc": 100,
+     "n_hold": 92,
+     "mean_disc": -0.417,
+     "mean_hold": -0.189,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 100,
+     "n_hold": 92,
+     "mean_disc": -0.417,
+     "mean_hold": -0.189,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 97,
+     "n_hold": 92,
+     "mean_disc": -0.3217,
+     "mean_hold": -0.101,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 53,
+     "n_hold": 41,
+     "mean_disc": -0.5173,
+     "mean_hold": -0.246,
+     "holds": false
+    }
+   },
+   {
+    "rule": "UB_S",
+    "cell": "线上·主流领",
+    "ref_mine": {
+     "n_disc": 59,
+     "n_hold": 368,
+     "mean_disc": -0.306,
+     "mean_hold": -0.189,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 59,
+     "n_hold": 368,
+     "mean_disc": -0.306,
+     "mean_hold": -0.189,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 59,
+     "n_hold": 366,
+     "mean_disc": -0.0595,
+     "mean_hold": -0.0407,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 10,
+     "n_hold": 189,
+     "mean_disc": -1.3,
+     "mean_hold": -0.0939,
+     "holds": false
+    }
+   },
+   {
+    "rule": "UB_S",
+    "cell": "线上·二线领",
+    "ref_mine": {
+     "n_disc": 34,
+     "n_hold": 131,
+     "mean_disc": 0.174,
+     "mean_hold": 0.155,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 34,
+     "n_hold": 131,
+     "mean_disc": 0.174,
+     "mean_hold": 0.155,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 34,
+     "n_hold": 131,
+     "mean_disc": 0.3988,
+     "mean_hold": 0.2889,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 15,
+     "n_hold": 63,
+     "mean_disc": 0.3935,
+     "mean_hold": 0.0668,
+     "holds": false
+    }
+   },
+   {
+    "rule": "UB_S",
+    "cell": "线下·主流领",
+    "ref_mine": {
+     "n_disc": 183,
+     "n_hold": 364,
+     "mean_disc": -0.026,
+     "mean_hold": -0.148,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 183,
+     "n_hold": 364,
+     "mean_disc": -0.026,
+     "mean_hold": -0.148,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 183,
+     "n_hold": 364,
+     "mean_disc": 0.1164,
+     "mean_hold": -0.0397,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 78,
+     "n_hold": 201,
+     "mean_disc": -0.1106,
+     "mean_hold": 0.1244,
+     "holds": false
+    }
+   },
+   {
+    "rule": "UB_S",
+    "cell": "线下·二线领",
+    "ref_mine": {
+     "n_disc": 78,
+     "n_hold": 140,
+     "mean_disc": -0.087,
+     "mean_hold": -0.424,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 78,
+     "n_hold": 140,
+     "mean_disc": -0.087,
+     "mean_hold": -0.424,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 78,
+     "n_hold": 139,
+     "mean_disc": 0.0586,
+     "mean_hold": -0.3708,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 35,
+     "n_hold": 67,
+     "mean_disc": 0.5236,
+     "mean_hold": -0.2137,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_L",
+    "cell": "线上·主流领",
+    "ref_mine": {
+     "n_disc": 161,
+     "n_hold": 632,
+     "mean_disc": -0.292,
+     "mean_hold": -0.048,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 161,
+     "n_hold": 632,
+     "mean_disc": -0.292,
+     "mean_hold": -0.048,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 160,
+     "n_hold": 622,
+     "mean_disc": -0.2863,
+     "mean_hold": -0.0633,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 219,
+     "n_hold": 882,
+     "mean_disc": -0.1028,
+     "mean_hold": -0.0086,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_L",
+    "cell": "线上·二线领",
+    "ref_mine": {
+     "n_disc": 199,
+     "n_hold": 358,
+     "mean_disc": -0.085,
+     "mean_hold": -0.079,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 199,
+     "n_hold": 358,
+     "mean_disc": -0.085,
+     "mean_hold": -0.079,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 195,
+     "n_hold": 354,
+     "mean_disc": -0.0796,
+     "mean_hold": -0.0845,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 278,
+     "n_hold": 502,
+     "mean_disc": 0.1415,
+     "mean_hold": -0.0006,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_L",
+    "cell": "线下·主流领",
+    "ref_mine": {
+     "n_disc": 236,
+     "n_hold": 438,
+     "mean_disc": -0.39,
+     "mean_hold": 0.1,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 236,
+     "n_hold": 438,
+     "mean_disc": -0.39,
+     "mean_hold": 0.1,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 237,
+     "n_hold": 453,
+     "mean_disc": -0.3846,
+     "mean_hold": 0.1179,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 384,
+     "n_hold": 627,
+     "mean_disc": -0.3119,
+     "mean_hold": 0.2482,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_L",
+    "cell": "线下·二线领",
+    "ref_mine": {
+     "n_disc": 141,
+     "n_hold": 210,
+     "mean_disc": -0.388,
+     "mean_hold": -0.222,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 141,
+     "n_hold": 210,
+     "mean_disc": -0.388,
+     "mean_hold": -0.222,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 140,
+     "n_hold": 208,
+     "mean_disc": -0.3973,
+     "mean_hold": -0.2177,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 199,
+     "n_hold": 287,
+     "mean_disc": -0.017,
+     "mean_hold": -0.1141,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_S",
+    "cell": "线上·主流领",
+    "ref_mine": {
+     "n_disc": 108,
+     "n_hold": 552,
+     "mean_disc": -0.058,
+     "mean_hold": 0.056,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 108,
+     "n_hold": 552,
+     "mean_disc": -0.058,
+     "mean_hold": 0.056,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 109,
+     "n_hold": 556,
+     "mean_disc": -0.1103,
+     "mean_hold": 0.0504,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 184,
+     "n_hold": 886,
+     "mean_disc": -0.2369,
+     "mean_hold": 0.0659,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_S",
+    "cell": "线上·二线领",
+    "ref_mine": {
+     "n_disc": 85,
+     "n_hold": 266,
+     "mean_disc": -0.185,
+     "mean_hold": -0.173,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 85,
+     "n_hold": 266,
+     "mean_disc": -0.185,
+     "mean_hold": -0.173,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 82,
+     "n_hold": 269,
+     "mean_disc": -0.1533,
+     "mean_hold": -0.1768,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 215,
+     "n_hold": 504,
+     "mean_disc": -0.2035,
+     "mean_hold": -0.0578,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_S",
+    "cell": "线下·主流领",
+    "ref_mine": {
+     "n_disc": 328,
+     "n_hold": 419,
+     "mean_disc": -0.159,
+     "mean_hold": -0.269,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 328,
+     "n_hold": 419,
+     "mean_disc": -0.159,
+     "mean_hold": -0.269,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 324,
+     "n_hold": 410,
+     "mean_disc": -0.172,
+     "mean_hold": -0.2517,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 457,
+     "n_hold": 726,
+     "mean_disc": 0.2062,
+     "mean_hold": -0.1893,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BR_S",
+    "cell": "线下·二线领",
+    "ref_mine": {
+     "n_disc": 128,
+     "n_hold": 207,
+     "mean_disc": 0.194,
+     "mean_hold": 0.052,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 128,
+     "n_hold": 207,
+     "mean_disc": 0.194,
+     "mean_hold": 0.052,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 127,
+     "n_hold": 208,
+     "mean_disc": 0.2041,
+     "mean_hold": 0.011,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 186,
+     "n_hold": 326,
+     "mean_disc": 0.424,
+     "mean_hold": 0.2674,
+     "holds": true
+    }
+   },
+   {
+    "rule": "BRF_L",
+    "cell": "线上·主流领",
+    "ref_mine": {
+     "n_disc": 121,
+     "n_hold": 443,
+     "mean_disc": -0.179,
+     "mean_hold": -0.04,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 121,
+     "n_hold": 443,
+     "mean_disc": -0.179,
+     "mean_hold": -0.04,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 121,
+     "n_hold": 437,
+     "mean_disc": -0.1791,
+     "mean_hold": -0.0466,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 145,
+     "n_hold": 606,
+     "mean_disc": 0.1377,
+     "mean_hold": 0.0189,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_L",
+    "cell": "线上·二线领",
+    "ref_mine": {
+     "n_disc": 159,
+     "n_hold": 304,
+     "mean_disc": 0.041,
+     "mean_hold": -0.103,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 159,
+     "n_hold": 304,
+     "mean_disc": 0.041,
+     "mean_hold": -0.103,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 155,
+     "n_hold": 301,
+     "mean_disc": 0.0656,
+     "mean_hold": -0.107,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 217,
+     "n_hold": 414,
+     "mean_disc": 0.3223,
+     "mean_hold": 0.033,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_L",
+    "cell": "线下·主流领",
+    "ref_mine": {
+     "n_disc": 133,
+     "n_hold": 270,
+     "mean_disc": -0.307,
+     "mean_hold": 0.163,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 133,
+     "n_hold": 270,
+     "mean_disc": -0.307,
+     "mean_hold": 0.163,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 132,
+     "n_hold": 278,
+     "mean_disc": -0.3005,
+     "mean_hold": 0.175,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 216,
+     "n_hold": 366,
+     "mean_disc": -0.2389,
+     "mean_hold": 0.3117,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_L",
+    "cell": "线下·二线领",
+    "ref_mine": {
+     "n_disc": 101,
+     "n_hold": 132,
+     "mean_disc": -0.406,
+     "mean_hold": 0.221,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 101,
+     "n_hold": 132,
+     "mean_disc": -0.406,
+     "mean_hold": 0.221,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 102,
+     "n_hold": 131,
+     "mean_disc": -0.4126,
+     "mean_hold": 0.2285,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 137,
+     "n_hold": 166,
+     "mean_disc": -0.1036,
+     "mean_hold": -0.0904,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_S",
+    "cell": "线上·主流领",
+    "ref_mine": {
+     "n_disc": 85,
+     "n_hold": 405,
+     "mean_disc": -0.109,
+     "mean_hold": 0.128,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 85,
+     "n_hold": 405,
+     "mean_disc": -0.109,
+     "mean_hold": 0.128,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 86,
+     "n_hold": 410,
+     "mean_disc": -0.1545,
+     "mean_hold": 0.1261,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 138,
+     "n_hold": 650,
+     "mean_disc": -0.2452,
+     "mean_hold": 0.1518,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_S",
+    "cell": "线上·二线领",
+    "ref_mine": {
+     "n_disc": 43,
+     "n_hold": 141,
+     "mean_disc": -0.142,
+     "mean_hold": -0.061,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 43,
+     "n_hold": 141,
+     "mean_disc": -0.142,
+     "mean_hold": -0.061,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 42,
+     "n_hold": 142,
+     "mean_disc": -0.1212,
+     "mean_hold": -0.0715,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 116,
+     "n_hold": 286,
+     "mean_disc": -0.1964,
+     "mean_hold": -0.0048,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_S",
+    "cell": "线下·主流领",
+    "ref_mine": {
+     "n_disc": 275,
+     "n_hold": 351,
+     "mean_disc": -0.109,
+     "mean_hold": -0.29,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 275,
+     "n_hold": 351,
+     "mean_disc": -0.109,
+     "mean_hold": -0.29,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 272,
+     "n_hold": 343,
+     "mean_disc": -0.1459,
+     "mean_hold": -0.289,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 381,
+     "n_hold": 598,
+     "mean_disc": 0.2095,
+     "mean_hold": -0.2406,
+     "holds": false
+    }
+   },
+   {
+    "rule": "BRF_S",
+    "cell": "线下·二线领",
+    "ref_mine": {
+     "n_disc": 92,
+     "n_hold": 168,
+     "mean_disc": 0.09,
+     "mean_hold": -0.111,
+     "holds": false
+    },
+    "ref_his": {
+     "n_disc": 92,
+     "n_hold": 168,
+     "mean_disc": 0.09,
+     "mean_hold": -0.111,
+     "holds": false
+    },
+    "mine_b": {
+     "n_disc": 92,
+     "n_hold": 169,
+     "mean_disc": 0.1457,
+     "mean_hold": -0.1198,
+     "holds": false
+    },
+    "mine_a": {
+     "n_disc": 129,
+     "n_hold": 242,
+     "mean_disc": 0.3842,
+     "mean_hold": 0.224,
+     "holds": false
+    }
+   }
+  ]
+ },
+ "ref_vs_his_holds_agree": 24,
+ "ref_vs_mine_b_holds_agree": 23
+}

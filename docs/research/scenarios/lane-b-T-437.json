@@ -1,0 +1,26 @@
+{
+ "author": "lane-b",
+ "entries": [
+  {
+   "id": "T-437-3",
+   "scenario": "BTC 价格区间",
+   "statement": "2026-12-31 BTC 收盘价落在 40000–85000 区间内(2026-11-25 收盘 58640 附近)",
+   "variable": "close:BTC",
+   "op": "between",
+   "lo": 40000,
+   "hi": 85000,
+   "prob": 0.85,
+   "horizon_d": "2026-12-31"
+  },
+  {
+   "id": "T-437-4",
+   "scenario": "状态格的方向",
+   "statement": "2026-12-31 面板 dist_200 > 0(线上)—— 2021-01-30 至 2026-11-19 的 2120 个格子里线上占 63.0%",
+   "variable": "state:dist_200",
+   "op": "gt",
+   "lo": 0,
+   "prob": 0.62,
+   "horizon_d": "2026-12-31"
+  }
+ ]
+}
