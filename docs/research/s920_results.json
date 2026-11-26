@@ -1,0 +1,257 @@
+{
+ "n_candidates": {
+  "BR_L": 2356,
+  "BR_S": 2110
+ },
+ "features": [
+  "dist_e50",
+  "e20_e50",
+  "atr_pct",
+  "bbw",
+  "ret_6",
+  "ret_42",
+  "fund7",
+  "dist200_coin",
+  "ret_30d",
+  "dist_200",
+  "style_rel_majors_30d",
+  "stable_supply_30d",
+  "funding_7d_ann_binance",
+  "pos:btc_crowd_ln",
+  "taker_buy_share_30d",
+  "joint_z"
+ ],
+ "results": {
+  "long|logit": {
+   "per_year": {
+    "2022": {
+     "n": 301,
+     "all": -0.342,
+     "top": 0.123,
+     "bottom": -0.68,
+     "auc": 0.584
+    },
+    "2023": {
+     "n": 361,
+     "all": 0.092,
+     "top": 0.135,
+     "bottom": -0.281,
+     "auc": 0.532
+    },
+    "2024": {
+     "n": 385,
+     "all": 0.174,
+     "top": 0.399,
+     "bottom": -0.165,
+     "auc": 0.538
+    },
+    "2025": {
+     "n": 687,
+     "all": 0.038,
+     "top": 0.189,
+     "bottom": -0.305,
+     "auc": 0.601
+    }
+   },
+   "pooled": {
+    "n": 1433,
+    "all_r": 0.088,
+    "top_r": 0.232,
+    "lift": 0.143,
+    "perm_pct": 0.878,
+    "auc": 0.558,
+    "years_top_beats_all": 3
+   },
+   "criteria": {
+    "lift_ge_0.15": false,
+    "perm_pct_ge_0.95": false,
+    "years_pos_ge_2": true,
+    "auc_ge_0.55": true
+   },
+   "holds": false,
+   "coefs_last_fold": {
+    "dist_e50": 0.227,
+    "e20_e50": 0.262,
+    "atr_pct": -0.509,
+    "bbw": -0.016,
+    "ret_6": 0.065,
+    "ret_42": -0.131,
+    "fund7": -0.376,
+    "dist200_coin": -0.046,
+    "ret_30d": -0.004,
+    "dist_200": 0.115,
+    "style_rel_majors_30d": 0.12,
+    "stable_supply_30d": 0.193,
+    "funding_7d_ann_binance": 0.187,
+    "pos:btc_crowd_ln": -0.101,
+    "taker_buy_share_30d": -0.057,
+    "joint_z": 0.167
+   }
+  },
+  "long|hgb": {
+   "per_year": {
+    "2022": {
+     "n": 301,
+     "all": -0.342,
+     "top": -0.099,
+     "bottom": -0.354,
+     "auc": 0.585
+    },
+    "2023": {
+     "n": 361,
+     "all": 0.092,
+     "top": 0.26,
+     "bottom": -0.22,
+     "auc": 0.531
+    },
+    "2024": {
+     "n": 385,
+     "all": 0.174,
+     "top": 0.744,
+     "bottom": -0.186,
+     "auc": 0.545
+    },
+    "2025": {
+     "n": 687,
+     "all": 0.038,
+     "top": 0.243,
+     "bottom": -0.408,
+     "auc": 0.586
+    }
+   },
+   "pooled": {
+    "n": 1433,
+    "all_r": 0.088,
+    "top_r": 0.382,
+    "lift": 0.293,
+    "perm_pct": 0.99,
+    "auc": 0.546,
+    "years_top_beats_all": 3
+   },
+   "criteria": {
+    "lift_ge_0.15": true,
+    "perm_pct_ge_0.95": true,
+    "years_pos_ge_2": true,
+    "auc_ge_0.55": false
+   },
+   "holds": false,
+   "coefs_last_fold": null
+  },
+  "short|logit": {
+   "per_year": {
+    "2022": {
+     "n": 369,
+     "all": 0.132,
+     "top": 0.418,
+     "bottom": 0.349,
+     "auc": 0.534
+    },
+    "2023": {
+     "n": 267,
+     "all": -0.118,
+     "top": 0.595,
+     "bottom": -0.617,
+     "auc": 0.617
+    },
+    "2024": {
+     "n": 335,
+     "all": -0.006,
+     "top": 0.25,
+     "bottom": -0.323,
+     "auc": 0.605
+    },
+    "2025": {
+     "n": 731,
+     "all": -0.124,
+     "top": 0.103,
+     "bottom": -0.444,
+     "auc": 0.524
+    }
+   },
+   "pooled": {
+    "n": 1333,
+    "all_r": -0.093,
+    "top_r": 0.239,
+    "lift": 0.332,
+    "perm_pct": 0.998,
+    "auc": 0.561,
+    "years_top_beats_all": 3
+   },
+   "criteria": {
+    "lift_ge_0.15": true,
+    "perm_pct_ge_0.95": true,
+    "years_pos_ge_2": true,
+    "auc_ge_0.55": true
+   },
+   "holds": true,
+   "coefs_last_fold": {
+    "dist_e50": -0.102,
+    "e20_e50": 0.368,
+    "atr_pct": -0.231,
+    "bbw": -0.166,
+    "ret_6": 0.114,
+    "ret_42": -0.256,
+    "fund7": 0.171,
+    "dist200_coin": -0.069,
+    "ret_30d": -0.221,
+    "dist_200": -0.216,
+    "style_rel_majors_30d": -0.183,
+    "stable_supply_30d": -0.069,
+    "funding_7d_ann_binance": 0.006,
+    "pos:btc_crowd_ln": 0.246,
+    "taker_buy_share_30d": -0.157,
+    "joint_z": 0.097
+   }
+  },
+  "short|hgb": {
+   "per_year": {
+    "2022": {
+     "n": 369,
+     "all": 0.132,
+     "top": 0.023,
+     "bottom": 0.135,
+     "auc": 0.535
+    },
+    "2023": {
+     "n": 267,
+     "all": -0.118,
+     "top": 0.695,
+     "bottom": -0.568,
+     "auc": 0.605
+    },
+    "2024": {
+     "n": 335,
+     "all": -0.006,
+     "top": 0.284,
+     "bottom": -0.009,
+     "auc": 0.562
+    },
+    "2025": {
+     "n": 731,
+     "all": -0.124,
+     "top": 0.216,
+     "bottom": -0.385,
+     "auc": 0.554
+    }
+   },
+   "pooled": {
+    "n": 1333,
+    "all_r": -0.093,
+    "top_r": 0.329,
+    "lift": 0.422,
+    "perm_pct": 1.0,
+    "auc": 0.564,
+    "years_top_beats_all": 3
+   },
+   "criteria": {
+    "lift_ge_0.15": true,
+    "perm_pct_ge_0.95": true,
+    "years_pos_ge_2": true,
+    "auc_ge_0.55": true
+   },
+   "holds": true,
+   "coefs_last_fold": null
+  }
+ },
+ "n_holds": 2
+}

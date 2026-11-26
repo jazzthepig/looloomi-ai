@@ -1,0 +1,91 @@
+loaded BTC 3100
+loaded ETH 3100
+loaded BTC 81180 hourly → 20273 4h
+loaded ETH 81180 hourly → 20273 4h
+loaded SOL 51706 hourly → 12921 4h
+loaded BNB 51706 hourly → 12921 4h
+loaded XRP 51706 hourly → 12921 4h
+loaded ADA 51706 hourly → 12921 4h
+loaded AVAX 51706 hourly → 12921 4h
+loaded DOGE 51706 hourly → 12921 4h
+loaded LINK 51706 hourly → 12921 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31260 hourly → 7815 4h
+loaded funding {'BTC': 2522, 'ETH': 2522, 'SOL': 2266, 'BNB': 2482, 'XRP': 2517, 'ADA': 2504, 'AVAX': 2257, 'DOGE': 2331, 'LINK': 2506, 'NEAR': 2235, 'SUI': 1304} market 2883 joint_z 1615
+/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py:124: RuntimeWarning: All-NaN slice encountered
+  med = np.nanmedian(Xtr, axis=0)
+joblib.externals.loky.process_executor._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/_utils.py", line 109, in __call__
+    return self.func(**kwargs)
+           ~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 607, in __call__
+    return [func(*args, **kwargs) for func, args, kwargs in self.items]
+            ~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/utils/parallel.py", line 184, in __call__
+    return self.function(*args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/ensemble/_hist_gradient_boosting/binning.py", line 82, in _find_binning_thresholds
+    bin_thresholds = sliding_window_view(distinct_values, 2).mean(axis=1)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.14/site-packages/numpy/lib/_stride_tricks_impl.py", line 365, in sliding_window_view
+    raise ValueError(
+        'window shape cannot be larger than input array shape')
+ValueError: window shape cannot be larger than input array shape
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py", line 264, in <module>
+    out = run(cands)
+  File "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py", line 218, in run
+    w = walk(cands, side, kind)
+  File "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py", line 172, in walk
+    p, cf = fit_predict(kind, train, test)
+            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py", line 133, in fit_predict
+    m.fit(Xtr, y)
+    ~~~~~^^^^^^^^
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/base.py", line 1403, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py", line 603, in fit
+    X_binned_train = self._bin_data(
+        X_train, sample_weight_train, is_training_data=True
+    )
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py", line 1122, in _bin_data
+    X_binned = self._bin_mapper.fit_transform(
+        X, sample_weight=sample_weight
+    )  # F-aligned array
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/utils/_set_output.py", line 319, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/base.py", line 969, in fit_transform
+    return self.fit(X, **fit_params).transform(X)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/ensemble/_hist_gradient_boosting/binning.py", line 287, in fit
+    non_cat_thresholds = Parallel(n_jobs=self.n_threads, backend="threading")(
+        delayed(_find_binning_thresholds)(
+    ...<3 lines>...
+        if not self.is_categorical_[f_idx]
+    )
+  File "/Users/sbb/Library/Python/3.14/lib/python/site-packages/sklearn/utils/parallel.py", line 91, in __call__
+    return super().__call__(iterable_with_config_and_warning_filters)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 2072, in __call__
+    return output if self.return_generator else list(output)
+                                                ~~~~^^^^^^^^
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 1682, in _get_outputs
+    yield from self._retrieve()
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 1784, in _retrieve
+    self._raise_error_fast()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 1859, in _raise_error_fast
+    error_job.get_result(self.timeout)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 758, in get_result
+    return self._return_or_raise()
+           ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/lib/python3.14/site-packages/joblib/parallel.py", line 773, in _return_or_raise
+    raise self._result
+ValueError: window shape cannot be larger than input array shape
