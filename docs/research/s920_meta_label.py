@@ -129,6 +129,13 @@ def fit_predict(kind: str, train: list, test: list) -> tuple:
         m = LogisticRegression(C=LOGIT_C, max_iter=2000)
         m.fit((Xtr - mu) / sd, y)
         return m.predict_proba((Xte - mu) / sd)[:, 1], dict(zip(FEATURES, [round(float(v), 3) for v in m.coef_[0]]))
+    allnan = np.isnan(Xtr).all(axis=0)
+    if allnan.any():
+        # 11-26(T-441):sklearn 1.9 的直方图分箱遇到训练段整列缺失会崩(2022 折的 joint_z —— 联合模型 2022-04 才有分数)。
+        # 按常数列处理 = 这一折不在这一列上分裂;与 lane-a 的 `_s920_run_patched.py` 同一口径,结果不变。
+        Xtr, Xte = Xtr.copy(), Xte.copy()
+        Xtr[:, allnan] = 0.0
+        Xte[:, allnan] = 0.0
     m = HistGradientBoostingClassifier(**HGB)
     m.fit(Xtr, y)
     return m.predict_proba(Xte)[:, 1], None

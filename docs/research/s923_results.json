@@ -1,0 +1,177 @@
+{
+ "cells": {
+  "short|logit": {
+   "n": 1333,
+   "all_r": -0.093,
+   "top_r": 0.239,
+   "lift": 0.332,
+   "shift": {
+    "top_r": 0.239,
+    "null_median": -0.147,
+    "null_q95": 0.118,
+    "pct": 0.989
+   },
+   "day": {
+    "days_all": 516,
+    "days_top": 185,
+    "all_r": -0.163,
+    "top_r": 0.091,
+    "lift": 0.254,
+    "tickets_per_day": 2.58
+   },
+   "loco": {
+    "by_coin": {
+     "ADA": 0.305,
+     "AVAX": 0.364,
+     "BNB": 0.344,
+     "BTC": 0.354,
+     "DOGE": 0.35,
+     "ETH": 0.327,
+     "LINK": 0.349,
+     "NEAR": 0.338,
+     "SOL": 0.29,
+     "SUI": 0.332,
+     "XRP": 0.299
+    },
+    "min_lift": 0.29,
+    "min_coin": "SOL"
+   },
+   "criteria": {
+    "shift_pct_ge_0.95": true,
+    "day_lift_ge_0.15": true,
+    "loco_min_gt_0": true
+   },
+   "survives": true
+  },
+  "short|hgb": {
+   "n": 1333,
+   "all_r": -0.093,
+   "top_r": 0.329,
+   "lift": 0.422,
+   "shift": {
+    "top_r": 0.329,
+    "null_median": -0.123,
+    "null_q95": 0.132,
+    "pct": 0.997
+   },
+   "day": {
+    "days_all": 516,
+    "days_top": 214,
+    "all_r": -0.163,
+    "top_r": 0.146,
+    "lift": 0.309,
+    "tickets_per_day": 2.58
+   },
+   "loco": {
+    "by_coin": {
+     "ADA": 0.43,
+     "AVAX": 0.456,
+     "BNB": 0.374,
+     "BTC": 0.444,
+     "DOGE": 0.453,
+     "ETH": 0.387,
+     "LINK": 0.482,
+     "NEAR": 0.467,
+     "SOL": 0.402,
+     "SUI": 0.314,
+     "XRP": 0.446
+    },
+    "min_lift": 0.314,
+    "min_coin": "SUI"
+   },
+   "criteria": {
+    "shift_pct_ge_0.95": true,
+    "day_lift_ge_0.15": true,
+    "loco_min_gt_0": true
+   },
+   "survives": true
+  },
+  "long|logit": {
+   "n": 1433,
+   "all_r": 0.088,
+   "top_r": 0.232,
+   "lift": 0.143,
+   "shift": {
+    "top_r": 0.232,
+    "null_median": 0.071,
+    "null_q95": 0.364,
+    "pct": 0.793
+   },
+   "day": {
+    "days_all": 611,
+    "days_top": 267,
+    "all_r": 0.014,
+    "top_r": -0.04,
+    "lift": -0.054,
+    "tickets_per_day": 2.35
+   },
+   "loco": {
+    "by_coin": {
+     "ADA": 0.189,
+     "AVAX": 0.163,
+     "BNB": 0.168,
+     "BTC": 0.135,
+     "DOGE": 0.128,
+     "ETH": 0.065,
+     "LINK": 0.129,
+     "NEAR": 0.2,
+     "SOL": 0.115,
+     "SUI": 0.161,
+     "XRP": 0.12
+    },
+    "min_lift": 0.065,
+    "min_coin": "ETH"
+   },
+   "criteria": {
+    "shift_pct_ge_0.95": false,
+    "day_lift_ge_0.15": false,
+    "loco_min_gt_0": true
+   },
+   "survives": false
+  },
+  "long|hgb": {
+   "n": 1433,
+   "all_r": 0.088,
+   "top_r": 0.382,
+   "lift": 0.293,
+   "shift": {
+    "top_r": 0.382,
+    "null_median": 0.066,
+    "null_q95": 0.34,
+    "pct": 0.972
+   },
+   "day": {
+    "days_all": 611,
+    "days_top": 268,
+    "all_r": 0.014,
+    "top_r": 0.189,
+    "lift": 0.174,
+    "tickets_per_day": 2.35
+   },
+   "loco": {
+    "by_coin": {
+     "ADA": 0.272,
+     "AVAX": 0.301,
+     "BNB": 0.328,
+     "BTC": 0.296,
+     "DOGE": 0.334,
+     "ETH": 0.301,
+     "LINK": 0.256,
+     "NEAR": 0.282,
+     "SOL": 0.374,
+     "SUI": 0.258,
+     "XRP": 0.229
+    },
+    "min_lift": 0.229,
+    "min_coin": "XRP"
+   },
+   "criteria": {
+    "shift_pct_ge_0.95": true,
+    "day_lift_ge_0.15": true,
+    "loco_min_gt_0": true
+   },
+   "survives": true
+  }
+ },
+ "n_survive_short": 2
+}

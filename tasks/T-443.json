@@ -1,0 +1,28 @@
+{
+  "id": "T-443",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-26",
+  "verified": null,
+  "title": "S-923:S-920 做空一侧的两格扛不扛得住扎堆(平移零分布 / 按天等权 / 去掉一个币)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-923(预注册,写于 S-920 结果之后、新计算之前)。脚本 `docs/research/s923_cluster_null.py`(import `s920_meta_label.py`,后者已并入 sklearn 1.9 整列缺失的处理 —— 不再需要 `_s920_run_patched.py`)。先 fetch,从 origin/main 开分支;两份脚本都以 origin/main 为准。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-443.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s923_cluster_null.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s923_cluster_null.py > docs/research/s923_run.txt 2>&1 &`,只 tail,等 WROTE(写 `s923_results.json`;取小时线约 10 分钟,之后 4 格各 1,000 次平移)。③ 最终回复只贴 `grep -E '^(loaded|CELL|SUMMARY|WROTE)' docs/research/s923_run.txt | cut -c1-700`。不改脚本、不下结论、不 Read 大 json。④ 报错:贴最后 15 行,停下报告 —— 不要自己打补丁。",
+    "expect": "s923_results.json + s923_run.txt;卡 in_review,推 lane-a/T-443。先于手上别的卡。"
+  },
+  "prior_value": "S-920 做空一侧把一条整体亏钱的规则(−0.09R/张)挑成上一档 +0.24 ~ +0.33R —— 但逐张打乱高估了把握。过不了扎堆这一道,就不配开纸面前向。",
+  "notes": "2026-11-26 lane-a 跑完(SELFTEST OK;取小时线 + 4 格各 1,000 次平移,约 22 分钟)。产物:docs/research/s923_results.json + docs/research/s923_run.txt。\n\n【做空一侧 —— 两格全过 S-923 三条判据(平移分位 ≥ 0.95 且按天等权增量 ≥ +0.15R 且去掉任何一个币增量 > 0)】\n- short|logit:n=1,333 张;全部均值 −0.093R,上一档 +0.239R(lift +0.332)。平移零分布(1,000 次)中位 −0.147R / q95 0.118R ⇒ 实测分位 0.989。按天等权:516 天、其中 185 天有上一档,全部 −0.163R、上一档 +0.091R(lift +0.254),一天 2.58 张票。去掉一个币:最小增量 +0.290R(SOL)。\n- short|hgb:上一档 +0.329R(lift +0.422);平移分位 0.997;按天等权 lift +0.309R;去掉一个币最小 +0.314R(SUI)。\n- SUMMARY n_survive_short = 2 ⇒ S-920 的做空一侧经得起「扎堆」这一道(S-920 的逐张打乱把同一天的扎堆拆掉了,把握被高估;这一道没拆它)。\n\n【做多一侧(只作对照)】long|logit 三条里两条不过(lift +0.143、平移分位 0.793、按天等权 −0.054、去掉一个币 +0.065);long|hgb 三条全过(lift +0.293、平移分位 0.972、按天等权 +0.174、去掉一个币 +0.229)。这与 S-920「做多 0 格」不冲突 —— S-920 的判据是 lift / perm_pct / AUC + 逐年一致,不含这三条;但「做多侧并非全死」这件事值得另立卡查(探索性)。\n\n【脚本来源(卡的前提与仓库实况不同,已照 Seth 工作区逐字节复制,未改一字)】origin/main 上没有 s923_cluster_null.py(Seth 主仓工作区未跟踪);origin/main 上的 s920_meta_label.py 也不含卡上说的「sklearn 1.9 整列缺失的处理」(那是 Seth 工作区未提交的改动:2022 折训练段 joint_z 整列全缺,HGB 分箱崩)。两份都从 /Users/sbb/Projects/looloomi-ai/docs/research/ 复制进本分支;s920 与 origin/main 的差异只有那 7 行 all-nan 处理。_s920_run_patched.py 未带入(卡上说不再需要)。\n\n【前向预期】docs/research/scenarios/lane-a-T-443.json(5 条:3 条 manual 重跑 + close:SUI + macro:fng,已过 scenario_ledger.validate)。\n\n2026-11-26T09:53:02Z Seth 开卡(S-920 结果之后)。"
+}
