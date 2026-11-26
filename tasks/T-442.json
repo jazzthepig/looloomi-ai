@@ -1,0 +1,28 @@
+{
+  "id": "T-442",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-26",
+  "verified": null,
+  "title": "S-921:BRF_L / BR_L 的参数面(回看 4 × 吊灯倍数 4 = 16 格)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-921(预注册)。脚本 `docs/research/s921_param_surface.py`(import `s916_jazz_4h_rules.py`,以 `--mgmt atr3 --dmin 0.01 --cap 20` 装载;都不改)。需要 sklearn(没有就 `pip install scikit-learn`,不换版本以外的东西)。先 fetch,从 origin/main 开分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-442.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s921_param_surface.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s921_param_surface.py > docs/research/s921_run.txt 2>&1 &`,只 tail,等 WROTE(写 `s921_results.json`;取小时线约 10 分钟)。③ 最终回复只贴 `grep -E '^(loaded|CELL|VERDICT|WROTE)' docs/research/s921_run.txt | cut -c1-600`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "s921_results.json + s921_run.txt;卡 in_review,推 lane-c/T-442。先于手上别的卡。"
+  },
+  "prior_value": "S-919 的 20 根 / 3 倍 ATR 是手定的;只有一片参数都成立才不算挑出来的。",
+  "notes": "2026-11-26T09:02:01Z Seth 开卡(Jazz 11-26「按你建议来先做」)。\n2026-11-26 lane-c 跑完(分支 lane-c/T-442,基于 origin/main 7d98798c)。① 脚本来源:Seth 主仓工作区**未提交**的 docs/research/s921_param_surface.py,我逐字节复制进本分支(cmp → CPY_IDENTICAL),一个字没改;它 import 的 s916_jazz_4h_rules.py / s881_setup_mining.py / s851_watch_base_rate.py 取自 origin/main。② selftest:`--selftest` → SELFTEST OK(32 格 = 4 回看 × 4 倍数 × 2 规则;网格 (20,3) 与默认参数直接跑一致、参数确实生效)。③ live:nohup 跑完,loaded 11 币(BTC/ETH 81180 小时 → 20273 根 4h;SOL/BNB/XRP/ADA/AVAX/DOGE/LINK 51706 → 12921;NEAR 52785 → 13187;SUI 31260 → 7815),写出 docs/research/s921_results.json(25473 B)。\nVERDICT BRF_L {\"n_cells_ok\": 16, \"plateau\": true, \"spike_at_20_3\": false, \"rank_of_20_3_by_hold\": 11, \"best_by_hold\": [40, 5.0]}\nVERDICT BR_L {\"n_cells_ok\": 12, \"plateau\": true, \"spike_at_20_3\": false, \"rank_of_20_3_by_hold\": 9, \"best_by_hold\": [40, 5.0]}\n(20,3) 那两格:BRF_L disc n647 r0.523 x5 0.372 win0.181 / hold n999 r0.176 x5 0.076 win0.199(对照 hold n2549 r0.065 x5 0.026 win0.245);BR_L disc n923 r0.189 x5 0.081 win0.153 / hold n1433 r0.088 x5 0.018 win0.192(同上对照)。判据只写在台账 S-921,本卡不下结论。④ 前向预期 3 条:docs/research/scenarios/lane-c-T-442.json(close:BTC>60458 / close:ETH>1692.65 / state:dist_200>0;概率 0.56 / 0.53 / 0.55,基础率来自近 3 年实测:BTC 60 日 P(涨)=0.546、ETH=0.522、dist_200 P(>0)=0.553)。"
+}
