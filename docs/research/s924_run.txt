@@ -1,0 +1,29 @@
+loaded BTC 81190 hourly → 20275 4h
+loaded ETH 81190 hourly → 20275 4h
+loaded SOL 51717 hourly → 12923 4h
+loaded BNB 51717 hourly → 12923 4h
+loaded XRP 51717 hourly → 12923 4h
+loaded ADA 51717 hourly → 12923 4h
+loaded AVAX 51717 hourly → 12923 4h
+loaded DOGE 51717 hourly → 12923 4h
+loaded LINK 51717 hourly → 12923 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31271 hourly → 7817 4h
+funding_daily rows 25446 symbols 11
+feature_matrix_daily rows 2883
+joint_forecast_daily rows 1675 with z 1615
+tickets BR_S 2110
+fold 2022 train 379 eval 369
+fold 2023 train 745 eval 267
+fold 2024 train 1024 eval 335
+fold 2025 train 1347 eval 731
+MISSING {"dist_e50": 0, "e20_e50": 0, "atr_pct": 0, "bbw": 0, "ret_6": 0, "ret_42": 0, "dist200_coin": 145, "ret_30d": 23, "fund7": 122, "dist_200": 91, "style_rel_majors_30d": 135, "stable_supply_30d": 136, "funding_7d_ann_binance": 124, "pos:btc_crowd_ln": 170, "taker_buy_share_30d": 186, "joint_z": 588}
+EVAL folds [(2023, 267), (2024, 335), (2025, 731)]
+CELL short|logit n_candidates=2110 n_eval=1333 all_r=-0.0932 top_r=0.2388 lift=0.3320 perm_pct=0.9980 years_top_beats_all=3 auc=0.5606 shift_pct=0.9890 day_lift=-0.0101 loco_min=0.2961 c1_lift_ge_0.15=1 c2_perm_pct_ge_0.95=1 c3_years_ge_2=1 c4_auc_ge_0.55=1 c5_shift_pct_ge_0.95=1 c6_day_lift_ge_0.15=0 c7_loco_min_gt_0=1
+CELL short|hgb n_candidates=2110 n_eval=1333 all_r=-0.0932 top_r=0.3291 lift=0.4223 perm_pct=1.0000 years_top_beats_all=3 auc=0.5638 shift_pct=0.9980 day_lift=0.0672 loco_min=0.3284 c1_lift_ge_0.15=1 c2_perm_pct_ge_0.95=1 c3_years_ge_2=1 c4_auc_ge_0.55=1 c5_shift_pct_ge_0.95=1 c6_day_lift_ge_0.15=0 c7_loco_min_gt_0=1
+FEAT SOL|2023-01-18T20:00:00+00:00|r=-1.0324|dist_e50=0.0559723,e20_e50=0.0938761,atr_pct=0.0487237,bbw=0.107193,ret_6=-0.0708493,ret_42=0.360625,dist200_coin=-0.213478,ret_30d=0.811148,fund7=0.0631356,dist_200=0.0700385,style_rel_majors_30d=-0.0525228,stable_supply_30d=-0.00986547,funding_7d_ann_binance=0.0872817,pos:btc_crowd_ln=-0.279456,taker_buy_share_30d=0.497967,joint_z=-0.6171
+FEAT SOL|2023-01-25T08:00:00+00:00|r=-1.1200|dist_e50=0.00139615,e20_e50=0.0336711,atr_pct=0.0341028,bbw=0.111977,ret_6=-0.0609362,ret_42=0.0126197,dist200_coin=-0.147059,ret_30d=1.05565,fund7=0.121674,dist_200=0.096185,style_rel_majors_30d=-0.0971197,stable_supply_30d=-0.000460562,funding_7d_ann_binance=0.0984786,pos:btc_crowd_ln=0.0328843,taker_buy_share_30d=0.497829,joint_z=-1.1652
+FEAT LINK|2023-01-25T12:00:00+00:00|r=-1.0606|dist_e50=-0.0166551,e20_e50=0.0134438,atr_pct=0.0293415,bbw=0.0914594,ret_6=-0.0596742,ret_42=-0.00785185,dist200_coin=-0.0455711,ret_30d=0.115981,fund7=0.119891,dist_200=0.096185,style_rel_majors_30d=-0.0971197,stable_supply_30d=-0.000460562,funding_7d_ann_binance=0.0984786,pos:btc_crowd_ln=0.0328843,taker_buy_share_30d=0.497829,joint_z=-1.1652
+FEAT XRP|2023-01-30T20:00:00+00:00|r=-1.0641|dist_e50=-0.0295157,e20_e50=0.00109473,atr_pct=0.0181237,bbw=0.0535173,ret_6=-0.0495311,ret_42=-0.0738051,dist200_coin=0.00834463,ret_30d=0.153487,fund7=0.1095,dist_200=0.156573,style_rel_majors_30d=-0.185988,stable_supply_30d=-1.92718e-05,funding_7d_ann_binance=0.0952162,pos:btc_crowd_ln=-0.161822,taker_buy_share_30d=0.498499,joint_z=-2.0433
+FEAT BTC|2023-01-31T00:00:00+00:00|r=-1.1200|dist_e50=-0.00171813,e20_e50=0.0142933,atr_pct=0.0148877,bbw=0.0540196,ret_6=-0.0385872,ret_42=-0.0039404,dist200_coin=0.159247,ret_30d=0.379857,fund7=0.109261,dist_200=0.104791,style_rel_majors_30d=-0.132054,stable_supply_30d=-0.00261373,funding_7d_ann_binance=0.0974442,pos:btc_crowd_ln=0.215623,taker_buy_share_30d=0.498177,joint_z=-2.1561
+WROTE docs/research/s924_results.json
