@@ -1,0 +1,14 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-442-1", "scenario": "S-921 参数面:趋势环境延续",
+     "statement": "S-921 的 16 格参数面显示 BRF_L(回看 10-60 根 × 吊灯 2-5 倍 ATR)在发现段与留出段都稳定高于随机对照 —— 平台而非尖峰;预期这一趋势环境在 60 天后仍在:BTC 日线收盘仍高于 2026-11-25 的 60458",
+     "variable": "close:BTC", "op": "gt", "lo": 60458, "prob": 0.56, "horizon_d": "2027-01-15"},
+    {"id": "T-442-2", "scenario": "S-921 参数面:趋势环境延续",
+     "statement": "同 S-921:预期 60 天后 ETH 日线收盘仍高于 2026-11-25 的 1692.65",
+     "variable": "close:ETH", "op": "gt", "lo": 1692.65, "prob": 0.53, "horizon_d": "2027-01-15"},
+    {"id": "T-442-3", "scenario": "S-921 参数面:趋势环境延续",
+     "statement": "同 S-921:预期 30 天后 state_daily 的 dist_200(相对 200 日均线)回到 0 以上(2026-11-22 为 -0.160)",
+     "variable": "state:dist_200", "op": "gt", "lo": 0, "prob": 0.55, "horizon_d": "2026-12-26"}
+  ]
+}

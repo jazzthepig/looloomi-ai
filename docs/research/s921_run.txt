@@ -1,0 +1,47 @@
+loaded BTC 3100
+loaded ETH 3100
+loaded BTC 81180 hourly → 20273 4h
+loaded ETH 81180 hourly → 20273 4h
+loaded SOL 51706 hourly → 12921 4h
+loaded BNB 51706 hourly → 12921 4h
+loaded XRP 51706 hourly → 12921 4h
+loaded ADA 51706 hourly → 12921 4h
+loaded AVAX 51706 hourly → 12921 4h
+loaded DOGE 51706 hourly → 12921 4h
+loaded LINK 51706 hourly → 12921 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31260 hourly → 7815 4h
+CELL BRF_L hl10 k2.0 | disc n836 r0.148 x50.028 win0.233 vs n1464 r0.081 x50.016 win0.306 | hold n1336 r0.072 x5-0.003 win0.229 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BR_L hl10 k2.0 | disc n1371 r0.061 x5-0.012 win0.217 vs n1464 r0.081 x50.016 win0.306 | hold n2210 r-0.006 x5-0.052 win0.222 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BRF_L hl20 k2.0 | disc n708 r0.182 x50.041 win0.227 vs n1464 r0.081 x50.016 win0.306 | hold n1105 r0.116 x50.026 win0.232 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BR_L hl20 k2.0 | disc n994 r0.001 x5-0.1 win0.204 vs n1464 r0.081 x50.016 win0.306 | hold n1565 r0.069 x50.005 win0.229 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BRF_L hl40 k2.0 | disc n606 r0.192 x50.027 win0.226 vs n1464 r0.081 x50.016 win0.306 | hold n939 r0.163 x50.058 win0.241 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BR_L hl40 k2.0 | disc n659 r0.214 x50.063 win0.226 vs n1464 r0.081 x50.016 win0.306 | hold n1047 r0.122 x50.027 win0.244 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BRF_L hl60 k2.0 | disc n541 r0.201 x50.022 win0.22 vs n1464 r0.081 x50.016 win0.306 | hold n823 r0.107 x5-0.005 win0.247 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BR_L hl60 k2.0 | disc n551 r0.21 x50.033 win0.227 vs n1464 r0.081 x50.016 win0.306 | hold n849 r0.069 x5-0.04 win0.245 vs n2688 r-0.083 x5-0.118 win0.277
+CELL BRF_L hl10 k3.0 | disc n753 r0.455 x50.325 win0.197 vs n1380 r0.15 x50.077 win0.248 | hold n1191 r0.157 x50.073 win0.193 vs n2549 r0.065 x50.026 win0.245
+CELL BR_L hl10 k3.0 | disc n1252 r0.203 x50.124 win0.169 vs n1380 r0.15 x50.077 win0.248 | hold n1999 r0.063 x50.013 win0.181 vs n2549 r0.065 x50.026 win0.245
+CELL BRF_L hl20 k3.0 | disc n647 r0.523 x50.372 win0.181 vs n1380 r0.15 x50.077 win0.248 | hold n999 r0.176 x50.076 win0.199 vs n2549 r0.065 x50.026 win0.245
+CELL BR_L hl20 k3.0 | disc n923 r0.189 x50.081 win0.153 vs n1380 r0.15 x50.077 win0.248 | hold n1433 r0.088 x50.018 win0.192 vs n2549 r0.065 x50.026 win0.245
+CELL BRF_L hl40 k3.0 | disc n556 r0.456 x50.279 win0.187 vs n1380 r0.15 x50.077 win0.248 | hold n842 r0.26 x50.142 win0.221 vs n2549 r0.065 x50.026 win0.245
+CELL BR_L hl40 k3.0 | disc n608 r0.426 x50.263 win0.183 vs n1380 r0.15 x50.077 win0.248 | hold n937 r0.241 x50.135 win0.223 vs n2549 r0.065 x50.026 win0.245
+CELL BRF_L hl60 k3.0 | disc n500 r0.497 x50.3 win0.176 vs n1380 r0.15 x50.077 win0.248 | hold n729 r0.243 x50.107 win0.232 vs n2549 r0.065 x50.026 win0.245
+CELL BR_L hl60 k3.0 | disc n507 r0.507 x50.313 win0.185 vs n1380 r0.15 x50.077 win0.248 | hold n748 r0.234 x50.101 win0.231 vs n2549 r0.065 x50.026 win0.245
+CELL BRF_L hl10 k4.0 | disc n706 r0.478 x50.338 win0.161 vs n1274 r0.124 x50.046 win0.21 | hold n1096 r0.205 x50.114 win0.18 vs n2347 r0.029 x5-0.014 win0.216
+CELL BR_L hl10 k4.0 | disc n1184 r0.149 x50.064 win0.141 vs n1274 r0.124 x50.046 win0.21 | hold n1875 r0.037 x5-0.016 win0.159 vs n2347 r0.029 x5-0.014 win0.216
+CELL BRF_L hl20 k4.0 | disc n615 r0.57 x50.411 win0.154 vs n1274 r0.124 x50.046 win0.21 | hold n942 r0.197 x50.091 win0.179 vs n2347 r0.029 x5-0.014 win0.216
+CELL BR_L hl20 k4.0 | disc n884 r0.201 x50.088 win0.128 vs n1274 r0.124 x50.046 win0.21 | hold n1359 r0.085 x50.012 win0.167 vs n2347 r0.029 x5-0.014 win0.216
+CELL BRF_L hl40 k4.0 | disc n529 r0.519 x50.333 win0.164 vs n1274 r0.124 x50.046 win0.21 | hold n801 r0.275 x50.151 win0.195 vs n2347 r0.029 x5-0.014 win0.216
+CELL BR_L hl40 k4.0 | disc n581 r0.46 x50.291 win0.16 vs n1274 r0.124 x50.046 win0.21 | hold n889 r0.264 x50.152 win0.197 vs n2347 r0.029 x5-0.014 win0.216
+CELL BRF_L hl60 k4.0 | disc n479 r0.529 x50.323 win0.161 vs n1274 r0.124 x50.046 win0.21 | hold n695 r0.212 x50.069 win0.204 vs n2347 r0.029 x5-0.014 win0.216
+CELL BR_L hl60 k4.0 | disc n485 r0.529 x50.327 win0.165 vs n1274 r0.124 x50.046 win0.21 | hold n714 r0.2 x50.061 win0.204 vs n2347 r0.029 x5-0.014 win0.216
+CELL BRF_L hl10 k5.0 | disc n672 r0.496 x50.349 win0.146 vs n1187 r0.186 x50.102 win0.193 | hold n1036 r0.248 x50.153 win0.165 vs n2144 r0.087 x50.04 win0.192
+CELL BR_L hl10 k5.0 | disc n1138 r0.12 x50.032 win0.123 vs n1187 r0.186 x50.102 win0.193 | hold n1785 r0.044 x5-0.012 win0.145 vs n2144 r0.087 x50.04 win0.192
+CELL BRF_L hl20 k5.0 | disc n590 r0.59 x50.424 win0.149 vs n1187 r0.186 x50.102 win0.193 | hold n896 r0.274 x50.163 win0.173 vs n2144 r0.087 x50.04 win0.192
+CELL BR_L hl20 k5.0 | disc n857 r0.197 x50.081 win0.119 vs n1187 r0.186 x50.102 win0.193 | hold n1298 r0.134 x50.057 win0.157 vs n2144 r0.087 x50.04 win0.192
+CELL BRF_L hl40 k5.0 | disc n520 r0.42 x50.23 win0.152 vs n1187 r0.186 x50.102 win0.193 | hold n766 r0.37 x50.241 win0.183 vs n2144 r0.087 x50.04 win0.192
+CELL BR_L hl40 k5.0 | disc n572 r0.349 x50.176 win0.147 vs n1187 r0.186 x50.102 win0.193 | hold n856 r0.323 x50.208 win0.18 vs n2144 r0.087 x50.04 win0.192
+CELL BRF_L hl60 k5.0 | disc n470 r0.424 x50.213 win0.145 vs n1187 r0.186 x50.102 win0.193 | hold n667 r0.267 x50.118 win0.186 vs n2144 r0.087 x50.04 win0.192
+CELL BR_L hl60 k5.0 | disc n473 r0.47 x50.261 win0.148 vs n1187 r0.186 x50.102 win0.193 | hold n687 r0.244 x50.099 win0.185 vs n2144 r0.087 x50.04 win0.192
+VERDICT {"BRF_L": {"n_cells_ok": 16, "plateau": true, "spike_at_20_3": false, "rank_of_20_3_by_hold": 11, "best_by_hold": [40, 5.0]}, "BR_L": {"n_cells_ok": 12, "plateau": true, "spike_at_20_3": false, "rank_of_20_3_by_hold": 9, "best_by_hold": [40, 5.0]}}
+WROTE docs/research/s921_results.json
