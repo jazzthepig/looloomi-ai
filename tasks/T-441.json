@@ -1,0 +1,28 @@
+{
+  "id": "T-441",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-26",
+  "verified": null,
+  "title": "S-920:突破回踩候选单的二次判断(meta-labeling,逻辑回归 / 梯度提升树,按年走步)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-920(预注册)。脚本 `docs/research/s920_meta_label.py`(import `s916_jazz_4h_rules.py`,以 `--mgmt atr3 --dmin 0.01 --cap 20` 装载;都不改)。需要 sklearn(没有就 `pip install scikit-learn`,不换版本以外的东西)。先 fetch,从 origin/main 开分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-441.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s920_meta_label.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s920_meta_label.py > docs/research/s920_run.txt 2>&1 &`,只 tail,等 WROTE(写 `s920_results.json`;取小时线约 10 分钟)。③ 最终回复只贴 `grep -E '^(loaded|COUNTS|RESULT|YEARS|COEFS|WROTE)' docs/research/s920_run.txt | cut -c1-600`。不改脚本、不下结论、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "s920_results.json + s920_run.txt;卡 in_review,推 lane-a/T-441。先于手上别的卡。"
+  },
+  "prior_value": "交易规则一直是「一个触发 × 一个粗格子」;触发那一刻库里已有的特征从没用来挑单。Jazz 11-26 问「有没有做特征组合还有算法优化的」。",
+  "notes": "2026-11-26T09:02:01Z Seth 开卡(Jazz 11-26「按你建议来先做」)。"
+}
