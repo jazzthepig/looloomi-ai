@@ -105,7 +105,8 @@ async def refresh(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     vmax = (v.rows or [{}])[0].get("d") if v.ok and v.rows else None
     smax = (s.rows or [{}])[0].get("d") if s.ok and s.rows else None
     if not needs_refresh(vmax, smax):
-        return {"ok": True, "skipped": True, "latest": vmax, "why": f"已是最新({vmax})"}
+        out = {"ok": True, "skipped": True, "latest": vmax, "why": f"已是最新({vmax})"}
+        return await _with_forecast(out, now)          # S-922:不刷也跑 —— 上一轮没写成的周一要能下一小时补,不是等到明天
     r = await supabase_rpc_write(RPC_REFRESH, {}, timeout=REFRESH_TIMEOUT_S)
     if not r.ok:
         return {"ok": False, "why": f"{RPC_REFRESH} 失败(客户端 {REFRESH_TIMEOUT_S:.0f} s):{(r.why or '')[:160]}"}
@@ -114,13 +115,20 @@ async def refresh(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         n = next(iter(n.values()), None)
     out = {"ok": bool(n), "rows": n, "latest_before": vmax, "source_latest": smax,
            "why": f"按币资金面空间刷新:{n} 行(上游最新 {smax})"}
-    try:                                   # 11-07:S-774 R ✅ 的前向记录(周一预测 + 到期结算);出错不挡刷新
+    return await _with_forecast(out, now)
+
+
+async def _with_forecast(out: dict[str, Any], now: Optional[dt.datetime]) -> dict[str, Any]:
+    """11-07:S-774 R ✅ 的前向记录(周一预测 + 到期结算);出错不挡刷新。
+    结果原样放进 `forecast`(带 why)—— 循环拿它单独记一条 `_asset_flow_forecast`(S-922:之前只拼进刷新的 why,
+    而刷新 ok 的那一轮 why 根本不落表,所以 19 天「找不到周一」没人看见)。"""
+    try:
         from src.data.state.asset_flow_forecast import run_once as _fc_run
         fc = await _fc_run(now)
-        out["forecast"] = {k: fc.get(k) for k in ("ok", "forecast_d", "n", "settled")}
-        out["why"] = f"{out['why']} | 前向预测:{fc.get('why')}"
     except Exception as e:                 # noqa: BLE001
-        out["why"] = f"{out['why']} | 前向预测出错:{type(e).__name__}: {str(e)[:120]}"
+        fc = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
+    out["forecast"] = {k: fc.get(k) for k in ("ok", "forecast_d", "n", "written", "late", "pending", "settled", "why") if k in fc}
+    out["why"] = f"{out['why']} | 前向预测:{fc.get('why')}"
     return out
 
 

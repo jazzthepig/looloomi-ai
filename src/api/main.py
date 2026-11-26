@@ -3118,6 +3118,9 @@ async def _feature_matrix_loop():
             from src.data.state.feature_matrix import run_once as _fm_run
             r = await _fm_run()
             await _iteration_result("_feature_matrix_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            _fc = (r.get("asset_flow") or {}).get("forecast")
+            if isinstance(_fc, dict):          # S-922:按币前向预测单独一条痕迹 —— 拼在上面的 why 里,ok 的那一轮不落表,19 天 0 行没人看见
+                await _iteration_result("_asset_flow_forecast", _fc)
             await _beat("_feature_matrix_loop", ok=bool(r.get("ok")), detail={"rows": r.get("rows"), "keys": r.get("keys")},
                         error=None if r.get("ok") else str(r.get("why"))[:200])
         except Exception as _e:

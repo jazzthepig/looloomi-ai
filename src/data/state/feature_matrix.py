@@ -60,6 +60,6 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         af = await _af_refresh(now)
     except Exception as e:                                                # noqa: BLE001
         af = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:120]}"}
-    out["asset_flow"] = {k: af.get(k) for k in ("ok", "rows", "skipped", "latest", "source_latest")}
+    out["asset_flow"] = {k: af.get(k) for k in ("ok", "rows", "skipped", "latest", "source_latest", "forecast")}
     out["why"] = f"{out.get('why')} | 按币:{af.get('why')}"
     return out
