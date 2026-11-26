@@ -1,0 +1,28 @@
+{
+  "id": "T-443",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-26",
+  "verified": null,
+  "title": "S-923:S-920 做空一侧的两格扛不扛得住扎堆(平移零分布 / 按天等权 / 去掉一个币)—— 只跑 Seth 写好的脚本",
+  "source": "台账 S-923(预注册,写于 S-920 结果之后、新计算之前)。脚本 `docs/research/s923_cluster_null.py`(import `s920_meta_label.py`,后者已并入 sklearn 1.9 整列缺失的处理 —— 不再需要 `_s920_run_patched.py`)。先 fetch,从 origin/main 开分支;两份脚本都以 origin/main 为准。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-443.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s923_cluster_null.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s923_cluster_null.py > docs/research/s923_run.txt 2>&1 &`,只 tail,等 WROTE(写 `s923_results.json`;取小时线约 10 分钟,之后 4 格各 1,000 次平移)。③ 最终回复只贴 `grep -E '^(loaded|CELL|SUMMARY|WROTE)' docs/research/s923_run.txt | cut -c1-700`。不改脚本、不下结论、不 Read 大 json。④ 报错:贴最后 15 行,停下报告 —— 不要自己打补丁。",
+    "expect": "s923_results.json + s923_run.txt;卡 in_review,推 lane-a/T-443。先于手上别的卡。"
+  },
+  "prior_value": "S-920 做空一侧把一条整体亏钱的规则(−0.09R/张)挑成上一档 +0.24 ~ +0.33R —— 但逐张打乱高估了把握。过不了扎堆这一道,就不配开纸面前向。",
+  "notes": "2026-11-26T09:53:02Z Seth 开卡(S-920 结果之后)。"
+}
