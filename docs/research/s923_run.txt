@@ -1,0 +1,24 @@
+loaded BTC 3100
+loaded ETH 3100
+loaded BTC 81190 hourly → 20275 4h
+loaded ETH 81190 hourly → 20275 4h
+loaded SOL 51716 hourly → 12923 4h
+loaded BNB 51716 hourly → 12923 4h
+loaded XRP 51716 hourly → 12923 4h
+loaded ADA 51716 hourly → 12923 4h
+loaded AVAX 51716 hourly → 12923 4h
+loaded DOGE 51716 hourly → 12923 4h
+loaded LINK 51716 hourly → 12923 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31270 hourly → 7817 4h
+loaded funding {'BTC': 2522, 'ETH': 2522, 'SOL': 2266, 'BNB': 2482, 'XRP': 2517, 'ADA': 2504, 'AVAX': 2257, 'DOGE': 2331, 'LINK': 2506, 'NEAR': 2235, 'SUI': 1304} market 2883 joint_z 1615
+/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py:124: RuntimeWarning: All-NaN slice encountered
+  med = np.nanmedian(Xtr, axis=0)
+/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/s920_meta_label.py:124: RuntimeWarning: All-NaN slice encountered
+  med = np.nanmedian(Xtr, axis=0)
+CELL short|logit {"n": 1333, "all_r": -0.093, "top_r": 0.239, "lift": 0.332} | shift {"top_r": 0.239, "null_median": -0.147, "null_q95": 0.118, "pct": 0.989} | day {"days_all": 516, "days_top": 185, "all_r": -0.163, "top_r": 0.091, "lift": 0.254, "tickets_per_day": 2.58} | loco {"min_lift": 0.29, "min_coin": "SOL"} | crit {"shift_pct_ge_0.95": true, "day_lift_ge_0.15": true, "loco_min_gt_0": true} | SURVIVES
+CELL short|hgb {"n": 1333, "all_r": -0.093, "top_r": 0.329, "lift": 0.422} | shift {"top_r": 0.329, "null_median": -0.123, "null_q95": 0.132, "pct": 0.997} | day {"days_all": 516, "days_top": 214, "all_r": -0.163, "top_r": 0.146, "lift": 0.309, "tickets_per_day": 2.58} | loco {"min_lift": 0.314, "min_coin": "SUI"} | crit {"shift_pct_ge_0.95": true, "day_lift_ge_0.15": true, "loco_min_gt_0": true} | SURVIVES
+CELL long|logit {"n": 1433, "all_r": 0.088, "top_r": 0.232, "lift": 0.143} | shift {"top_r": 0.232, "null_median": 0.071, "null_q95": 0.364, "pct": 0.793} | day {"days_all": 611, "days_top": 267, "all_r": 0.014, "top_r": -0.04, "lift": -0.054, "tickets_per_day": 2.35} | loco {"min_lift": 0.065, "min_coin": "ETH"} | crit {"shift_pct_ge_0.95": false, "day_lift_ge_0.15": false, "loco_min_gt_0": true} 
+CELL long|hgb {"n": 1433, "all_r": 0.088, "top_r": 0.382, "lift": 0.293} | shift {"top_r": 0.382, "null_median": 0.066, "null_q95": 0.34, "pct": 0.972} | day {"days_all": 611, "days_top": 268, "all_r": 0.014, "top_r": 0.189, "lift": 0.174, "tickets_per_day": 2.35} | loco {"min_lift": 0.229, "min_coin": "XRP"} | crit {"shift_pct_ge_0.95": true, "day_lift_ge_0.15": true, "loco_min_gt_0": true} | SURVIVES
+SUMMARY {"n_survive_short": 2}
+WROTE docs/research/s923_results.json
