@@ -1,0 +1,30 @@
+loaded BTC 3100
+loaded ETH 3100
+loaded BTC 81180 hourly → 20273 4h
+loaded ETH 81180 hourly → 20273 4h
+loaded SOL 51706 hourly → 12921 4h
+loaded BNB 51706 hourly → 12921 4h
+loaded XRP 51706 hourly → 12921 4h
+loaded ADA 51706 hourly → 12921 4h
+loaded AVAX 51706 hourly → 12921 4h
+loaded DOGE 51706 hourly → 12921 4h
+loaded LINK 51706 hourly → 12921 4h
+loaded NEAR 52785 hourly → 13187 4h
+loaded SUI 31260 hourly → 7815 4h
+loaded funding {'BTC': 2522, 'ETH': 2522, 'SOL': 2266, 'BNB': 2482, 'XRP': 2517, 'ADA': 2504, 'AVAX': 2257, 'DOGE': 2331, 'LINK': 2506, 'NEAR': 2235, 'SUI': 1304} market 2883 joint_z 1615
+docs/research/s920_meta_label.py:124: RuntimeWarning: All-NaN slice encountered
+  med = np.nanmedian(Xtr, axis=0)
+docs/research/s920_meta_label.py:124: RuntimeWarning: All-NaN slice encountered
+  med = np.nanmedian(Xtr, axis=0)
+COUNTS {"n_candidates": {"BR_L": 2356, "BR_S": 2110}, "n_holds": 2}
+RESULT long|logit | pooled {"n": 1433, "all_r": 0.088, "top_r": 0.232, "lift": 0.143, "perm_pct": 0.878, "auc": 0.558, "years_top_beats_all": 3} | crit {"lift_ge_0.15": false, "perm_pct_ge_0.95": false, "years_pos_ge_2": true, "auc_ge_0.55": true} 
+YEARS long|logit {"2022": {"n": 301, "all": -0.342, "top": 0.123, "bottom": -0.68, "auc": 0.584}, "2023": {"n": 361, "all": 0.092, "top": 0.135, "bottom": -0.281, "auc": 0.532}, "2024": {"n": 385, "all": 0.174, "top": 0.399, "bottom": -0.165, "auc": 0.538}, "2025": {"n": 687, "all": 0.038, "top": 0.189, "bottom": -0.305, "auc": 0.601}}
+COEFS long|logit [["atr_pct", -0.509], ["fund7", -0.376], ["e20_e50", 0.262], ["dist_e50", 0.227], ["stable_supply_30d", 0.193], ["funding_7d_ann_binance", 0.187], ["joint_z", 0.167], ["ret_42", -0.131]]
+RESULT long|hgb | pooled {"n": 1433, "all_r": 0.088, "top_r": 0.382, "lift": 0.293, "perm_pct": 0.99, "auc": 0.546, "years_top_beats_all": 3} | crit {"lift_ge_0.15": true, "perm_pct_ge_0.95": true, "years_pos_ge_2": true, "auc_ge_0.55": false} 
+YEARS long|hgb {"2022": {"n": 301, "all": -0.342, "top": -0.099, "bottom": -0.354, "auc": 0.585}, "2023": {"n": 361, "all": 0.092, "top": 0.26, "bottom": -0.22, "auc": 0.531}, "2024": {"n": 385, "all": 0.174, "top": 0.744, "bottom": -0.186, "auc": 0.545}, "2025": {"n": 687, "all": 0.038, "top": 0.243, "bottom": -0.408, "auc": 0.586}}
+RESULT short|logit | pooled {"n": 1333, "all_r": -0.093, "top_r": 0.239, "lift": 0.332, "perm_pct": 0.998, "auc": 0.561, "years_top_beats_all": 3} | crit {"lift_ge_0.15": true, "perm_pct_ge_0.95": true, "years_pos_ge_2": true, "auc_ge_0.55": true} | HOLDS
+YEARS short|logit {"2022": {"n": 369, "all": 0.132, "top": 0.418, "bottom": 0.349, "auc": 0.534}, "2023": {"n": 267, "all": -0.118, "top": 0.595, "bottom": -0.617, "auc": 0.617}, "2024": {"n": 335, "all": -0.006, "top": 0.25, "bottom": -0.323, "auc": 0.605}, "2025": {"n": 731, "all": -0.124, "top": 0.103, "bottom": -0.444, "auc": 0.524}}
+COEFS short|logit [["e20_e50", 0.368], ["ret_42", -0.256], ["pos:btc_crowd_ln", 0.246], ["atr_pct", -0.231], ["ret_30d", -0.221], ["dist_200", -0.216], ["style_rel_majors_30d", -0.183], ["fund7", 0.171]]
+RESULT short|hgb | pooled {"n": 1333, "all_r": -0.093, "top_r": 0.329, "lift": 0.422, "perm_pct": 1.0, "auc": 0.564, "years_top_beats_all": 3} | crit {"lift_ge_0.15": true, "perm_pct_ge_0.95": true, "years_pos_ge_2": true, "auc_ge_0.55": true} | HOLDS
+YEARS short|hgb {"2022": {"n": 369, "all": 0.132, "top": 0.023, "bottom": 0.135, "auc": 0.535}, "2023": {"n": 267, "all": -0.118, "top": 0.695, "bottom": -0.568, "auc": 0.605}, "2024": {"n": 335, "all": -0.006, "top": 0.284, "bottom": -0.009, "auc": 0.562}, "2025": {"n": 731, "all": -0.124, "top": 0.216, "bottom": -0.385, "auc": 0.554}}
+WROTE docs/research/s920_results.json

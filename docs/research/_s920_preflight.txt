@@ -1,0 +1,337 @@
+  · preflight 运行于 Python 3.14.3 @ Darwin-arm64
+  ⓘ gate runs credential-free (11 production vars stripped)
+→ [0/3] test-runner dependencies ...
+  ✓ pytest present
+→ [1/2] byte-compile all src ...
+  ✓ syntax OK
+→ [2/3] import + boot smoke (the real gate py_compile can't do) ...
+[11/26/26 18:33:41] INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+[11/26/26 18:33:42] INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+[11/26/26 18:33:43] INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     StreamableHTTP       streamable_http_manager.py:110
+                             session manager                                    
+                             started                                            
+[11/26/26 18:35:43] INFO     HTTP Request: POST                  _client.py:1740
+                             https://soupjamxlfsmgmmtoeok.supaba                
+                             se.co/rest/v1/loop_attempt                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     HTTP Request: GET                   _client.py:1025
+                             http://testserver/internal/build-st                
+                             ate "HTTP/1.1 200 OK"                              
+                    INFO     StreamableHTTP       streamable_http_manager.py:114
+                             session manager                                    
+                             shutting down                                      
+Smoke test — import + boot
+[MCP] ✅ Mounted /mcp (streamable) + /mcp-sse (sse) — ROADMAP_A2A Phase 2.2
+  ✓ import src.api.main
+[SNAPSHOT] ✅ hourly T2 snapshot loop scheduled (every 3600s)
+[REGIME_FITNESS] ✅ daily compute loop scheduled
+[OHLCV] ✅ daily collector loop scheduled
+[FWD] ✅ forward-record keeper scheduled (writes the log, pages on a stalled book)
+[HL-BOOK] ✅ daily compute-only record scheduled (hl_book_daily, 5 arms)
+[DEEP] ✅ deep-panel daily collector scheduled (262 symbols, Binance, capped concurrency)
+[FWD] ✅ forward-return backfill scheduled (IC weights energise at 20 days)
+[VEC] ✅ embedding rebuild scheduled (the writer asset_embeddings never had)
+[T2] ✅ universe precompute scheduled (off the request path)
+[HL] ✅ hyperliquid daily collector scheduled (232 perps, 6h, the execution venue)
+[BETA-PLUS] ✅ forward record scheduled (beta_plus_daily, 4 arms)
+[TOKEN-TILT] ✅ forward record scheduled (tokenization_tilt_daily, 2 arms)
+[PRICE-AGREE] ✅ cross-source price agreement guard scheduled (price_source_agreement_daily)
+[REGIME-DAILY] ✅ regime_daily fingerprint writer scheduled (refresh_regime_daily RPC)
+[CORE-CAP] ✅ ① cap-weighted core scheduled (core_cap_daily, 3 arms)
+[CIS-TILT] ✅ ② CIS tilt scheduled (cis_tilt_daily, 1 arm)
+[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)
+[EXEC-DRY] ✅ executor dry run scheduled (execution_intents, sleeve x1v_spot_dry; no orders)
+[META-ALLOC] ✅ analog meta-allocator scheduled (meta_allocator_daily)
+[ANCHOR] ✅ forward-record anchoring scheduled (forward_anchor_daily → OpenTimestamps)
+[CORE-VARIANTS] ✅ core variants scheduled (core_variants_daily: uncapped / momentum vs BTC)
+[STABLE-LEND] ✅ stablecoin lending APY scheduled (stable_lending_daily, 4 Aave pools)
+[WORLD50-HIST] ✅ World50 weekly data scheduled (adjusted prices from 2015, market caps, on-chain forms)
+[CHAIN-ACT] ✅ chain activity scheduled (chain_activity_daily: TVL / fees / DEX volume)
+[CIS-INPUTS] ✅ CIS input dimensions scheduled (macro_daily / protocol_tvl_daily / volume / tradfi adjusted)
+[CIS-OFFICIAL] ✅ official daily CIS scheduled (cis_official_daily, append-only)
+[CIS-V2] ✅ CIS v2 shadow scheduled (cis_v2_daily, append-only; public stays v1)
+[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1.2)
+[STD-OUTCOMES] ✅ official-series outcomes scheduled (cis_standard_outcomes → track record / edge map)
+[PERP-MCAP] ✅ paced CoinGecko market-cap backfill scheduled (perp_cg_map → cg_coin_mcap_daily)
+[SIGNAL-ATTR] ✅ per-signal attribution scheduled (cis_signal_attribution)
+[FEATURE-ARMS] ✅ CIS feature arms scheduled (feature_arms_daily: cis_ew / cis_follow / cis_contra)
+[STYLE-PIT] ✅ point-in-time style index scheduled (style_index_pit_daily, broad universe)
+[PORTFOLIO-LAYER] ✅ portfolio layer scheduled (portfolio_layer_daily: replay since 2023 + forward)
+[SOCIAL-INGEST] ✅ Santiment social volume + Sharpe mindshare ingest scheduled (6h; once per UTC day)
+[PROTOCOL-REV] ✅ DeFiLlama revenue / holders-revenue daily snapshot scheduled (01:20 UTC)
+[R-TICKETS] ✅ trading layer v2 paper book scheduled (r_tickets_scan, hourly)
+[PORTFOLIO] ✅ T25 live target table scheduled (portfolio_targets_daily, hourly check, write once a day)
+[LIVE-ACCT] ✅ real-money account daily snapshot scheduled (live_account_daily, hourly check)
+[CORE-PIT] ✅ S-700 point-in-time core replay arm scheduled (6h)
+[MCAP-DEEPEN] ✅ S-700 asset_mcap_daily deepening scheduled (one-shot, checkpointed)
+[EVENTS] ✅ event store scheduled (hourly)
+[SNAPSHOT] ✅ market snapshot scheduled (30 min; CMC quotes + global → market_snapshot)
+[ISSUER-FUND] ✅ SEC EDGAR fundamentals scheduled (daily check, weekly fetch)
+[EXPOSURE] ✅ daily ③ decision scheduled (hourly check)
+[DVOL] ✅ Deribit DVOL scheduled (6h)
+[TREATMENT] ✅ minority-holder treatment daily scheduled (hourly check)
+[TREAT-TILT] ✅ treatment tilt forward book scheduled (hourly)
+[HL-FUNDING] ✅ HL realized hourly funding collector scheduled (hourly)
+[CARRY-HL] ✅ ④ HL funding carry paper book scheduled (hourly)
+[TEXT-VEC] ✅ text vector space (MiniMax embeddings) scheduled (hourly)
+[PRED-MKT] ✅ prediction-market priors scheduled (hourly)
+[OPT-SURF] ✅ Deribit option surface + hedge prices scheduled (hourly)
+[STABLE-ISS] ✅ stablecoin supply by issuer scheduled (6-hourly)
+[STATE-MAP] ✅ frozen state map + S5 protected-long paper tickets scheduled (6-hourly)
+[CEX-RES] ✅ exchange reserves / flows / leverage scheduled (6-hourly)
+[POLITICAL] ✅ GPR + GDELT political intensity / narratives scheduled (every 20 min; GPR 12-hourly)
+[DERIV-MKT] ✅ market-wide perp OI / basis (CoinGecko /derivatives) scheduled (6-hourly)
+[EX-VOL] ✅ per-venue daily volume (CoinGecko volume_chart/range) scheduled
+[HOLDERS] ✅ token holder-count history (CoinGecko holders_chart) scheduled
+[CG-SUPPLY] ✅ supply breakdown + new listings (CoinGecko Analyst) scheduled (12-hourly)
+[JOINT-FC] ✅ S-741 joint-model forward record scheduled (6-hourly)
+[STABLE-CHAIN] ✅ stablecoin supply by chain scheduled (6-hourly)
+[DELIST-WATCH] ✅ Binance delisting watchlist + forward record scheduled (6-hourly)
+[RETAIL-FLOW] ✅ Upbit daily + market flags + notices, degen fees scheduled (hourly)
+[FEAT-MATRIX] ✅ fused feature matrix refresh scheduled (hourly)
+[ISSUERS] ✅ entity / decision layer scheduled (6h)
+[CYCLE] ✅ ⓪ cycle vector scheduled (hourly check)
+[OUTCOMES] ✅ decision → outcome settlement scheduled (6h)
+[BOOKVEC] ✅ strategy-space book vectors scheduled (hourly check)
+[WINDOW] ✅ 60-day path window vectors scheduled (hourly check)
+[ENTVEC] ✅ entity-space quarterly vectors scheduled (6h)
+[AGENT-J] ✅ agent judgment arm scheduled (hourly check, S-725)
+[STALL] ✅ event-loop stall watch loop scheduled (S-862)
+[SCENARIOS] ✅ scenario ledger scoring scheduled (hourly)
+[NEWSFEED] ✅ news feed scheduled (every 20 min; dry until TELEGRAM_FEED_CHAT_ID)
+[VENUE-DEPTH] ✅ HL order-book depth sampling scheduled (UTC 00/08/16)
+[DEAD-GUARD] ✅ dead-host guard scheduled (10 min; HL public reads, alerts only)
+[DIGEST] ✅ daily Telegram digest scheduled (01:00 UTC)
+[EXEC-Q] ✅ execution quality daily scheduled (execution_quality_daily, hourly)
+[EXEC-WATCH] ✅ executor host heartbeat watch scheduled (hourly)
+[CACHE-WARM] ✅ public panel cache warm-up scheduled (loopback, every 4 min)
+[VC-ROUNDS] ✅ VC funding rounds from public headlines scheduled (hourly, vc_funding_rounds)
+[OI-SNAP] ✅ S-690 d-close OI/mcap snapshot scheduled (00:05 UTC live, hourly audit vs archive)
+[BINANCE-VISION] ✅ futures positioning archive backfill scheduled (deriv_metrics_daily, hourly)
+[BINANCE-HF] ✅ hourly bars + perp funding scheduled (ohlcv_hourly / funding_history, 10 symbols)
+[STATE-DAILY] ✅ L1 state layer scheduled (state_daily, 17 panel features)
+[RR-MATRIX] ✅ evaluation layer scheduled (rr_matrix_daily)
+[STYLE] ✅ style header scheduled (style_membership / asset_mcap_daily / style_index_daily)
+[ALLOCATION] ✅ L3 paper allocation scheduled (allocation_daily / allocation_nav_daily)
+[CHANNELS] ✅ upstream channel series scheduled (stablecoin / tokenized / rwa / global)
+[INTERPRET] ✅ interpretation layer scheduled (market_interpretation_daily)
+[CG-PANEL] ✅ panel daily-bar sync loop scheduled
+[TREASURY] ✅ decision-stream loop scheduled
+[OUTCOME] ✅ daily outcome-tracker loop scheduled
+[MSV] ✅ daily market-state-vector recompute loop scheduled
+[PRED] ✅ daily prediction-resolver loop scheduled
+[CAUSAL-PAPER] ⏸ 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-13 起 −4.1%(价格 −5.1%、资金费 +1.4%、成本 −0.4%)
+[DINGGE-PAPER] ⏸ 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −3.3%
+[COMBINED-BOOK] ⏸ 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −10.7%(同上,一并冻结)
+[SCALABLE-BOOK] ⏸ 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-16 起 −10.7%(Jazz 批的是前四本,这本同属 ④ 多空,同一条理由一并冻
+
+╭─ RUNTIME ROLE ────────────────────────────────────────────────
+│  role                 : replica
+│  writes shared record : no (reads only)
+│  ✓ SUPABASE_URL               set
+│  ✓ SUPABASE_KEY               set
+│  ∅ SUPABASE_SERVICE_KEY       absent
+│  ∅ UPSTASH_REDIS_REST_URL     absent
+│  ∅ UPSTASH_REDIS_REST_TOKEN   absent
+│  ✓ INTERNAL_TOKEN             set
+│  ∅ TELEGRAM_BOT_TOKEN         absent
+│  ∅ TELEGRAM_ALERT_CHAT_ID     absent
+│  ∅ GITHUB_TOKEN               absent
+│  ✓ COINGECKO_API_KEY          set
+│
+│  6 credential(s) not usable — features depending on them will
+│  degrade. This line exists because the alternative is finding
+│  out from a stack trace at 01:00.
+╰───────────────────────────────────────────────────────────────
+[METERING] ✅ usage flush loop scheduled (Redis → api_usage)
+[BETA-CORE] ✅ daily ① beta-core NAV loop scheduled (the product book)
+[TWO-LAYER] ⏸ 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-22 起 ≈ 0(核心多数日子不触发,本就按设计退役)
+[FUSION-PAPER] ⏸ 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;v2 09-19 → 10-13 −1.2%,全部是成本;v3 10-20 刚重开即冻结
+[FUSION-TRACK] ✅ daily R66 fusion-paper tracking loop scheduled
+[R76-PAPER] ✅ daily R76 strategy-2 paper-book loop scheduled
+[FUSION-REGIME] ✅ daily ⓠ regime override paper-track loop scheduled
+[POD-AGG] ✅ daily pod-aggregator paper-book loop scheduled
+[FACTOR-TILT] ✅ daily factor-tilt paper-book loop scheduled
+[FACTORY] ⏸ 这条循环重算的是 combined book 的权重,而那本账已冻结 —— 冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起
+[EGRESS] ✅ egress probe scheduled (boot + 6 h)
+[TRACK-REC] ✅ daily track-record refresh loop scheduled
+[BAND-LOG] ✅ daily regime-band snapshot loop scheduled
+[HOLDER] ✅ D3 holder-concentration refresh loop scheduled (CoinGecko onchain top_holders)
+[FWD-SUPPLY] ✅ upstream forward-supply refresh loop scheduled
+[POSITIONING] ✅ upstream positioning refresh loop scheduled
+[SNAPSHOT] ✅ daily full-universe snapshot loop scheduled
+[TRENDING] ✅ daily attention-diffusion loop scheduled
+[SWEEP] ✅ daily aged-position sweep loop scheduled
+[SL/TP] ✅ 5min SL/TP auto-execution loop scheduled
+[CIS-FLIP] ✅ 5min CIS-flip exit loop scheduled
+[REBAL] ⏸ loop disabled (set REBAL_LOOP_ENABLED=1 to activate)
+[HEARTBEAT] ✅ observability loop scheduled (Telegram alerts)
+[MCP] ✅ streamable-HTTP live at /mcp  · legacy SSE at /mcp-sse/sse
+[CONVICTION] ✅ daily conviction-watchlist loop scheduled
+[AI-BRIEFING] ✅ signal-feed narrative loop scheduled (LLM over facts)
+    · 118 background data loop(s) not started (DISABLE_BACKGROUND_LOOPS=1); MCP session manager unaffected
+  ✓ boot app + GET /internal/build-state
+
+SMOKE OK
+→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026-07-27) ...
+── the boot probe boots without running the app (S-161) ──
+  ✓ startup schedules a plausible number of tasks
+  ✓ exactly one startup task is not a *_loop
+  ✓ and it is the MCP session manager
+  ✓ without the flag the loops still schedule
+  ✓ smoke passes with loops suppressed
+  ✓ it still boots and probes an endpoint
+  ✓ it says how many loops it skipped
+  ✓ main.py has no boot-probe switch
+  ✓ smoke_test owns the suppression
+  ✓ and restores create_task afterwards
+  ✓ the false 'only create_task + sleep' claim is no longer asserted
+  ✓ but the correction still quotes it, so the lesson survives
+
+✅ booting is not running
+  ✓ test_a_trigger_must_outlive_the_position_it_opens
+  ✓ test_aggregate_only_reporting_is_incomplete
+  ✓ test_allowlist_entries_are_still_needed
+  ✓ test_deciding_modules_declare_decision_inputs
+  ✓ test_decision_inputs_debt_is_not_stale
+  ✓ test_decision_path_is_declared_honestly_not_forced_through_our_own_tools
+  ✓ test_decision_path_requires_all_four_layers
+  ✓ test_every_sleeve_has_a_cause_or_notes
+  ✓ test_executability_floor_is_enforced
+  ✓ test_multiple_testing_floor_is_enforced
+  ✓ test_new_ship_record_without_evidence_is_rejected
+  ✓ test_refuted_records_stay_honest
+  ✓ test_ship_gate_is_evidence_not_calendar
+  ✓ test_ship_records_carry_the_evidence_floor
+  ✓ test_stop_added_after_the_fact_is_rejected
+
+✅ 15/15 strategy-discipline checks passed (philosophy compiled to CI)
+M-114 lag-discipline guard — LAG_RETENTION_FLOOR=0.5, SHARPE_MIN_TRIVIAL=0.05
+
+  lag-0 SR=+3.235, lag-1 SR=-0.880, retention=-0.272
+✓ test_look_ahead_score_fails_guard — lag-0 +3.235 → lag-1 -0.880 (retention -0.272 < 0.5, look-ahead detected)
+  lag-0 SR=+3.021, lag-1 SR=+2.799, retention=0.927
+✓ test_lagged_score_passes_guard — lag-0 +3.021 → lag-1 +2.799 (retention 0.927 ≥ 0.5, real signal)
+✓ test_retention_formula_lookahead_near_zero — pure look-ahead retention = -0.343 (well below 0.30)
+✓ test_retention_formula_real_signal_high — real-signal retention = 0.973 (≥ 0.5)
+  guard result: passed=False, failed=['m95c_4sleeve_book (sr0=+8.234, sr1=+0.594, retention=0.072)']
+✓ test_guard_contract_catches_m95c — guard caught m95c and spared survivors + trivial sleeves
+✓ test_guard_contract_passes_clean_book — all 3 sleeves passed (lag-0 → lag-1 retention ≥ 0.5)
+
+=== All M-114 lag-discipline guard tests passed ===
+  ✓ M-114 lag-discipline regression guard
+[SUPABASE] 4xx caller_error #1 (consec=1): HTTP 404 — no such row
+[SUPABASE] 4xx caller_error #2 (consec=2): HTTP 404 — no such row
+[SUPABASE] 4xx caller_error #3 (consec=3): HTTP 404 — no such row
+[SUPABASE] 4xx caller_error #4 (consec=4): HTTP 404 — no such row
+[SUPABASE] 4xx caller_error #5 (consec=5): HTTP 404 — no such row
+[SUPABASE] Retry 1/3 after 0.001s: HTTP 500
+[SUPABASE] Retry 2/3 after 0.002s: HTTP 500
+[SUPABASE] circuit OPEN after 1 consecutive failures — failing fast for 30.0s (trip #1)
+[SUPABASE] All retries exhausted: HTTP 500
+[SUPABASE] circuit OPEN after 1 consecutive failures — failing fast for 30.0s (trip #2)
+[SUPABASE] timeout (ReadTimeout('simulated saturation')) — no retry, falling back
+[SUPABASE] circuit open — short-circuiting request
+[SUPABASE] timeout (ReadTimeout('simulated saturation')) — no retry, falling back
+[SUPABASE] timeout (ReadTimeout('simulated saturation')) — no retry, falling back
+[SUPABASE] circuit OPEN after 3 consecutive failures — failing fast for 30.0s (trip #3)
+[SUPABASE] timeout (ReadTimeout('simulated saturation')) — no retry, falling back
+[SUPABASE] circuit open — short-circuiting request
+[SUPABASE] circuit OPEN after 1 consecutive failures — failing fast for 0.05s (trip #4)
+[SUPABASE] timeout (ReadTimeout('simulated saturation')) — no retry, falling back
+[SUPABASE] circuit OPEN after 1 consecutive failures — failing fast for 30.0s (trip #5)
+[SUPABASE] timeout (ReadTimeout('simulated saturation')) — no retry, falling back
+[11/26/26 18:40:06] INFO     NumExpr defaulting to 14 threads.      utils.py:164
+                    WARNING  [SUPABASE] timeout                     store.py:311
+                             (ReadTimeout('simulated saturation'))              
+                             — no retry, falling back                           
+  ✓ test_4xx_does_not_trip_breaker
+  ✓ test_5xx_still_retries_then_trips
+  ✓ test_breaker_fails_fast
+  ✓ test_breaker_opens_and_stops_issuing_calls
+  ✓ test_breaker_recovers_after_cooldown
+[MCP] ✅ Mounted /mcp (streamable) + /mcp-sse (sse) — ROADMAP_A2A Phase 2.2
+  ✓ test_health_reports_degraded_when_breaker_open
+  ✓ test_timeout_is_not_retried
+
+✅ 7/7 supabase breaker checks passed
+[CIS] universe build exceeded 0.2s — serving stale
+[CIS] universe build raised unhandled exception — returning degraded empty universe rather than 500
+Traceback (most recent call last):
+  File "/Users/sbb/Projects/looloomi-ai-lane-a/src/api/routers/cis.py", line 613, in _get_cis_universe_live
+    data = await asyncio.wait_for(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+        _build_cis_universe(force_source), timeout=_UNIVERSE_BUILD_BUDGET_S)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/sbb/Projects/looloomi-ai-lane-a/tests/test_cis_universe_lock.py", line 141, in _boom
+    raise RuntimeError("upstream exploded")
+RuntimeError: upstream exploded
+[CIS] universe lock busy — serving stale (100.2s old)
+  ✓ test_ancient_cache_is_refused
+  ✓ test_build_timeout_serves_stale_not_hang
+  ✓ test_fresh_cache_served_without_touching_build
+  ✓ test_lock_is_released_when_build_raises
+  ✓ test_no_cache_plus_timeout_returns_503_not_hang
+  ✓ test_slow_build_does_not_block_other_callers
+  ✓ test_stale_is_flagged_never_silent
+
+✅ 7/7 cis-universe lock checks passed
+  ✓ test_branch_timings_reach_health
+  ✓ test_decoration_budget_is_below_the_build_budget
+  ✓ test_degradation_is_reported_not_silent
+  ✓ test_negative_cache_actually_short_circuits
+  ✓ test_negative_cache_ttl_is_short_enough_to_self_heal
+  ✓ test_provider_failure_is_negative_cached
+  ✓ test_slow_branch_does_not_gate_the_build
+
+✅ 7/7 T2 fan-out bound checks passed
+<unknown>:123: SyntaxWarning: "\$" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\$"? A raw string is also an option.
+<unknown>:123: SyntaxWarning: "\$" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\$"? A raw string is also an option.
+  ✓ test_a_main_block_does_not_precede_the_tests_it_is_meant_to_run
+  ✓ test_amnesia_protocol_document_exists
+  ✓ test_every_open_risk_carries_a_verify_line
+  ✓ test_every_test_file_actually_runs_the_tests_it_defines
+  ✓ test_history_was_split_out_and_not_deleted
+  ✓ test_ledger_lessons_are_not_ledger_only
+  · MEMORY.md 3395/3400 chars (5 headroom)
+  ✓ test_memory_stays_within_cap
+  ✗ test_project_state_header_not_older_than_newest_ledger_entry
+      PROJECT_STATE header says 2026-11-25 but REFUTATION_LEDGER.md (private — local path) has an entry dated 2026-11-26. The navigation layer is behind the evidence layer — a cold agent will start on a stale priority. Update the header in the SAME turn work lands.
+  ✓ test_project_state_opens_with_open_risks
+  ✓ test_the_staleness_guard_can_actually_go_red
+  · CLAUDE.md 15988/16000 chars (12 headroom)
+  · MINIMAX_SYNC.md 71281/80000 chars (8719 headroom)
+  · PROJECT_STATE.md 75889/80000 chars (4111 headroom)
+  · docs/DECISIONS.md 7999/8000 chars (1 headroom)
+  ✓ test_the_whole_cold_start_read_stays_affordable
+
+🔴 10/11 cold-start contract checks passed · 1 FAILING
