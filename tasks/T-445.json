@@ -1,0 +1,28 @@
+{
+  "id": "T-445",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-27",
+  "verified": null,
+  "title": "复核 S-925 – S-929 五条模拟的设计:逐条对 docs/RULEBOOK.md 的「研究前三问」—— 只对规则,不重算",
+  "source": "台账 S-930 补(Seth 定:交互会话算出的结论先复核再算数)。材料:`docs/RULEBOOK.md`(现行规则 + 研究前三问 + 两条报告规矩);五个脚本 `docs/research/s925_world50_gate.py`、`s926_joint_z_sizing.py`、`s927_bear_actions.py`、`s928_bear_playbook.py`、`s929_t370_short.py`;台账里 S-925 – S-929 各自的预注册与结果段(grep 标题,不要整本读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-445.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 写 `docs/research/T-445_rule_check.md`:每条模拟一张小表 —— 三问各自的答案(层 / 基准 / 尺子;用了哪些现行规则、改了哪一条、预注册里有没有写明;碰没碰 RULEBOOK 里任何一条裁定),每一处不合规写出脚本行号或台账原句。② 另列「判据的算式有没有写死」:每条判据,预注册里是一句话还是一个算式;一句话的,写出它能被读成几种算法(S-923 第 6 条就是这个病)。③ 不重跑、不改脚本、不评价结果好坏、不登情景。④ 最终回复只贴每条模拟一行:`S-9xx | 三问 ✓/✗ | 不合规几处 | 没写死的判据几条`。",
+    "expect": "T-445_rule_check.md;卡 in_review,推 lane-c/T-445。"
+  },
+  "prior_value": "这五条都是交互会话里算完直接报给 Jazz 的,没有经过复核;S-923 的口径错就是评审轮一天之内拦下的。复核不重算,只拿设计对规则 —— 便宜,且正好是我这一串反复出错的地方。",
+  "notes": "2026-11-27T19:18:17Z Seth 开卡(S-930 补)。"
+}
