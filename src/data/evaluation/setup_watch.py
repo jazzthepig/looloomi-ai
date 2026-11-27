@@ -19,11 +19,15 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any, Optional
 
+from src.data.evaluation.house_rules import T370
+
 AUTHOR = "seth:setup-watch"
 SYMBOLS = ("BTC", "ETH")
-HORIZON_D = 28
-LOOKBACK = 20
-STOP_ABOVE, STOP_CAP, MOVE = 1.01, 1.08, 0.90
+# 形态 #1 的口径就是 T-370 v1 的空单口径 —— 只在 `house_rules` 写一份(S-930:同一条规则写在好几处,研究里就会用错版本)
+HORIZON_D = T370["horizon_d"]
+LOOKBACK = T370["lookback"]
+STOP_ABOVE, STOP_CAP = T370["stop_above"], T370["stop_cap"]
+MOVE = 0.90                     # 「期间最低跌破进场价 × 0.90」只是记分的命题,不是规则
 #: S-891 结果:2020-01 → 2026-10-17,BTC + ETH,一个窗口一组;≤ 2022 有 8 组、2023 起 11 组;取两段中点。
 PROBS = {1: {"STOP": 0.597, "CLOSE": 0.801, "MOVE": 0.682}}
 BASE_NOTE = {1: "历史同定义 19 组(≤ 2022 8 组 / 2023 起 11 组):碰到认错线 37.5% / 81.8%,第 28 天收盘低于进场价 87.5% / 72.7%,"

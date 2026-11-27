@@ -20,7 +20,7 @@
 | **Private docs** (ledger, playbook, both `DECISIONS.md`) | Mac main dir = only copy; lanes symlink | **Public repo**: gitignored, never `git add -f`. Backup + history: `~/Projects/looloomi-private` (seth_bot) |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | **哪条路是活的**(应用通路 / 已退役登记) | `docs/SPINE.md` | **建新路径或换实现前必读。** CI 校验(`tests/test_spine_is_current.py`):文档与代码必须说同一件事 |
-| Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
+| 交易规则 | `docs/RULEBOOK.md` · `docs/TRADER_TOM_DOCTRINE.md` | **设计策略/模拟前必读**;新研究脚本声明 `HOUSE_RULES`(CI) |
 | **Mining output — where the research IS** | `Shadow/.../_reports/INDEX.md` → then `absorb_input/` | Minimax-C writes both; **read the WHOLE lineage, not the first hit** — R70 alone gave a number R71 corrected by 32% |
 | **How deep we hold a symbol** (before ANY backfill) | `curl /internal/data-coverage?symbol=X` | Baseline is **`deepest_start` = union across sources**, never one source's. S-276: a single-source read re-fetched 820 days we already had |
 | Full history | `git log` | |

@@ -28,9 +28,21 @@ _sp = importlib.util.spec_from_file_location("s928", os.path.join(HERE, "s928_be
 B = importlib.util.module_from_spec(_sp)
 _sp.loader.exec_module(B)
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
+from src.data.evaluation.house_rules import T370  # noqa: E402
+
+#: S-930:研究前三问 —— 哪一层 / 哪把尺、用了哪些现行规则、改了哪一条(`docs/RULEBOOK.md`;CI 查)
+HOUSE_RULES = {
+    "layer": "③ 空头票(⓪ short 状态)+ ⓪ 防守时多头书空仓",
+    "ruler": "票:占名义 % 的均值与盈亏比,发现段 / 留出段;账户:崩塌削减、回本时间(DECISIONS 11-11 / 11-15)",
+    "uses": ["T370"],
+    "varies": {"⓪ 签名": "S-929:回测里没有 Jazz 的签名,用 S-928 的 D1 防守(周线坏 × 稳定币抽)代理",
+               "C 组管法": "S-929:C 组故意换成 S-928 的 3R 目标 + 1R 保本,只作对照"},
+}
+
 OUT = "docs/research/s929_results.json"
-LOOKBACK, STOP_ABOVE, STOP_CAP, HORIZON = 20, 1.01, 1.08, 28       # = setup_watch 的常量
-NOTIONAL = 0.10                                                    # 档位 2:每币 10%,合计 20%
+LOOKBACK, STOP_ABOVE, STOP_CAP, HORIZON = T370["lookback"], T370["stop_above"], T370["stop_cap"], T370["horizon_d"]
+NOTIONAL = T370["tiers"][1] / 2                                    # 档位 2:合计 20%,均分到 BTC / ETH
 COST = B.COST
 ASSETS = B.ASSETS
 SPLIT = B.SPLIT
