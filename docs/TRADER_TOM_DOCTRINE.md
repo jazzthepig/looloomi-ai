@@ -272,6 +272,18 @@ it only confirms the rule below.
 - "Never lose money" cannot be promised (stops fill, gaps jump them); what the rule must deliver, and what tests check,
   is a loss bounded near −1R and no winner turned into a loser. First pre-registration in this form: S-736 (T-256).
 
+> **⚠️ Superseded on management (2026-11-15, T-370 v1 — read this before writing any short ticket).** The "profit target taken
+> on touch / stop to breakeven at ≥ 1R" above was the 11-06 wording. S-612, S-865 and S-874 then measured it: targets and
+> breakeven moves cut the right tail and do not protect the left. **The settled default (`tasks/T-370.json`) is:** open only
+> in the right state (below the 200-day line, stablecoins draining) on a close below the prior 20-day low, with 7-day
+> funding positive (S-886); stop = the broken level + 1%, never more than 8% from entry; **one full entry, no automatic
+> adds** (adding into a squeeze is Jazz's separately signed action, with its own stop, inside the cap); **hold 28 days, no
+> early profit-taking, no breakeven move**; size by tier: 10 / 20 / 30% of the account in total short notional, split
+> across coins. The short itself comes from the **⓪ short state: Jazz signs (coins, tier); the system enforces stop,
+> expiry and cap; `flat` / `off` closes everything.** Still true from this section: a short exists only while its
+> reason exists, and every exit is written before entry. S-928 (11-27) used the old wording and got +3.3% of notional per
+> ticket; the same entries under T-370 v1 made +10.4% (S-929).
+
 > **Scope note (2026-11-12, after Jazz 11-11 / 11-12 — this section is not the whole short side).** §12 describes the
 > *tactical* short: a ticket. Jazz 11-11 described a second object — the *allocation-level* short: low-frequency,
 > two-way, funded from realised long profits, **held without a price stop** — and on 11-12 said "never short" was never
