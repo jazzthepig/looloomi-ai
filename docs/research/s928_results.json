@@ -1,0 +1,2392 @@
+{
+ "window": [
+  "2020-02-01",
+  "2026-11-25"
+ ],
+ "crashes": [
+  [
+   "2020-02-14",
+   "2020-03-12"
+  ],
+  [
+   "2021-04-13",
+   "2021-07-20"
+  ],
+  [
+   "2021-11-08",
+   "2022-11-21"
+  ],
+  [
+   "2025-10-06",
+   "2026-06-30"
+  ]
+ ],
+ "rallies": [
+  [
+   "2020-03-12",
+   "2021-04-13"
+  ],
+  [
+   "2021-07-20",
+   "2021-11-08"
+  ],
+  [
+   "2022-11-21",
+   "2025-10-06"
+  ]
+ ],
+ "arms": {
+  "HOLD": {
+   "all": {
+    "longest_underwater_d": 847,
+    "underwater_now_d": 415,
+    "max_dd": 0.7667,
+    "total": 5.4337
+   },
+   "disc": {
+    "longest_underwater_d": 418,
+    "underwater_now_d": 418,
+    "max_dd": 0.7667,
+    "total": 0.7607
+   },
+   "hold": {
+    "longest_underwater_d": 415,
+    "underwater_now_d": 415,
+    "max_dd": 0.5298,
+    "total": 2.6381
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "hold": -0.54,
+     "acct": -0.54,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-04-13",
+     "trough": "2021-07-20",
+     "hold": -0.532,
+     "acct": -0.532,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "hold": -0.767,
+     "acct": -0.767,
+     "cut": -0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "hold": -0.53,
+     "acct": -0.53,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-04-13",
+     "hold": 12.359,
+     "acct": 12.359,
+     "captured": 1.0
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "hold": 1.271,
+     "acct": 1.271,
+     "captured": 1.0
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2025-10-06",
+     "hold": 6.901,
+     "acct": 6.901,
+     "captured": 1.0
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 0
+    },
+    "disc": {
+     "n": 0
+    },
+    "hold": {
+     "n": 0
+    }
+   },
+   "defend_days_share": 0.0,
+   "runs": []
+  },
+  "TOM_PRICE_FLAT": {
+   "all": {
+    "longest_underwater_d": 965,
+    "underwater_now_d": 65,
+    "max_dd": 0.54,
+    "total": 9.684
+   },
+   "disc": {
+    "longest_underwater_d": 627,
+    "underwater_now_d": 627,
+    "max_dd": 0.54,
+    "total": 2.5763
+   },
+   "hold": {
+    "longest_underwater_d": 922,
+    "underwater_now_d": 65,
+    "max_dd": 0.3867,
+    "total": 1.9875
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "hold": -0.54,
+     "acct": -0.54,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-04-13",
+     "trough": "2021-07-20",
+     "hold": -0.532,
+     "acct": -0.424,
+     "cut": 0.203,
+     "defend_from": "2021-05-20",
+     "btc_fall_before_defend": -0.364,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "hold": -0.767,
+     "acct": -0.31,
+     "cut": 0.595,
+     "defend_from": "2021-12-14",
+     "btc_fall_before_defend": -0.285,
+     "evaluable": true
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "hold": -0.53,
+     "acct": -0.147,
+     "cut": 0.722,
+     "defend_from": "2025-10-18",
+     "btc_fall_before_defend": -0.141,
+     "evaluable": true
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-04-13",
+     "hold": 12.359,
+     "acct": 12.359,
+     "captured": 1.0
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "hold": 1.271,
+     "acct": 0.329,
+     "captured": 0.347
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2025-10-06",
+     "hold": 6.901,
+     "acct": 2.406,
+     "captured": 0.593
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 0
+    },
+    "disc": {
+     "n": 0
+    },
+    "hold": {
+     "n": 0
+    }
+   },
+   "defend_days_share": 0.395,
+   "runs": [
+    {
+     "from": "2021-05-20",
+     "to": "2021-08-09",
+     "days": 82,
+     "btc": 0.261,
+     "acct": -0.001
+    },
+    {
+     "from": "2021-09-11",
+     "to": "2021-10-04",
+     "days": 24,
+     "btc": 0.097,
+     "acct": -0.001
+    },
+    {
+     "from": "2021-12-14",
+     "to": "2023-01-13",
+     "days": 396,
+     "btc": -0.573,
+     "acct": -0.001
+    },
+    {
+     "from": "2023-08-18",
+     "to": "2023-10-16",
+     "days": 60,
+     "btc": 0.071,
+     "acct": -0.001
+    },
+    {
+     "from": "2024-07-05",
+     "to": "2024-07-15",
+     "days": 11,
+     "btc": 0.134,
+     "acct": -0.001
+    },
+    {
+     "from": "2024-08-04",
+     "to": "2024-08-23",
+     "days": 20,
+     "btc": 0.055,
+     "acct": -0.001
+    },
+    {
+     "from": "2024-09-02",
+     "to": "2024-09-24",
+     "days": 23,
+     "btc": 0.122,
+     "acct": -0.001
+    },
+    {
+     "from": "2024-10-10",
+     "to": "2024-10-14",
+     "days": 5,
+     "btc": 0.09,
+     "acct": -0.001
+    },
+    {
+     "from": "2025-03-10",
+     "to": "2025-04-22",
+     "days": 44,
+     "btc": 0.158,
+     "acct": -0.001
+    },
+    {
+     "from": "2025-10-18",
+     "to": "2026-08-19",
+     "days": 306,
+     "btc": -0.348,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-11-13",
+     "to": "2026-11-25",
+     "days": 13,
+     "btc": -0.154,
+     "acct": -0.001
+    }
+   ]
+  },
+  "D1_FLAT": {
+   "all": {
+    "longest_underwater_d": 519,
+    "underwater_now_d": 415,
+    "max_dd": 0.54,
+    "total": 20.4717
+   },
+   "disc": {
+    "longest_underwater_d": 418,
+    "underwater_now_d": 418,
+    "max_dd": 0.54,
+    "total": 2.9596
+   },
+   "hold": {
+    "longest_underwater_d": 415,
+    "underwater_now_d": 415,
+    "max_dd": 0.3852,
+    "total": 4.399
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "hold": -0.54,
+     "acct": -0.54,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": false
+    },
+    {
+     "peak": "2021-04-13",
+     "trough": "2021-07-20",
+     "hold": -0.532,
+     "acct": -0.532,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "hold": -0.767,
+     "acct": -0.443,
+     "cut": 0.422,
+     "defend_from": "2022-04-18",
+     "btc_fall_before_defend": -0.397,
+     "evaluable": true
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "hold": -0.53,
+     "acct": -0.314,
+     "cut": 0.407,
+     "defend_from": "2025-11-24",
+     "btc_fall_before_defend": -0.292,
+     "evaluable": true
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-04-13",
+     "hold": 12.359,
+     "acct": 12.359,
+     "captured": 1.0
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "hold": 1.271,
+     "acct": 1.271,
+     "captured": 1.0
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2025-10-06",
+     "hold": 6.901,
+     "acct": 6.592,
+     "captured": 0.981
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 0
+    },
+    "disc": {
+     "n": 0
+    },
+    "hold": {
+     "n": 0
+    }
+   },
+   "defend_days_share": 0.206,
+   "runs": [
+    {
+     "from": "2022-04-18",
+     "to": "2022-07-24",
+     "days": 98,
+     "btc": -0.431,
+     "acct": -0.001
+    },
+    {
+     "from": "2022-08-22",
+     "to": "2022-12-18",
+     "days": 119,
+     "btc": -0.222,
+     "acct": -0.001
+    },
+    {
+     "from": "2023-06-05",
+     "to": "2023-09-17",
+     "days": 105,
+     "btc": -0.022,
+     "acct": -0.001
+    },
+    {
+     "from": "2025-11-24",
+     "to": "2025-12-21",
+     "days": 28,
+     "btc": 0.021,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-01-26",
+     "to": "2026-03-15",
+     "days": 49,
+     "btc": -0.16,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-06-01",
+     "to": "2026-08-23",
+     "days": 84,
+     "btc": 0.055,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-10-26",
+     "to": "2026-11-25",
+     "days": 31,
+     "btc": -0.246,
+     "acct": -0.001
+    }
+   ]
+  },
+  "D1_FULL": {
+   "all": {
+    "longest_underwater_d": 518,
+    "underwater_now_d": 415,
+    "max_dd": 0.54,
+    "total": 25.6306
+   },
+   "disc": {
+    "longest_underwater_d": 418,
+    "underwater_now_d": 418,
+    "max_dd": 0.54,
+    "total": 3.1375
+   },
+   "hold": {
+    "longest_underwater_d": 415,
+    "underwater_now_d": 415,
+    "max_dd": 0.3573,
+    "total": 5.4082
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "hold": -0.54,
+     "acct": -0.54,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": false
+    },
+    {
+     "peak": "2021-04-13",
+     "trough": "2021-07-20",
+     "hold": -0.532,
+     "acct": -0.532,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "hold": -0.767,
+     "acct": -0.415,
+     "cut": 0.459,
+     "defend_from": "2022-04-18",
+     "btc_fall_before_defend": -0.397,
+     "evaluable": true
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "hold": -0.53,
+     "acct": -0.268,
+     "cut": 0.494,
+     "defend_from": "2025-11-24",
+     "btc_fall_before_defend": -0.292,
+     "evaluable": true
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-04-13",
+     "hold": 12.359,
+     "acct": 12.359,
+     "captured": 1.0
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "hold": 1.271,
+     "acct": 1.271,
+     "captured": 1.0
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2025-10-06",
+     "hold": 6.901,
+     "acct": 6.608,
+     "captured": 0.982
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 50,
+     "win": 0.36,
+     "mean_R": 0.535,
+     "payoff": 3.6,
+     "worst_R": -1.18,
+     "best_R": 2.97,
+     "exits": {
+      "target": 18,
+      "stop": 23,
+      "breakeven": 9,
+      "time": 0,
+      "reason_gone": 0
+     }
+    },
+    "disc": {
+     "n": 17,
+     "win": 0.294,
+     "mean_R": 0.267,
+     "payoff": 3.48,
+     "worst_R": -1.18,
+     "best_R": 2.96,
+     "exits": {
+      "target": 5,
+      "stop": 9,
+      "breakeven": 3,
+      "time": 0,
+      "reason_gone": 0
+     }
+    },
+    "hold": {
+     "n": 33,
+     "win": 0.394,
+     "mean_R": 0.673,
+     "payoff": 3.68,
+     "worst_R": -1.18,
+     "best_R": 2.97,
+     "exits": {
+      "target": 13,
+      "stop": 14,
+      "breakeven": 6,
+      "time": 0,
+      "reason_gone": 0
+     }
+    }
+   },
+   "defend_days_share": 0.206,
+   "runs": [
+    {
+     "from": "2022-04-18",
+     "to": "2022-07-24",
+     "days": 98,
+     "btc": -0.431,
+     "acct": 0.054
+    },
+    {
+     "from": "2022-08-22",
+     "to": "2022-12-18",
+     "days": 119,
+     "btc": -0.222,
+     "acct": -0.011
+    },
+    {
+     "from": "2023-06-05",
+     "to": "2023-09-17",
+     "days": 105,
+     "btc": -0.022,
+     "acct": 0.006
+    },
+    {
+     "from": "2025-11-24",
+     "to": "2025-12-21",
+     "days": 28,
+     "btc": 0.021,
+     "acct": -0.006
+    },
+    {
+     "from": "2026-01-26",
+     "to": "2026-03-15",
+     "days": 49,
+     "btc": -0.16,
+     "acct": 0.05
+    },
+    {
+     "from": "2026-06-01",
+     "to": "2026-08-23",
+     "days": 84,
+     "btc": 0.055,
+     "acct": 0.014
+    },
+    {
+     "from": "2026-10-26",
+     "to": "2026-11-25",
+     "days": 31,
+     "btc": -0.246,
+     "acct": 0.109
+    }
+   ],
+   "shift_null_longest_uw": {
+    "median": 1099.0,
+    "q10": 755.8
+   },
+   "judge": {
+    "i_crash_cut_ge_half": false,
+    "ii_underwater_shorter_both": false,
+    "iii_tickets_both_segments": true,
+    "iv_shift_pct_ge_0.90": true,
+    "shift_pct": 0.984,
+    "pass": false
+   },
+   "ticket_list": [
+    {
+     "sym": "ETH",
+     "signal_d": "2022-05-06",
+     "entry_d": "2022-05-07",
+     "entry": 2691.6,
+     "stop0": 2752.351,
+     "target": 2509.347,
+     "exit_d": "2022-05-08",
+     "exit": 2509.347,
+     "why": "target",
+     "R": 2.9349
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-05",
+     "entry_d": "2022-05-06",
+     "entry": 36533.7,
+     "stop0": 37990.645,
+     "target": 32162.865,
+     "exit_d": "2022-05-09",
+     "exit": 32162.865,
+     "why": "target",
+     "R": 2.9583
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-11",
+     "entry_d": "2022-05-12",
+     "entry": 29077.9,
+     "stop0": 30357.166,
+     "target": 25240.102,
+     "exit_d": "2022-05-13",
+     "exit": 29077.9,
+     "why": "breakeven",
+     "R": -0.063
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-05-11",
+     "entry_d": "2022-05-12",
+     "entry": 2083.98,
+     "stop0": 2249.7548,
+     "target": 1586.6556,
+     "exit_d": "2022-05-13",
+     "exit": 2083.98,
+     "why": "breakeven",
+     "R": -0.0446
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-18",
+     "entry_d": "2022-05-19",
+     "entry": 28700.6,
+     "stop0": 29310.907,
+     "target": 26869.679,
+     "exit_d": "2022-05-19",
+     "exit": 29310.907,
+     "why": "stop",
+     "R": -1.0881
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-27",
+     "entry_d": "2022-05-28",
+     "entry": 28623.3,
+     "stop0": 28987.606,
+     "target": 27530.382,
+     "exit_d": "2022-05-28",
+     "exit": 28987.606,
+     "why": "stop",
+     "R": -1.1346
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-05-26",
+     "entry_d": "2022-05-27",
+     "entry": 1790.99,
+     "stop0": 1933.342,
+     "target": 1363.934,
+     "exit_d": "2022-05-30",
+     "exit": 1933.342,
+     "why": "stop",
+     "R": -1.0168
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-06-11",
+     "entry_d": "2022-06-12",
+     "entry": 28416.6,
+     "stop0": 28909.432,
+     "target": 26938.104,
+     "exit_d": "2022-06-12",
+     "exit": 26938.104,
+     "why": "target",
+     "R": 2.891
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-06-10",
+     "entry_d": "2022-06-11",
+     "entry": 1661.95,
+     "stop0": 1743.8155,
+     "target": 1416.3535,
+     "exit_d": "2022-06-13",
+     "exit": 1416.3535,
+     "why": "target",
+     "R": 2.9456
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-06-16",
+     "entry_d": "2022-06-17",
+     "entry": 20387.4,
+     "stop0": 22018.392,
+     "target": 15494.424,
+     "exit_d": "2022-06-19",
+     "exit": 20387.4,
+     "why": "breakeven",
+     "R": -0.0228
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-07-12",
+     "entry_d": "2022-07-13",
+     "entry": 1037.88,
+     "stop0": 1059.894,
+     "target": 971.838,
+     "exit_d": "2022-07-13",
+     "exit": 1059.894,
+     "why": "stop",
+     "R": -1.118
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-09-06",
+     "entry_d": "2022-09-07",
+     "entry": 18781.4,
+     "stop0": 19742.975,
+     "target": 15896.675,
+     "exit_d": "2022-09-09",
+     "exit": 19742.975,
+     "why": "stop",
+     "R": -1.0349
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-09-21",
+     "entry_d": "2022-09-22",
+     "entry": 18447.5,
+     "stop0": 18969.315,
+     "target": 16882.055,
+     "exit_d": "2022-09-22",
+     "exit": 18969.315,
+     "why": "stop",
+     "R": -1.0746
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-10-15",
+     "entry_d": "2022-10-16",
+     "entry": 1274.12,
+     "stop0": 1288.7196,
+     "target": 1230.3212,
+     "exit_d": "2022-10-16",
+     "exit": 1288.7196,
+     "why": "stop",
+     "R": -1.1749
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-10-20",
+     "entry_d": "2022-10-21",
+     "entry": 19034.8,
+     "stop0": 19239.894,
+     "target": 18419.518,
+     "exit_d": "2022-10-21",
+     "exit": 19239.894,
+     "why": "stop",
+     "R": -1.1779
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-11-08",
+     "entry_d": "2022-11-09",
+     "entry": 18533.9,
+     "stop0": 19225.047,
+     "target": 16460.459,
+     "exit_d": "2022-11-09",
+     "exit": 16460.459,
+     "why": "target",
+     "R": 2.9358
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-12-16",
+     "entry_d": "2022-12-17",
+     "entry": 1166.19,
+     "stop0": 1178.8821,
+     "target": 1128.1137,
+     "exit_d": "2022-12-17",
+     "exit": 1178.8821,
+     "why": "stop",
+     "R": -1.1785
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-06-05",
+     "entry_d": "2023-06-06",
+     "entry": 25714.6,
+     "stop0": 26576.938,
+     "target": 23127.586,
+     "exit_d": "2023-06-06",
+     "exit": 26576.938,
+     "why": "stop",
+     "R": -1.0614
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-06-14",
+     "entry_d": "2023-06-15",
+     "entry": 25115.9,
+     "stop0": 25971.847,
+     "target": 22548.059,
+     "exit_d": "2023-06-16",
+     "exit": 25971.847,
+     "why": "stop",
+     "R": -1.0544
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-06-10",
+     "entry_d": "2023-06-11",
+     "entry": 1750.65,
+     "stop0": 1816.8284,
+     "target": 1552.1148,
+     "exit_d": "2023-06-17",
+     "exit": 1750.65,
+     "why": "breakeven",
+     "R": -0.0394
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-07-18",
+     "entry_d": "2023-07-19",
+     "entry": 29845.7,
+     "stop0": 30173.144,
+     "target": 28863.368,
+     "exit_d": "2023-07-19",
+     "exit": 30173.144,
+     "why": "stop",
+     "R": -1.1614
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-07-20",
+     "entry_d": "2023-07-21",
+     "entry": 29791.0,
+     "stop0": 30144.056,
+     "target": 28731.832,
+     "exit_d": "2023-07-23",
+     "exit": 30144.056,
+     "why": "stop",
+     "R": -1.1409
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-08-02",
+     "entry_d": "2023-08-03",
+     "entry": 1839.07,
+     "stop0": 1867.5304,
+     "target": 1753.6888,
+     "exit_d": "2023-08-07",
+     "exit": 1839.07,
+     "why": "breakeven",
+     "R": -0.0439
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-07-24",
+     "entry_d": "2023-07-25",
+     "entry": 29163.8,
+     "stop0": 30081.335,
+     "target": 26411.195,
+     "exit_d": "2023-08-08",
+     "exit": 30081.335,
+     "why": "stop",
+     "R": -0.9503
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-08-16",
+     "entry_d": "2023-08-17",
+     "entry": 28714.4,
+     "stop0": 29348.277,
+     "target": 26812.769,
+     "exit_d": "2023-08-17",
+     "exit": 26812.769,
+     "why": "target",
+     "R": 2.923
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-08-16",
+     "entry_d": "2023-08-17",
+     "entry": 1807.19,
+     "stop0": 1846.4618,
+     "target": 1689.3746,
+     "exit_d": "2023-08-17",
+     "exit": 1689.3746,
+     "why": "target",
+     "R": 2.9193
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-08-26",
+     "entry_d": "2023-08-27",
+     "entry": 26004.3,
+     "stop0": 26302.521,
+     "target": 25109.637,
+     "exit_d": "2023-08-29",
+     "exit": 26302.521,
+     "why": "stop",
+     "R": -1.1678
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-08-31",
+     "entry_d": "2023-09-01",
+     "entry": 25928.0,
+     "stop0": 26264.343,
+     "target": 24918.971,
+     "exit_d": "2023-09-02",
+     "exit": 25928.0,
+     "why": "breakeven",
+     "R": -0.139
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-09-01",
+     "entry_d": "2023-09-02",
+     "entry": 1628.2,
+     "stop0": 1650.845,
+     "target": 1560.265,
+     "exit_d": "2023-09-06",
+     "exit": 1650.845,
+     "why": "stop",
+     "R": -1.143
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-09-05",
+     "entry_d": "2023-09-06",
+     "entry": 25779.7,
+     "stop0": 26053.556,
+     "target": 24958.132,
+     "exit_d": "2023-09-07",
+     "exit": 25779.7,
+     "why": "breakeven",
+     "R": -0.1734
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-09-10",
+     "entry_d": "2023-09-11",
+     "entry": 1616.46,
+     "stop0": 1644.4719,
+     "target": 1532.4243,
+     "exit_d": "2023-09-11",
+     "exit": 1532.4243,
+     "why": "target",
+     "R": 2.8903
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-09-11",
+     "entry_d": "2023-09-12",
+     "entry": 25150.4,
+     "stop0": 26004.874,
+     "target": 22586.978,
+     "exit_d": "2023-09-12",
+     "exit": 26004.874,
+     "why": "stop",
+     "R": -1.0575
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2025-12-17",
+     "entry_d": "2025-12-18",
+     "entry": 86201.6,
+     "stop0": 87104.016,
+     "target": 83494.352,
+     "exit_d": "2025-12-18",
+     "exit": 87104.016,
+     "why": "stop",
+     "R": -1.1779
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-01-25",
+     "entry_d": "2026-01-26",
+     "entry": 86628.9,
+     "stop0": 89274.506,
+     "target": 78692.082,
+     "exit_d": "2026-01-27",
+     "exit": 89274.506,
+     "why": "stop",
+     "R": -1.0556
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-01-25",
+     "entry_d": "2026-01-26",
+     "entry": 2815.49,
+     "stop0": 2967.6224,
+     "target": 2359.0928,
+     "exit_d": "2026-01-27",
+     "exit": 2967.6224,
+     "why": "stop",
+     "R": -1.0334
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-01-29",
+     "entry_d": "2026-01-30",
+     "entry": 84604.7,
+     "stop0": 87495.189,
+     "target": 75933.233,
+     "exit_d": "2026-01-31",
+     "exit": 75933.233,
+     "why": "target",
+     "R": 2.9492
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-01-30",
+     "entry_d": "2026-01-31",
+     "entry": 2705.66,
+     "stop0": 2843.6449,
+     "target": 2291.7053,
+     "exit_d": "2026-01-31",
+     "exit": 2291.7053,
+     "why": "target",
+     "R": 2.958
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-02-03",
+     "entry_d": "2026-02-04",
+     "entry": 75732.4,
+     "stop0": 77700.815,
+     "target": 69827.155,
+     "exit_d": "2026-02-05",
+     "exit": 69827.155,
+     "why": "target",
+     "R": 2.928
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-05-31",
+     "entry_d": "2026-06-01",
+     "entry": 2006.3,
+     "stop0": 2029.0092,
+     "target": 1938.1724,
+     "exit_d": "2026-06-02",
+     "exit": 2006.3,
+     "why": "breakeven",
+     "R": -0.1351
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-06-01",
+     "entry_d": "2026-06-02",
+     "entry": 71391.5,
+     "stop0": 74162.482,
+     "target": 63078.554,
+     "exit_d": "2026-06-04",
+     "exit": 63078.554,
+     "why": "target",
+     "R": 2.9613
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-06-25",
+     "entry_d": "2026-06-26",
+     "entry": 1566.98,
+     "stop0": 1584.286,
+     "target": 1515.062,
+     "exit_d": "2026-06-26",
+     "exit": 1584.286,
+     "why": "stop",
+     "R": -1.1839
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-06-25",
+     "entry_d": "2026-06-26",
+     "entry": 59772.0,
+     "stop0": 61458.197,
+     "target": 54713.409,
+     "exit_d": "2026-07-02",
+     "exit": 59999.6,
+     "why": "breakeven",
+     "R": -0.1662
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-10-29",
+     "entry_d": "2026-10-30",
+     "entry": 77962.6,
+     "stop0": 80915.443,
+     "target": 69104.071,
+     "exit_d": "2026-11-04",
+     "exit": 80915.443,
+     "why": "stop",
+     "R": -1.009
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-10-29",
+     "entry_d": "2026-10-30",
+     "entry": 2252.35,
+     "stop0": 2346.6845,
+     "target": 1969.3465,
+     "exit_d": "2026-11-04",
+     "exit": 2346.6845,
+     "why": "stop",
+     "R": -1.043
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-11-05",
+     "entry_d": "2026-11-06",
+     "entry": 2237.21,
+     "stop0": 2266.036,
+     "target": 2150.732,
+     "exit_d": "2026-11-08",
+     "exit": 2150.732,
+     "why": "target",
+     "R": 2.8924
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-11-05",
+     "entry_d": "2026-11-06",
+     "entry": 76050.0,
+     "stop0": 77559.213,
+     "target": 71522.361,
+     "exit_d": "2026-11-12",
+     "exit": 71522.361,
+     "why": "target",
+     "R": 2.9728
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-11-08",
+     "entry_d": "2026-11-09",
+     "entry": 2126.26,
+     "stop0": 2259.572,
+     "target": 1726.324,
+     "exit_d": "2026-11-14",
+     "exit": 1726.324,
+     "why": "target",
+     "R": 2.9742
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-11-12",
+     "entry_d": "2026-11-13",
+     "entry": 71423.3,
+     "stop0": 74500.529,
+     "target": 62191.613,
+     "exit_d": "2026-11-15",
+     "exit": 62191.613,
+     "why": "target",
+     "R": 2.962
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-11-18",
+     "entry_d": "2026-11-19",
+     "entry": 63036.9,
+     "stop0": 64771.805,
+     "target": 57832.185,
+     "exit_d": "2026-11-20",
+     "exit": 57832.185,
+     "why": "target",
+     "R": 2.9358
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-11-19",
+     "entry_d": "2026-11-20",
+     "entry": 1756.72,
+     "stop0": 1786.0436,
+     "target": 1668.7492,
+     "exit_d": "2026-11-20",
+     "exit": 1668.7492,
+     "why": "target",
+     "R": 2.886
+    }
+   ],
+   "watch": {
+    "n": 20,
+    "n_confirmed": 6,
+    "runs": [
+     {
+      "from": "2020-10-04",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2020-10-25",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-01-31",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-02-28",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-06-20",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-08-29",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-09-12",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2022-08-21",
+      "confirmed": "2022-08-21",
+      "weeks_to_confirm": 0
+     },
+     {
+      "from": "2023-01-15",
+      "confirmed": "2023-06-04",
+      "weeks_to_confirm": 20
+     },
+     {
+      "from": "2024-02-18",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-07-14",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-08-25",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-09-29",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-10-13",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-03-23",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-04-27",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-05-25",
+      "confirmed": "2025-11-23",
+      "weeks_to_confirm": 26
+     },
+     {
+      "from": "2025-12-14",
+      "confirmed": "2025-12-14",
+      "weeks_to_confirm": 0
+     },
+     {
+      "from": "2026-01-04",
+      "confirmed": "2026-01-25",
+      "weeks_to_confirm": 3
+     },
+     {
+      "from": "2026-03-08",
+      "confirmed": "2026-03-08",
+      "weeks_to_confirm": 0
+     }
+    ]
+   }
+  },
+  "D2_FLAT": {
+   "all": {
+    "longest_underwater_d": 519,
+    "underwater_now_d": 415,
+    "max_dd": 0.54,
+    "total": 20.9642
+   },
+   "disc": {
+    "longest_underwater_d": 418,
+    "underwater_now_d": 418,
+    "max_dd": 0.54,
+    "total": 2.9596
+   },
+   "hold": {
+    "longest_underwater_d": 415,
+    "underwater_now_d": 415,
+    "max_dd": 0.3711,
+    "total": 4.5229
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "hold": -0.54,
+     "acct": -0.54,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": false
+    },
+    {
+     "peak": "2021-04-13",
+     "trough": "2021-07-20",
+     "hold": -0.532,
+     "acct": -0.532,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "hold": -0.767,
+     "acct": -0.443,
+     "cut": 0.422,
+     "defend_from": "2022-04-18",
+     "btc_fall_before_defend": -0.397,
+     "evaluable": true
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "hold": -0.53,
+     "acct": -0.299,
+     "cut": 0.436,
+     "defend_from": "2026-01-26",
+     "btc_fall_before_defend": -0.291,
+     "evaluable": true
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-04-13",
+     "hold": 12.359,
+     "acct": 12.359,
+     "captured": 1.0
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "hold": 1.271,
+     "acct": 1.271,
+     "captured": 1.0
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2025-10-06",
+     "hold": 6.901,
+     "acct": 6.592,
+     "captured": 0.981
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 0
+    },
+    "disc": {
+     "n": 0
+    },
+    "hold": {
+     "n": 0
+    }
+   },
+   "defend_days_share": 0.195,
+   "runs": [
+    {
+     "from": "2022-04-18",
+     "to": "2022-07-24",
+     "days": 98,
+     "btc": -0.431,
+     "acct": -0.001
+    },
+    {
+     "from": "2022-08-22",
+     "to": "2022-12-18",
+     "days": 119,
+     "btc": -0.222,
+     "acct": -0.001
+    },
+    {
+     "from": "2023-06-05",
+     "to": "2023-09-17",
+     "days": 105,
+     "btc": -0.022,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-01-26",
+     "to": "2026-03-15",
+     "days": 49,
+     "btc": -0.16,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-06-01",
+     "to": "2026-08-23",
+     "days": 84,
+     "btc": 0.055,
+     "acct": -0.001
+    },
+    {
+     "from": "2026-10-26",
+     "to": "2026-11-25",
+     "days": 31,
+     "btc": -0.246,
+     "acct": -0.001
+    }
+   ]
+  },
+  "D2_FULL": {
+   "all": {
+    "longest_underwater_d": 518,
+    "underwater_now_d": 415,
+    "max_dd": 0.54,
+    "total": 26.3764
+   },
+   "disc": {
+    "longest_underwater_d": 418,
+    "underwater_now_d": 418,
+    "max_dd": 0.54,
+    "total": 3.1375
+   },
+   "hold": {
+    "longest_underwater_d": 415,
+    "underwater_now_d": 415,
+    "max_dd": 0.3393,
+    "total": 5.5876
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "hold": -0.54,
+     "acct": -0.54,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": false
+    },
+    {
+     "peak": "2021-04-13",
+     "trough": "2021-07-20",
+     "hold": -0.532,
+     "acct": -0.532,
+     "cut": 0.0,
+     "defend_from": null,
+     "btc_fall_before_defend": null,
+     "evaluable": true
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "hold": -0.767,
+     "acct": -0.415,
+     "cut": 0.459,
+     "defend_from": "2022-04-18",
+     "btc_fall_before_defend": -0.397,
+     "evaluable": true
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "hold": -0.53,
+     "acct": -0.247,
+     "cut": 0.533,
+     "defend_from": "2026-01-26",
+     "btc_fall_before_defend": -0.291,
+     "evaluable": true
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-04-13",
+     "hold": 12.359,
+     "acct": 12.359,
+     "captured": 1.0
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "hold": 1.271,
+     "acct": 1.271,
+     "captured": 1.0
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2025-10-06",
+     "hold": 6.901,
+     "acct": 6.608,
+     "captured": 0.982
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 49,
+     "win": 0.367,
+     "mean_R": 0.57,
+     "payoff": 3.66,
+     "worst_R": -1.18,
+     "best_R": 2.97,
+     "exits": {
+      "target": 18,
+      "stop": 22,
+      "breakeven": 9,
+      "time": 0,
+      "reason_gone": 0
+     }
+    },
+    "disc": {
+     "n": 17,
+     "win": 0.294,
+     "mean_R": 0.267,
+     "payoff": 3.48,
+     "worst_R": -1.18,
+     "best_R": 2.96,
+     "exits": {
+      "target": 5,
+      "stop": 9,
+      "breakeven": 3,
+      "time": 0,
+      "reason_gone": 0
+     }
+    },
+    "hold": {
+     "n": 32,
+     "win": 0.406,
+     "mean_R": 0.731,
+     "payoff": 3.78,
+     "worst_R": -1.18,
+     "best_R": 2.97,
+     "exits": {
+      "target": 13,
+      "stop": 13,
+      "breakeven": 6,
+      "time": 0,
+      "reason_gone": 0
+     }
+    }
+   },
+   "defend_days_share": 0.195,
+   "runs": [
+    {
+     "from": "2022-04-18",
+     "to": "2022-07-24",
+     "days": 98,
+     "btc": -0.431,
+     "acct": 0.054
+    },
+    {
+     "from": "2022-08-22",
+     "to": "2022-12-18",
+     "days": 119,
+     "btc": -0.222,
+     "acct": -0.011
+    },
+    {
+     "from": "2023-06-05",
+     "to": "2023-09-17",
+     "days": 105,
+     "btc": -0.022,
+     "acct": 0.006
+    },
+    {
+     "from": "2026-01-26",
+     "to": "2026-03-15",
+     "days": 49,
+     "btc": -0.16,
+     "acct": 0.05
+    },
+    {
+     "from": "2026-06-01",
+     "to": "2026-08-23",
+     "days": 84,
+     "btc": 0.055,
+     "acct": 0.014
+    },
+    {
+     "from": "2026-10-26",
+     "to": "2026-11-25",
+     "days": 31,
+     "btc": -0.246,
+     "acct": 0.109
+    }
+   ],
+   "shift_null_longest_uw": {
+    "median": 1095.0,
+    "q10": 756.0
+   },
+   "judge": {
+    "i_crash_cut_ge_half": false,
+    "ii_underwater_shorter_both": false,
+    "iii_tickets_both_segments": true,
+    "iv_shift_pct_ge_0.90": true,
+    "shift_pct": 0.984,
+    "pass": false
+   },
+   "ticket_list": [
+    {
+     "sym": "ETH",
+     "signal_d": "2022-05-06",
+     "entry_d": "2022-05-07",
+     "entry": 2691.6,
+     "stop0": 2752.351,
+     "target": 2509.347,
+     "exit_d": "2022-05-08",
+     "exit": 2509.347,
+     "why": "target",
+     "R": 2.9349
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-05",
+     "entry_d": "2022-05-06",
+     "entry": 36533.7,
+     "stop0": 37990.645,
+     "target": 32162.865,
+     "exit_d": "2022-05-09",
+     "exit": 32162.865,
+     "why": "target",
+     "R": 2.9583
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-11",
+     "entry_d": "2022-05-12",
+     "entry": 29077.9,
+     "stop0": 30357.166,
+     "target": 25240.102,
+     "exit_d": "2022-05-13",
+     "exit": 29077.9,
+     "why": "breakeven",
+     "R": -0.063
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-05-11",
+     "entry_d": "2022-05-12",
+     "entry": 2083.98,
+     "stop0": 2249.7548,
+     "target": 1586.6556,
+     "exit_d": "2022-05-13",
+     "exit": 2083.98,
+     "why": "breakeven",
+     "R": -0.0446
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-18",
+     "entry_d": "2022-05-19",
+     "entry": 28700.6,
+     "stop0": 29310.907,
+     "target": 26869.679,
+     "exit_d": "2022-05-19",
+     "exit": 29310.907,
+     "why": "stop",
+     "R": -1.0881
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-05-27",
+     "entry_d": "2022-05-28",
+     "entry": 28623.3,
+     "stop0": 28987.606,
+     "target": 27530.382,
+     "exit_d": "2022-05-28",
+     "exit": 28987.606,
+     "why": "stop",
+     "R": -1.1346
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-05-26",
+     "entry_d": "2022-05-27",
+     "entry": 1790.99,
+     "stop0": 1933.342,
+     "target": 1363.934,
+     "exit_d": "2022-05-30",
+     "exit": 1933.342,
+     "why": "stop",
+     "R": -1.0168
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-06-11",
+     "entry_d": "2022-06-12",
+     "entry": 28416.6,
+     "stop0": 28909.432,
+     "target": 26938.104,
+     "exit_d": "2022-06-12",
+     "exit": 26938.104,
+     "why": "target",
+     "R": 2.891
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-06-10",
+     "entry_d": "2022-06-11",
+     "entry": 1661.95,
+     "stop0": 1743.8155,
+     "target": 1416.3535,
+     "exit_d": "2022-06-13",
+     "exit": 1416.3535,
+     "why": "target",
+     "R": 2.9456
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-06-16",
+     "entry_d": "2022-06-17",
+     "entry": 20387.4,
+     "stop0": 22018.392,
+     "target": 15494.424,
+     "exit_d": "2022-06-19",
+     "exit": 20387.4,
+     "why": "breakeven",
+     "R": -0.0228
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-07-12",
+     "entry_d": "2022-07-13",
+     "entry": 1037.88,
+     "stop0": 1059.894,
+     "target": 971.838,
+     "exit_d": "2022-07-13",
+     "exit": 1059.894,
+     "why": "stop",
+     "R": -1.118
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-09-06",
+     "entry_d": "2022-09-07",
+     "entry": 18781.4,
+     "stop0": 19742.975,
+     "target": 15896.675,
+     "exit_d": "2022-09-09",
+     "exit": 19742.975,
+     "why": "stop",
+     "R": -1.0349
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-09-21",
+     "entry_d": "2022-09-22",
+     "entry": 18447.5,
+     "stop0": 18969.315,
+     "target": 16882.055,
+     "exit_d": "2022-09-22",
+     "exit": 18969.315,
+     "why": "stop",
+     "R": -1.0746
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-10-15",
+     "entry_d": "2022-10-16",
+     "entry": 1274.12,
+     "stop0": 1288.7196,
+     "target": 1230.3212,
+     "exit_d": "2022-10-16",
+     "exit": 1288.7196,
+     "why": "stop",
+     "R": -1.1749
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-10-20",
+     "entry_d": "2022-10-21",
+     "entry": 19034.8,
+     "stop0": 19239.894,
+     "target": 18419.518,
+     "exit_d": "2022-10-21",
+     "exit": 19239.894,
+     "why": "stop",
+     "R": -1.1779
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2022-11-08",
+     "entry_d": "2022-11-09",
+     "entry": 18533.9,
+     "stop0": 19225.047,
+     "target": 16460.459,
+     "exit_d": "2022-11-09",
+     "exit": 16460.459,
+     "why": "target",
+     "R": 2.9358
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2022-12-16",
+     "entry_d": "2022-12-17",
+     "entry": 1166.19,
+     "stop0": 1178.8821,
+     "target": 1128.1137,
+     "exit_d": "2022-12-17",
+     "exit": 1178.8821,
+     "why": "stop",
+     "R": -1.1785
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-06-05",
+     "entry_d": "2023-06-06",
+     "entry": 25714.6,
+     "stop0": 26576.938,
+     "target": 23127.586,
+     "exit_d": "2023-06-06",
+     "exit": 26576.938,
+     "why": "stop",
+     "R": -1.0614
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-06-14",
+     "entry_d": "2023-06-15",
+     "entry": 25115.9,
+     "stop0": 25971.847,
+     "target": 22548.059,
+     "exit_d": "2023-06-16",
+     "exit": 25971.847,
+     "why": "stop",
+     "R": -1.0544
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-06-10",
+     "entry_d": "2023-06-11",
+     "entry": 1750.65,
+     "stop0": 1816.8284,
+     "target": 1552.1148,
+     "exit_d": "2023-06-17",
+     "exit": 1750.65,
+     "why": "breakeven",
+     "R": -0.0394
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-07-18",
+     "entry_d": "2023-07-19",
+     "entry": 29845.7,
+     "stop0": 30173.144,
+     "target": 28863.368,
+     "exit_d": "2023-07-19",
+     "exit": 30173.144,
+     "why": "stop",
+     "R": -1.1614
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-07-20",
+     "entry_d": "2023-07-21",
+     "entry": 29791.0,
+     "stop0": 30144.056,
+     "target": 28731.832,
+     "exit_d": "2023-07-23",
+     "exit": 30144.056,
+     "why": "stop",
+     "R": -1.1409
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-08-02",
+     "entry_d": "2023-08-03",
+     "entry": 1839.07,
+     "stop0": 1867.5304,
+     "target": 1753.6888,
+     "exit_d": "2023-08-07",
+     "exit": 1839.07,
+     "why": "breakeven",
+     "R": -0.0439
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-07-24",
+     "entry_d": "2023-07-25",
+     "entry": 29163.8,
+     "stop0": 30081.335,
+     "target": 26411.195,
+     "exit_d": "2023-08-08",
+     "exit": 30081.335,
+     "why": "stop",
+     "R": -0.9503
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-08-16",
+     "entry_d": "2023-08-17",
+     "entry": 28714.4,
+     "stop0": 29348.277,
+     "target": 26812.769,
+     "exit_d": "2023-08-17",
+     "exit": 26812.769,
+     "why": "target",
+     "R": 2.923
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-08-16",
+     "entry_d": "2023-08-17",
+     "entry": 1807.19,
+     "stop0": 1846.4618,
+     "target": 1689.3746,
+     "exit_d": "2023-08-17",
+     "exit": 1689.3746,
+     "why": "target",
+     "R": 2.9193
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-08-26",
+     "entry_d": "2023-08-27",
+     "entry": 26004.3,
+     "stop0": 26302.521,
+     "target": 25109.637,
+     "exit_d": "2023-08-29",
+     "exit": 26302.521,
+     "why": "stop",
+     "R": -1.1678
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-08-31",
+     "entry_d": "2023-09-01",
+     "entry": 25928.0,
+     "stop0": 26264.343,
+     "target": 24918.971,
+     "exit_d": "2023-09-02",
+     "exit": 25928.0,
+     "why": "breakeven",
+     "R": -0.139
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-09-01",
+     "entry_d": "2023-09-02",
+     "entry": 1628.2,
+     "stop0": 1650.845,
+     "target": 1560.265,
+     "exit_d": "2023-09-06",
+     "exit": 1650.845,
+     "why": "stop",
+     "R": -1.143
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-09-05",
+     "entry_d": "2023-09-06",
+     "entry": 25779.7,
+     "stop0": 26053.556,
+     "target": 24958.132,
+     "exit_d": "2023-09-07",
+     "exit": 25779.7,
+     "why": "breakeven",
+     "R": -0.1734
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2023-09-10",
+     "entry_d": "2023-09-11",
+     "entry": 1616.46,
+     "stop0": 1644.4719,
+     "target": 1532.4243,
+     "exit_d": "2023-09-11",
+     "exit": 1532.4243,
+     "why": "target",
+     "R": 2.8903
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2023-09-11",
+     "entry_d": "2023-09-12",
+     "entry": 25150.4,
+     "stop0": 26004.874,
+     "target": 22586.978,
+     "exit_d": "2023-09-12",
+     "exit": 26004.874,
+     "why": "stop",
+     "R": -1.0575
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-01-25",
+     "entry_d": "2026-01-26",
+     "entry": 86628.9,
+     "stop0": 89274.506,
+     "target": 78692.082,
+     "exit_d": "2026-01-27",
+     "exit": 89274.506,
+     "why": "stop",
+     "R": -1.0556
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-01-25",
+     "entry_d": "2026-01-26",
+     "entry": 2815.49,
+     "stop0": 2967.6224,
+     "target": 2359.0928,
+     "exit_d": "2026-01-27",
+     "exit": 2967.6224,
+     "why": "stop",
+     "R": -1.0334
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-01-29",
+     "entry_d": "2026-01-30",
+     "entry": 84604.7,
+     "stop0": 87495.189,
+     "target": 75933.233,
+     "exit_d": "2026-01-31",
+     "exit": 75933.233,
+     "why": "target",
+     "R": 2.9492
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-01-30",
+     "entry_d": "2026-01-31",
+     "entry": 2705.66,
+     "stop0": 2843.6449,
+     "target": 2291.7053,
+     "exit_d": "2026-01-31",
+     "exit": 2291.7053,
+     "why": "target",
+     "R": 2.958
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-02-03",
+     "entry_d": "2026-02-04",
+     "entry": 75732.4,
+     "stop0": 77700.815,
+     "target": 69827.155,
+     "exit_d": "2026-02-05",
+     "exit": 69827.155,
+     "why": "target",
+     "R": 2.928
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-05-31",
+     "entry_d": "2026-06-01",
+     "entry": 2006.3,
+     "stop0": 2029.0092,
+     "target": 1938.1724,
+     "exit_d": "2026-06-02",
+     "exit": 2006.3,
+     "why": "breakeven",
+     "R": -0.1351
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-06-01",
+     "entry_d": "2026-06-02",
+     "entry": 71391.5,
+     "stop0": 74162.482,
+     "target": 63078.554,
+     "exit_d": "2026-06-04",
+     "exit": 63078.554,
+     "why": "target",
+     "R": 2.9613
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-06-25",
+     "entry_d": "2026-06-26",
+     "entry": 1566.98,
+     "stop0": 1584.286,
+     "target": 1515.062,
+     "exit_d": "2026-06-26",
+     "exit": 1584.286,
+     "why": "stop",
+     "R": -1.1839
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-06-25",
+     "entry_d": "2026-06-26",
+     "entry": 59772.0,
+     "stop0": 61458.197,
+     "target": 54713.409,
+     "exit_d": "2026-07-02",
+     "exit": 59999.6,
+     "why": "breakeven",
+     "R": -0.1662
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-10-29",
+     "entry_d": "2026-10-30",
+     "entry": 77962.6,
+     "stop0": 80915.443,
+     "target": 69104.071,
+     "exit_d": "2026-11-04",
+     "exit": 80915.443,
+     "why": "stop",
+     "R": -1.009
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-10-29",
+     "entry_d": "2026-10-30",
+     "entry": 2252.35,
+     "stop0": 2346.6845,
+     "target": 1969.3465,
+     "exit_d": "2026-11-04",
+     "exit": 2346.6845,
+     "why": "stop",
+     "R": -1.043
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-11-05",
+     "entry_d": "2026-11-06",
+     "entry": 2237.21,
+     "stop0": 2266.036,
+     "target": 2150.732,
+     "exit_d": "2026-11-08",
+     "exit": 2150.732,
+     "why": "target",
+     "R": 2.8924
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-11-05",
+     "entry_d": "2026-11-06",
+     "entry": 76050.0,
+     "stop0": 77559.213,
+     "target": 71522.361,
+     "exit_d": "2026-11-12",
+     "exit": 71522.361,
+     "why": "target",
+     "R": 2.9728
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-11-08",
+     "entry_d": "2026-11-09",
+     "entry": 2126.26,
+     "stop0": 2259.572,
+     "target": 1726.324,
+     "exit_d": "2026-11-14",
+     "exit": 1726.324,
+     "why": "target",
+     "R": 2.9742
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-11-12",
+     "entry_d": "2026-11-13",
+     "entry": 71423.3,
+     "stop0": 74500.529,
+     "target": 62191.613,
+     "exit_d": "2026-11-15",
+     "exit": 62191.613,
+     "why": "target",
+     "R": 2.962
+    },
+    {
+     "sym": "BTC",
+     "signal_d": "2026-11-18",
+     "entry_d": "2026-11-19",
+     "entry": 63036.9,
+     "stop0": 64771.805,
+     "target": 57832.185,
+     "exit_d": "2026-11-20",
+     "exit": 57832.185,
+     "why": "target",
+     "R": 2.9358
+    },
+    {
+     "sym": "ETH",
+     "signal_d": "2026-11-19",
+     "entry_d": "2026-11-20",
+     "entry": 1756.72,
+     "stop0": 1786.0436,
+     "target": 1668.7492,
+     "exit_d": "2026-11-20",
+     "exit": 1668.7492,
+     "why": "target",
+     "R": 2.886
+    }
+   ],
+   "watch": {
+    "n": 20,
+    "n_confirmed": 5,
+    "runs": [
+     {
+      "from": "2020-10-04",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2020-10-25",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-01-31",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-02-28",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-06-20",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-08-29",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2021-09-12",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2022-08-21",
+      "confirmed": "2022-08-21",
+      "weeks_to_confirm": 0
+     },
+     {
+      "from": "2023-01-15",
+      "confirmed": "2023-06-04",
+      "weeks_to_confirm": 20
+     },
+     {
+      "from": "2024-02-18",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-07-14",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-08-25",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-09-29",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2024-10-13",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-03-23",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-04-27",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-05-25",
+      "confirmed": null,
+      "weeks_to_confirm": null
+     },
+     {
+      "from": "2025-12-14",
+      "confirmed": "2026-01-25",
+      "weeks_to_confirm": 6
+     },
+     {
+      "from": "2026-01-04",
+      "confirmed": "2026-01-25",
+      "weeks_to_confirm": 3
+     },
+     {
+      "from": "2026-03-08",
+      "confirmed": "2026-03-08",
+      "weeks_to_confirm": 0
+     }
+    ]
+   }
+  }
+ }
+}
