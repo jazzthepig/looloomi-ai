@@ -1,0 +1,46 @@
+{
+  "card": "T-447",
+  "lane": "lane-c",
+  "title": "S-931 换生产输入重跑后的前向命题(附,未登台账 —— 按卡 acceptance ④,结果段由 Seth 合并时登)",
+  "created_utc": "2026-11-28",
+  "source": "docs/research/s931b_results.json(生产输入臂 PROD_23)+ docs/research/T-447_rerun.md",
+  "note": "概率 = 主观先验,到期按台账的 Brier 结算;命题只写机器可核的量,不含收益承诺。",
+  "scenarios": [
+    {
+      "id": "T447-1",
+      "claim": "2027-06-30 时,`multiplier_daily.core_u_replay` 与 `core_variants_daily.cap_pit24` 的 NAV 比值(同日相除)仍 ≥ 1.25",
+      "metric": "nav(core_u_replay, 2027-06-30) / nav(cap_pit24, 2027-06-30)",
+      "source": "multiplier_daily(arm=core_u_replay) / core_variants_daily(arm=cap_pit24)",
+      "check_by": "2027-06-30",
+      "probability": 0.7,
+      "reason": "实测 2023-01-02 → 2026-11-19:1.7577 / 1.3077 = 1.344;两个核的构造规则不同(回放臂 vs 历史锚),差不会自己合拢。"
+    },
+    {
+      "id": "T447-2",
+      "claim": "2027-06-30 时,生产输入下加密腿(100% ① 的 X1V)BASE 臂的留出段最长水下仍 ≥ 463 天",
+      "metric": "stats.BASE.hold.longest_underwater_d(生产输入臂,窗口 2023-01-02 → 2027-06-30)",
+      "source": "docs/research/s931b_prod_inputs.py 重跑(① core_u_replay + 实测 BTC 资金费)",
+      "check_by": "2027-06-30",
+      "probability": 0.75,
+      "reason": "实测 703 天(原口径 463 天);两臂都还在水下,新高在 2025-08 附近,回本要等下一段上涨创新高。"
+    },
+    {
+      "id": "T447-3",
+      "claim": "2027-06-30 时,生产输入下 V2(⓪ 否决 + 票)在可评崩塌段相对 BASE 的平均削减仍 > 0.15",
+      "metric": "judge.mean_cut_vs_base(生产输入臂)",
+      "source": "docs/research/s931b_prod_inputs.py 重跑",
+      "check_by": "2027-06-30",
+      "probability": 0.6,
+      "reason": "实测 0.174(原口径 0.209);削减来自 ⓪ 否决挡住熊市里的回补,机制在,但新崩塌段的形状不定。"
+    },
+    {
+      "id": "T447-4",
+      "claim": "2027-06-30 时,生产输入下加密腿的实测 BTC 资金费覆盖仍是 100%(缺值落 0.10 的天数为 0)",
+      "metric": "funding_count.funding_default_0.10_days == 0 且 funding_missing.BTC_prod_window.missing_days == 0",
+      "source": "funding_history(venue=binance_perp, symbol=BTC)",
+      "check_by": "2027-06-30",
+      "probability": 0.9,
+      "reason": "实测 1418 天全部有实测值(observed 1418 / ffill 0 / 落 0.10 0);binance 永续的 8 小时结算是连续的,断档少见。"
+    }
+  ]
+}

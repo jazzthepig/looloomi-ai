@@ -1,0 +1,29 @@
+{
+  "id": "T-447",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-28",
+  "verified": null,
+  "title": "S-931 换生产输入重跑:① 用 core_u_replay、资金费用实测 BTC 永续,未平票按预注册 2×10bp —— 结论照预注册判,不调参",
+  "source": "T-446 复核(`docs/research/T-446_rule_check.md` (a)(e)、卡 T-446 notes 里 Seth 的裁定);台账 S-931 预注册与结果两段;脚本 `docs/research/s931_x1v_zero_veto.py`;生产 `src/data/universe/forward_books.py` tom_inputs(:205-228)与 :340-346。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-447.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "REFUTATION_LEDGER.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 新脚本 `docs/research/s931b_prod_inputs.py`(可 import s931 的函数,不改原脚本):① NAV 读 multiplier_daily arm=core_u_replay;BASE/V1/V2 的 trade_returns 传 forward_books 同口径的实测 BTC 资金费(funding_history binance_perp 按天求和 ×365,缺值才落 0.10 并计数);未平票扣 2×10bp;HOUSE_RULES.varies 补写这三处与「加密腿 100% 而非生产 T25 的 30%」。② 输出 `docs/research/s931b_results.json`:c1–c5 原判据原阈值的值与判定、两段深熊 BASE/V2 的回撤、与 S-931 原数并列;资金费缺值天数单列,缺值不当 0 算进结论。③ 窗口、种子(931)、判据一个不改;只读库。④ 不登情景、不写台账(结果段由 Seth 合并时登)。",
+    "expect": "s931b_results.json + 一份 ≤40 行的 `docs/research/T-447_rerun.md`(每条判据一行:原值 → 新值 → 判定);卡 in_review,推 lane-c/T-447。"
+  },
+  "prior_value": "S-930:交互会话的结论复核前不算数;T-446 查出 S-931 的 BASE 两处输入不是生产(① 序列差 ~45pp、资金费固定 10%),「在生产之上削掉四成」那句要用生产输入重算后才成立或作废。",
+  "notes": "2026-11-28 lane-c 交付(分支 lane-c/T-447):产物 docs/research/s931b_prod_inputs.py(不改原脚本 s931_x1v_zero_veto.py,只 import)+ docs/research/s931b_results.json(三条臂 PROD_23/ORIG_23/ORIG_full、资金费缺值单列、HOUSE_RULES.varies 补三处与「加密腿 100% 而非生产 T25 的 30%」、S-931 发布数并列)+ docs/research/T-447_rerun.md(≤40 行,每条判据一行)+ docs/research/scenarios/lane-c-T-447.json(4 条前向命题;按卡 ④ 未登台账)。测得(生产输入臂 PROD_23,窗口 2023-01-02 → 2026-11-19,1418 天):c1 不可判(留出段 LUW BASE 703 = V2 703,严格小于不成立;发现段无生产 ① 核 ⇒ 不可评);c2 ✓(3 段崩塌 BASE −27.8%/−21.7%/−18.6% → V2 −27.8%/−21.7%/−8.9%,削减平均 0.174);c3 ✓;c4 不足判定(本轮只跑 5 次平移,粗值 0.4,须 500 次、种子 931);c5 不可判(留出段 11 张 +6.3% 盈亏比 5.06 ✓;发现段无票)。结构性变化:生产 ① 核 multiplier_daily.core_u_replay 只有 2023-01-02 起 ⇒ 发现段 [2020-02-01, 2022-12-31] 在生产输入下不存在;原口径两段深熊里 2021-11→2022-11(−28.6% → −17.2%,削 40%)不可评,只剩 2025-10→2026-06(−18.6% → −8.9%,削 52%)⇒ 「在生产 X1V 之上削掉四成」那句里的两段少了一段。重建对照 ORIG_full 与 S-931 发布数逐项相同(LUW/max_dd/崩塌表含 evaluable 标志/上涨表/defend_days 508/被否决持多日 98/削减 0.209),差:多 1 张已平票(17 vs 16)、未平票进场价差 0.05%。资金费:加密腿 1418 天全部有实测值(缺 0、ffill 0、落 0.10 0 天);未平票按预注册 2×10bp 记(BTC +13.1%、ETH +8.8%)。还差:① c4 要补跑满 500 次平移(判据与种子不改)—— 本轮上下文用尽、钩子拦下;② c1/c5 的发现段半边在生产输入下永久不可评,除非另立卡把 ① 的核往前回放。探索性(需另立预注册、在新数据上过零信号对照):生产核前 200 天规则预热(g≡1 全仓 ①)而生产自己从 2024-01-01 起算 ⇒ 生产臂留出段 LUW 463→703 里这 200 天是主要嫌疑(未单独拆);票统计两臂完全相同(11 张/+6.3%/5.06,触发只用 BTC 收盘/面板/各自资金费)。"
+}

@@ -1,0 +1,1054 @@
+{
+ "card": "T-447",
+ "window_rule": {
+  "start": "2020-02-01",
+  "split": "2023-01-01",
+  "end": "2026-11-19",
+  "seed": 931,
+  "n_shift": 5,
+  "note": "生产 ① 序列 core_u_replay 只回放到 2023-01-02 ⇒ 发现段 [2020-02-01, 2022-12-31] 无生产输入"
+ },
+ "funding_count": {
+  "core_days": 1418,
+  "funding_observed_days": 1418,
+  "funding_ffilled_days": 0,
+  "funding_default_0.10_days": 0
+ },
+ "funding_missing": {
+  "BTC_prod_window": {
+   "window_days": 1418,
+   "missing_days": 0,
+   "first_missing": null,
+   "last_missing": null
+  },
+  "ETH_prod_window": {
+   "window_days": 1418,
+   "missing_days": 0,
+   "first_missing": null,
+   "last_missing": null
+  },
+  "BTC_orig_window": {
+   "window_days": 2484,
+   "missing_days": 0,
+   "first_missing": null,
+   "last_missing": null
+  },
+  "ETH_orig_window": {
+   "window_days": 2484,
+   "missing_days": 0,
+   "first_missing": null,
+   "last_missing": null
+  }
+ },
+ "house_rules": {
+  "layer": "③ 加密腿(生产 X1V)+ ⓪ 否决 + 空头票",
+  "ruler": "账户口径:回本时间、每段崩塌的损失、每段上涨拿到几成;票:占名义 % 的均值与盈亏比(DECISIONS 11-11 / 11-15)",
+  "uses": [
+   "T370",
+   "EXPOSURE"
+  ],
+  "varies": {
+   "① 的 NAV": "S-931 原用 core_variants_daily.cap_pit24(① 历史锚);T-447 换成生产的 multiplier_daily.core_u_replay(生产 tom_trader 的核,forward_books.tom_inputs)",
+   "资金费": "S-931 原用固定年化 10%(tom.trade_returns 的默认值);T-447 换成实测 BTC 永续资金费(funding_history binance_perp 按天求和 ×365,与 forward_books.tom_inputs 同口径),缺值先 ffill、再落 0.10",
+   "未平票成本": "S-931 原脚本对未平票只扣 1×10bp;按预注册字面,T-447 记 2×10bp",
+   "⓪ 否决": "S-931:新加的一层 —— ⓪ 确认转向后,X1V 的多头(含反弹单、回补)清零,直到 ⓪ 退出",
+   "⓪ 签名": "S-931:回测里没有 Jazz 的签名,用 S-928 的 D1 防守代理(同 S-929)",
+   "加密腿权重": "S-931 账户里加密腿占 100%;生产 T25 里这条腿占 30%(FLEX_X1V_ARMS T25 crypto=0.30)—— 结论不能直接搬去生产"
+  }
+ },
+ "arms": {
+  "PROD_23": {
+   "window": [
+    "2023-01-02",
+    "2026-11-19"
+   ],
+   "stats": {
+    "HOLD": {
+     "all": {
+      "longest_underwater_d": 409,
+      "underwater_now_d": 409,
+      "max_dd": 0.5675,
+      "total": 1.7577
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 409,
+      "underwater_now_d": 409,
+      "max_dd": 0.5675,
+      "total": 1.7577
+     }
+    },
+    "BASE": {
+     "all": {
+      "longest_underwater_d": 703,
+      "underwater_now_d": 703,
+      "max_dd": 0.408,
+      "total": 2.2906
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 703,
+      "underwater_now_d": 703,
+      "max_dd": 0.408,
+      "total": 2.2906
+     }
+    },
+    "V1": {
+     "all": {
+      "longest_underwater_d": 703,
+      "underwater_now_d": 703,
+      "max_dd": 0.3841,
+      "total": 1.957
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 703,
+      "underwater_now_d": 703,
+      "max_dd": 0.3841,
+      "total": 1.957
+     }
+    },
+    "V2": {
+     "all": {
+      "longest_underwater_d": 703,
+      "underwater_now_d": 703,
+      "max_dd": 0.3646,
+      "total": 2.2332
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 703,
+      "underwater_now_d": 703,
+      "max_dd": 0.3646,
+      "total": 2.2332
+     }
+    }
+   },
+   "crash": [
+    {
+     "peak": "2024-03-13",
+     "trough": "2024-09-06",
+     "core": -0.3178,
+     "evaluable": true,
+     "HOLD": -0.3178,
+     "BASE": -0.278,
+     "V1": -0.278,
+     "V2": -0.278
+    },
+    {
+     "peak": "2024-12-16",
+     "trough": "2025-04-08",
+     "core": -0.3641,
+     "evaluable": true,
+     "HOLD": -0.3641,
+     "BASE": -0.2173,
+     "V1": -0.2173,
+     "V2": -0.2173
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "core": -0.5675,
+     "evaluable": true,
+     "HOLD": -0.5675,
+     "BASE": -0.1855,
+     "V1": -0.1525,
+     "V2": -0.0885
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2024-09-06",
+     "peak": "2024-12-16",
+     "core": 1.003,
+     "HOLD": 1.0,
+     "BASE": 0.717,
+     "V1": 0.717,
+     "V2": 0.717
+    },
+    {
+     "trough": "2025-04-08",
+     "peak": "2025-10-06",
+     "core": 0.808,
+     "HOLD": 1.0,
+     "BASE": -0.041,
+     "V1": -0.041,
+     "V2": -0.041
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 11,
+     "mean_pct": 0.0627,
+     "median_pct": 0.0031,
+     "win": 0.545,
+     "payoff": 5.06,
+     "worst_pct": -0.0513,
+     "best_pct": 0.2822,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 5,
+      "time": 6,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    },
+    "disc": {
+     "n": 0
+    },
+    "hold": {
+     "n": 11,
+     "mean_pct": 0.0627,
+     "median_pct": 0.0031,
+     "win": 0.545,
+     "payoff": 5.06,
+     "worst_pct": -0.0513,
+     "best_pct": 0.2822,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 5,
+      "time": 6,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    }
+   },
+   "open_tickets": [
+    {
+     "sym": "BTC",
+     "entry_d": "2026-11-12",
+     "entry": 71460.0,
+     "stop0": 73454.573,
+     "why": "open",
+     "pct": 0.1313471801371397
+    },
+    {
+     "sym": "ETH",
+     "entry_d": "2026-11-13",
+     "entry": 1929.88,
+     "stop0": 2003.6581999999999,
+     "why": "open",
+     "pct": 0.08770872589964152
+    }
+   ],
+   "defend_days": 291,
+   "x1v_long_days_vetoed": 80,
+   "shift_null_luw": {
+    "median": 703.0,
+    "q10": 649.0
+   },
+   "judge": {
+    "c1_underwater": null,
+    "c2_crash_not_worse": true,
+    "mean_cut_vs_base": 0.174,
+    "c3_rally_cost": true,
+    "c4_shift_pct": 0.4,
+    "c4": false,
+    "c5_tickets": null,
+    "c1_hold_part": false,
+    "c1_disc_part": null,
+    "c5_hold_part": true,
+    "c5_disc_part": null,
+    "pass": false,
+    "pass_note": "不可判:缺 2 条(发现段无生产输入)"
+   },
+   "judge_orig": null
+  },
+  "ORIG_23": {
+   "window": [
+    "2023-01-02",
+    "2026-11-19"
+   ],
+   "stats": {
+    "HOLD": {
+     "all": {
+      "longest_underwater_d": 409,
+      "underwater_now_d": 409,
+      "max_dd": 0.5921,
+      "total": 1.3077
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 409,
+      "underwater_now_d": 409,
+      "max_dd": 0.5921,
+      "total": 1.3077
+     }
+    },
+    "BASE": {
+     "all": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.3436,
+      "total": 1.8339
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.3436,
+      "total": 1.8339
+     }
+    },
+    "V1": {
+     "all": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.3362,
+      "total": 1.5737
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.3362,
+      "total": 1.5737
+     }
+    },
+    "V2": {
+     "all": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.2912,
+      "total": 1.8141
+     },
+     "disc": null,
+     "hold": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.2912,
+      "total": 1.8141
+     }
+    }
+   },
+   "crash": [
+    {
+     "peak": "2024-03-13",
+     "trough": "2024-09-06",
+     "core": -0.3512,
+     "evaluable": true,
+     "HOLD": -0.3512,
+     "BASE": -0.221,
+     "V1": -0.221,
+     "V2": -0.221
+    },
+    {
+     "peak": "2024-12-08",
+     "trough": "2025-04-08",
+     "core": -0.4363,
+     "evaluable": true,
+     "HOLD": -0.4363,
+     "BASE": -0.269,
+     "V1": -0.269,
+     "V2": -0.269
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "core": -0.5921,
+     "evaluable": true,
+     "HOLD": -0.5921,
+     "BASE": -0.2126,
+     "V1": -0.1812,
+     "V2": -0.1193
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2024-09-06",
+     "peak": "2024-12-08",
+     "core": 1.042,
+     "HOLD": 1.0,
+     "BASE": 0.472,
+     "V1": 0.472,
+     "V2": 0.472
+    },
+    {
+     "trough": "2025-04-08",
+     "peak": "2025-10-06",
+     "core": 0.998,
+     "HOLD": 1.0,
+     "BASE": 0.286,
+     "V1": 0.286,
+     "V2": 0.286
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 11,
+     "mean_pct": 0.0627,
+     "median_pct": 0.0031,
+     "win": 0.545,
+     "payoff": 5.06,
+     "worst_pct": -0.0513,
+     "best_pct": 0.2822,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 5,
+      "time": 6,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    },
+    "disc": {
+     "n": 0
+    },
+    "hold": {
+     "n": 11,
+     "mean_pct": 0.0627,
+     "median_pct": 0.0031,
+     "win": 0.545,
+     "payoff": 5.06,
+     "worst_pct": -0.0513,
+     "best_pct": 0.2822,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 5,
+      "time": 6,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    }
+   },
+   "open_tickets": [
+    {
+     "sym": "BTC",
+     "entry_d": "2026-11-12",
+     "entry": 71460.0,
+     "stop0": 73454.573,
+     "why": "open",
+     "pct": 0.1313471801371397
+    },
+    {
+     "sym": "ETH",
+     "entry_d": "2026-11-13",
+     "entry": 1929.88,
+     "stop0": 2003.6581999999999,
+     "why": "open",
+     "pct": 0.08770872589964152
+    }
+   ],
+   "defend_days": 291,
+   "x1v_long_days_vetoed": 80,
+   "shift_null_luw": {
+    "median": 711.0,
+    "q10": 559.2
+   },
+   "judge": {
+    "c1_underwater": null,
+    "c2_crash_not_worse": true,
+    "mean_cut_vs_base": 0.146,
+    "c3_rally_cost": true,
+    "c4_shift_pct": 1.0,
+    "c4": true,
+    "c5_tickets": null,
+    "c1_hold_part": false,
+    "c1_disc_part": null,
+    "c5_hold_part": true,
+    "c5_disc_part": null,
+    "pass": false,
+    "pass_note": "不可判:缺 2 条(发现段无生产输入)"
+   },
+   "judge_orig": null
+  },
+  "ORIG_full": {
+   "window": [
+    "2020-02-01",
+    "2026-11-19"
+   ],
+   "stats": {
+    "HOLD": {
+     "all": {
+      "longest_underwater_d": 1119,
+      "underwater_now_d": 409,
+      "max_dd": 0.7773,
+      "total": 4.5216
+     },
+     "disc": {
+      "longest_underwater_d": 418,
+      "underwater_now_d": 418,
+      "max_dd": 0.7773,
+      "total": 1.3597
+     },
+     "hold": {
+      "longest_underwater_d": 409,
+      "underwater_now_d": 409,
+      "max_dd": 0.5921,
+      "total": 1.3309
+     }
+    },
+    "BASE": {
+     "all": {
+      "longest_underwater_d": 897,
+      "underwater_now_d": 463,
+      "max_dd": 0.398,
+      "total": 16.349
+     },
+     "disc": {
+      "longest_underwater_d": 481,
+      "underwater_now_d": 481,
+      "max_dd": 0.3525,
+      "total": 8.4686
+     },
+     "hold": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.3436,
+      "total": 0.8323
+     }
+    },
+    "V1": {
+     "all": {
+      "longest_underwater_d": 820,
+      "underwater_now_d": 463,
+      "max_dd": 0.3362,
+      "total": 17.5676
+     },
+     "disc": {
+      "longest_underwater_d": 481,
+      "underwater_now_d": 481,
+      "max_dd": 0.2962,
+      "total": 9.4571
+     },
+     "hold": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.3362,
+      "total": 0.7756
+     }
+    },
+    "V2": {
+     "all": {
+      "longest_underwater_d": 817,
+      "underwater_now_d": 463,
+      "max_dd": 0.2912,
+      "total": 21.3037
+     },
+     "disc": {
+      "longest_underwater_d": 481,
+      "underwater_now_d": 481,
+      "max_dd": 0.2782,
+      "total": 10.4881
+     },
+     "hold": {
+      "longest_underwater_d": 463,
+      "underwater_now_d": 463,
+      "max_dd": 0.2912,
+      "total": 0.9415
+     }
+    }
+   },
+   "crash": [
+    {
+     "peak": "2020-02-14",
+     "trough": "2020-03-12",
+     "core": -0.5757,
+     "evaluable": false,
+     "HOLD": -0.5757,
+     "BASE": -0.2753,
+     "V1": -0.2753,
+     "V2": -0.2753
+    },
+    {
+     "peak": "2021-05-09",
+     "trough": "2021-07-20",
+     "core": -0.5562,
+     "evaluable": true,
+     "HOLD": -0.5562,
+     "BASE": -0.1909,
+     "V1": -0.1909,
+     "V2": -0.1909
+    },
+    {
+     "peak": "2021-11-08",
+     "trough": "2022-11-21",
+     "core": -0.7773,
+     "evaluable": true,
+     "HOLD": -0.7773,
+     "BASE": -0.2855,
+     "V1": -0.2515,
+     "V2": -0.172
+    },
+    {
+     "peak": "2024-12-08",
+     "trough": "2025-04-08",
+     "core": -0.4363,
+     "evaluable": true,
+     "HOLD": -0.4363,
+     "BASE": -0.2683,
+     "V1": -0.2683,
+     "V2": -0.2683
+    },
+    {
+     "peak": "2025-10-06",
+     "trough": "2026-06-30",
+     "core": -0.5921,
+     "evaluable": true,
+     "HOLD": -0.5921,
+     "BASE": -0.2126,
+     "V1": -0.1812,
+     "V2": -0.1193
+    }
+   ],
+   "rally": [
+    {
+     "trough": "2020-03-12",
+     "peak": "2021-05-09",
+     "core": 16.377,
+     "HOLD": 1.0,
+     "BASE": 0.851,
+     "V1": 0.851,
+     "V2": 0.851
+    },
+    {
+     "trough": "2021-07-20",
+     "peak": "2021-11-08",
+     "core": 1.488,
+     "HOLD": 1.0,
+     "BASE": 0.502,
+     "V1": 0.502,
+     "V2": 0.502
+    },
+    {
+     "trough": "2022-11-21",
+     "peak": "2024-12-08",
+     "core": 3.901,
+     "HOLD": 1.0,
+     "BASE": 0.539,
+     "V1": 0.604,
+     "V2": 0.598
+    },
+    {
+     "trough": "2025-04-08",
+     "peak": "2025-10-06",
+     "core": 0.998,
+     "HOLD": 1.0,
+     "BASE": 0.286,
+     "V1": 0.286,
+     "V2": 0.286
+    }
+   ],
+   "tickets": {
+    "all": {
+     "n": 17,
+     "mean_pct": 0.0969,
+     "median_pct": 0.0743,
+     "win": 0.647,
+     "payoff": 5.35,
+     "worst_pct": -0.0513,
+     "best_pct": 0.2836,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 6,
+      "time": 11,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    },
+    "disc": {
+     "n": 6,
+     "mean_pct": 0.1595,
+     "median_pct": 0.1921,
+     "win": 0.833,
+     "payoff": 3.95,
+     "worst_pct": -0.051,
+     "best_pct": 0.2836,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 1,
+      "time": 5,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    },
+    "hold": {
+     "n": 11,
+     "mean_pct": 0.0627,
+     "median_pct": 0.0031,
+     "win": 0.545,
+     "payoff": 5.06,
+     "worst_pct": -0.0513,
+     "best_pct": 0.2822,
+     "mean_R": 0.0,
+     "exits": {
+      "stop": 5,
+      "time": 6,
+      "target": 0,
+      "breakeven": 0,
+      "reason_gone": 0
+     }
+    }
+   },
+   "open_tickets": [
+    {
+     "sym": "BTC",
+     "entry_d": "2026-11-12",
+     "entry": 71460.0,
+     "stop0": 73454.573,
+     "why": "open",
+     "pct": 0.1313471801371397
+    },
+    {
+     "sym": "ETH",
+     "entry_d": "2026-11-13",
+     "entry": 1929.88,
+     "stop0": 2003.6581999999999,
+     "why": "open",
+     "pct": 0.08770872589964152
+    }
+   ],
+   "defend_days": 508,
+   "x1v_long_days_vetoed": 98,
+   "shift_null_luw": {
+    "median": 897.0,
+    "q10": 820.6
+   },
+   "judge": {
+    "c1_underwater": null,
+    "c2_crash_not_worse": true,
+    "mean_cut_vs_base": 0.209,
+    "c3_rally_cost": true,
+    "c4_shift_pct": 1.0,
+    "c4": true,
+    "c5_tickets": true,
+    "c1_hold_part": false,
+    "c1_disc_part": null,
+    "c5_hold_part": true,
+    "c5_disc_part": true,
+    "pass": false,
+    "pass_note": "不可判:缺 1 条(发现段无生产输入)"
+   },
+   "judge_orig": null
+  }
+ },
+ "published_s931": {
+  "window": [
+   "2020-02-01",
+   "2026-11-19"
+  ],
+  "stats": {
+   "HOLD": {
+    "all": {
+     "longest_underwater_d": 1119,
+     "underwater_now_d": 409,
+     "max_dd": 0.7773,
+     "total": 4.5216
+    },
+    "disc": {
+     "longest_underwater_d": 418,
+     "underwater_now_d": 418,
+     "max_dd": 0.7773,
+     "total": 1.3597
+    },
+    "hold": {
+     "longest_underwater_d": 409,
+     "underwater_now_d": 409,
+     "max_dd": 0.5921,
+     "total": 1.3309
+    }
+   },
+   "BASE": {
+    "all": {
+     "longest_underwater_d": 897,
+     "underwater_now_d": 463,
+     "max_dd": 0.398,
+     "total": 16.349
+    },
+    "disc": {
+     "longest_underwater_d": 481,
+     "underwater_now_d": 481,
+     "max_dd": 0.3525,
+     "total": 8.4686
+    },
+    "hold": {
+     "longest_underwater_d": 463,
+     "underwater_now_d": 463,
+     "max_dd": 0.3436,
+     "total": 0.8323
+    }
+   },
+   "V1": {
+    "all": {
+     "longest_underwater_d": 820,
+     "underwater_now_d": 463,
+     "max_dd": 0.3362,
+     "total": 17.5676
+    },
+    "disc": {
+     "longest_underwater_d": 481,
+     "underwater_now_d": 481,
+     "max_dd": 0.2962,
+     "total": 9.4571
+    },
+    "hold": {
+     "longest_underwater_d": 463,
+     "underwater_now_d": 463,
+     "max_dd": 0.3362,
+     "total": 0.7756
+    }
+   },
+   "V2": {
+    "all": {
+     "longest_underwater_d": 817,
+     "underwater_now_d": 463,
+     "max_dd": 0.2912,
+     "total": 21.3454
+    },
+    "disc": {
+     "longest_underwater_d": 481,
+     "underwater_now_d": 481,
+     "max_dd": 0.2782,
+     "total": 10.4882
+    },
+    "hold": {
+     "longest_underwater_d": 463,
+     "underwater_now_d": 463,
+     "max_dd": 0.2912,
+     "total": 0.9451
+    }
+   }
+  },
+  "crash": [
+   {
+    "peak": "2020-02-14",
+    "trough": "2020-03-12",
+    "core": -0.5757,
+    "evaluable": false,
+    "HOLD": -0.5757,
+    "BASE": -0.2753,
+    "V1": -0.2753,
+    "V2": -0.2753
+   },
+   {
+    "peak": "2021-05-09",
+    "trough": "2021-07-20",
+    "core": -0.5562,
+    "evaluable": true,
+    "HOLD": -0.5562,
+    "BASE": -0.1909,
+    "V1": -0.1909,
+    "V2": -0.1909
+   },
+   {
+    "peak": "2021-11-08",
+    "trough": "2022-11-21",
+    "core": -0.7773,
+    "evaluable": true,
+    "HOLD": -0.7773,
+    "BASE": -0.2855,
+    "V1": -0.2515,
+    "V2": -0.172
+   },
+   {
+    "peak": "2024-12-08",
+    "trough": "2025-04-08",
+    "core": -0.4363,
+    "evaluable": true,
+    "HOLD": -0.4363,
+    "BASE": -0.2683,
+    "V1": -0.2683,
+    "V2": -0.2683
+   },
+   {
+    "peak": "2025-10-06",
+    "trough": "2026-06-30",
+    "core": -0.5921,
+    "evaluable": true,
+    "HOLD": -0.5921,
+    "BASE": -0.2126,
+    "V1": -0.1812,
+    "V2": -0.1193
+   }
+  ],
+  "rally": [
+   {
+    "trough": "2020-03-12",
+    "peak": "2021-05-09",
+    "core": 16.377,
+    "HOLD": 1.0,
+    "BASE": 0.851,
+    "V1": 0.851,
+    "V2": 0.851
+   },
+   {
+    "trough": "2021-07-20",
+    "peak": "2021-11-08",
+    "core": 1.488,
+    "HOLD": 1.0,
+    "BASE": 0.502,
+    "V1": 0.502,
+    "V2": 0.502
+   },
+   {
+    "trough": "2022-11-21",
+    "peak": "2024-12-08",
+    "core": 3.901,
+    "HOLD": 1.0,
+    "BASE": 0.539,
+    "V1": 0.604,
+    "V2": 0.598
+   },
+   {
+    "trough": "2025-04-08",
+    "peak": "2025-10-06",
+    "core": 0.998,
+    "HOLD": 1.0,
+    "BASE": 0.286,
+    "V1": 0.286,
+    "V2": 0.286
+   }
+  ],
+  "tickets": {
+   "all": {
+    "n": 16,
+    "mean_pct": 0.1041,
+    "median_pct": 0.1134,
+    "win": 0.688,
+    "payoff": 4.95,
+    "worst_pct": -0.0509,
+    "best_pct": 0.2837,
+    "mean_R": 0.0,
+    "exits": {
+     "stop": 5,
+     "time": 11,
+     "target": 0,
+     "breakeven": 0,
+     "reason_gone": 0
+    }
+   },
+   "disc": {
+    "n": 6,
+    "mean_pct": 0.1596,
+    "median_pct": 0.1921,
+    "win": 0.833,
+    "payoff": 3.97,
+    "worst_pct": -0.0509,
+    "best_pct": 0.2837,
+    "mean_R": 0.0,
+    "exits": {
+     "stop": 1,
+     "time": 5,
+     "target": 0,
+     "breakeven": 0,
+     "reason_gone": 0
+    }
+   },
+   "hold": {
+    "n": 10,
+    "mean_pct": 0.0708,
+    "median_pct": 0.017,
+    "win": 0.6,
+    "payoff": 4.68,
+    "worst_pct": -0.0502,
+    "best_pct": 0.2823,
+    "mean_R": 0.0,
+    "exits": {
+     "stop": 4,
+     "time": 6,
+     "target": 0,
+     "breakeven": 0,
+     "reason_gone": 0
+    }
+   }
+  },
+  "open_tickets": [
+   {
+    "sym": "BTC",
+    "entry_d": "2026-11-12",
+    "entry": 71423.3,
+    "stop0": 73417.91,
+    "pct": 0.13228508892648477
+   },
+   {
+    "sym": "ETH",
+    "entry_d": "2026-11-13",
+    "entry": 1929.21,
+    "stop0": 2002.426,
+    "pct": 0.0886983112602568
+   }
+  ],
+  "defend_days": 508,
+  "x1v_long_days_vetoed": 98,
+  "shift_null_luw": {
+   "median": 906.0,
+   "q10": 793.0
+  },
+  "judge": {
+   "c1_underwater": false,
+   "c2_crash_not_worse": true,
+   "mean_cut_vs_base": 0.209,
+   "c3_rally_cost": true,
+   "c4_shift_pct": 0.858,
+   "c4": false,
+   "c5_tickets": true,
+   "pass": false
+  }
+ },
+ "inputs": {
+  "px": {
+   "BTC": [
+    "2020-01-01",
+    "2026-11-27",
+    2523
+   ],
+   "ETH": [
+    "2020-01-01",
+    "2026-11-27",
+    2523
+   ]
+  },
+  "fund": {
+   "BTC": [
+    "2020-01-01",
+    "2026-11-28",
+    2524
+   ],
+   "ETH": [
+    "2020-01-01",
+    "2026-11-28",
+    2524
+   ]
+  },
+  "stable": [
+   "2020-01-30",
+   "2026-11-18",
+   2485
+  ],
+  "taker": [
+   "2021-01-25",
+   "2026-11-22",
+   2128
+  ],
+  "y2": [
+   "2018-01-03",
+   "2026-11-26",
+   2225
+  ],
+  "d200": [
+   "2019-06-29",
+   "2026-11-22",
+   2704
+  ],
+  "core_prod": [
+   "2023-01-02",
+   "2026-11-22",
+   1421
+  ],
+  "core_orig": [
+   "2019-01-01",
+   "2026-11-19",
+   2880
+  ]
+ },
+ "notes": [
+  "A 臂(重建对照)与 B 臂(生产输入)只差三处输入;判据、阈值、窗口、平移种子完全一样。",
+  "ORIG_full 与 S-931 发布数的差 = 数据重建漂移(私有导出不在仓库侧,这里从库重建);PROD_23 与 ORIG_23 的差 = 生产输入效应。",
+  "PROD_23 的窗口由 ① 生产核的历史决定(core_u_replay 自 2023-01-02 起)—— 发现段没有生产 NAV,相关判据记「不可评」。"
+ ]
+}
