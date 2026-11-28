@@ -17,6 +17,7 @@
 | open | T-429 | lane-a | 两条状态轴不靠 CoinGecko 能不能读:稳定币轴换 DeFiLlama 口径、「谁在领」用币安价 + 冻结权重续算 —— 全历史对账,只量不改 | 脚本 + 结果 + 一页说明;卡 in_review,推 lane-a/T-429。排在 T-428(S-642 接线)之后。 | 两条第二轴是纸面账与形态 #1 的输入;它们靠一个会停的付费源。量清楚无 CG 时能读到什么精度,才能决定要不要给它们留一条并行的读法。 |  |
 | open | T-436 | lane-a | S-916:Jazz 自己的 4 小时线两种进场单(低吸边界单 / 突破回踩确认单)× 状态四格 + 今天的匹配板 —— 只跑 Seth 写好的脚本 | docs/research/s916_results.json + s916_run.txt;卡 in_review,推 lane-a/T-436。先于手上别的卡。 | Jazz 的框架写着「回测只想测自己的规则」;他最常用的两种单在 4 小时线上从没量过 —— 台账里站住的形态都是日线、都是我们定义的。 |  |
 | open | T-444 | lane-b | S-924:S-920 / S-923 做空一侧的盲复算 —— 照书面口径自己写特征拼装、走步、模型、七条判据(不读 A 的脚本) | s924_blind_short.py + s924_results.json + s924_run.txt;卡 in_review,推 lane-b/T-444。这张卡不登情景(盲复算不是前向命题)。 | 前向写入端要照 S-920 的特征建 —— 建之前另写一遍,别在一个 bug 上建生产通路。 |  |
+| open | T-447 | lane-c | S-931 换生产输入重跑:① 用 core_u_replay、资金费用实测 BTC 永续,未平票按预注册 2×10bp —— 结论照预注册判,不调参 | s931b_results.json + 一份 ≤40 行的 `docs/research/T-447_rerun.md`(每条判据一行:原值 → 新值 → 判定);卡 in_review,推 lane-c/T-447。 | S-930:交互会话的结论复核前不算数;T-446 查出 S-931 的 BASE 两处输入不是生产(① 序列差 ~45pp、资金费固定 10%),「在生产之上削掉四成」那句要用生产输入重算后才成立或作废。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -448,4 +449,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 26 · claimed 7 · blocked 5 · in_review 3 · done 399 · dropped 5
+open 27 · claimed 7 · blocked 5 · in_review 3 · done 399 · dropped 5

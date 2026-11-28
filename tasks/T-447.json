@@ -1,0 +1,29 @@
+{
+  "id": "T-447",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-28",
+  "verified": null,
+  "title": "S-931 换生产输入重跑:① 用 core_u_replay、资金费用实测 BTC 永续,未平票按预注册 2×10bp —— 结论照预注册判,不调参",
+  "source": "T-446 复核(`docs/research/T-446_rule_check.md` (a)(e)、卡 T-446 notes 里 Seth 的裁定);台账 S-931 预注册与结果两段;脚本 `docs/research/s931_x1v_zero_veto.py`;生产 `src/data/universe/forward_books.py` tom_inputs(:205-228)与 :340-346。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-447.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "REFUTATION_LEDGER.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 新脚本 `docs/research/s931b_prod_inputs.py`(可 import s931 的函数,不改原脚本):① NAV 读 multiplier_daily arm=core_u_replay;BASE/V1/V2 的 trade_returns 传 forward_books 同口径的实测 BTC 资金费(funding_history binance_perp 按天求和 ×365,缺值才落 0.10 并计数);未平票扣 2×10bp;HOUSE_RULES.varies 补写这三处与「加密腿 100% 而非生产 T25 的 30%」。② 输出 `docs/research/s931b_results.json`:c1–c5 原判据原阈值的值与判定、两段深熊 BASE/V2 的回撤、与 S-931 原数并列;资金费缺值天数单列,缺值不当 0 算进结论。③ 窗口、种子(931)、判据一个不改;只读库。④ 不登情景、不写台账(结果段由 Seth 合并时登)。",
+    "expect": "s931b_results.json + 一份 ≤40 行的 `docs/research/T-447_rerun.md`(每条判据一行:原值 → 新值 → 判定);卡 in_review,推 lane-c/T-447。"
+  },
+  "prior_value": "S-930:交互会话的结论复核前不算数;T-446 查出 S-931 的 BASE 两处输入不是生产(① 序列差 ~45pp、资金费固定 10%),「在生产之上削掉四成」那句要用生产输入重算后才成立或作废。",
+  "notes": "2026-11-28T04:50Z Seth 开卡(T-446 复核之后)。交给 C 道:不是作者、也不是复核者。"
+}
