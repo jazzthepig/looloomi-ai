@@ -1,0 +1,28 @@
+{
+  "id": "T-446",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-28",
+  "verified": null,
+  "title": "复核 S-931(X1V + ⓪ 否决 + T-370 票)的设计 —— 只对规则与算式,不重算",
+  "source": "台账 S-931 预注册与「S-931 结果(未复核)」两段(grep 标题);脚本 `docs/research/s931_x1v_zero_veto.py`(以 origin/main 为准);`docs/RULEBOOK.md`;生产 `src/data/signals/tom.py`、`src/data/universe/forward_books.py` 的 `TOM_ARMS['CORE_X1V']`、`src/data/evaluation/house_rules.py`。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-446.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 写 `docs/research/T-446_rule_check.md`,逐条答:(a) BASE 是否就是生产 `CORE_X1V` 的参数原样调用(给出脚本行号与 forward_books 行号);(b) 否决的时点:g[d] 作用于 d+1、否决看 defend[d+1] —— 有没有错一天;(c) 五条判据 c1 – c5 的实现是否与预注册的算式一字对得上(每条给行号;对不上的写出两边原文);(d) 票是否 T-370 v1 原样(house_rules 的值有没有被改写);(e) HOUSE_RULES 的 uses / varies 是否如实 —— 有没有改了规则却没写。② 不重跑、不改脚本、不评价结果、不登情景。③ 最终回复只贴 (a) – (e) 各一行 ✓ / ✗ + 一句。",
+    "expect": "T-446_rule_check.md;卡 in_review,推 lane-a/T-446。先于手上别的卡。"
+  },
+  "prior_value": "S-930 补定下的规矩:交互会话算出的结论,复核之前不算数。S-923 的口径错就是这类复核一天之内拦下的。",
+  "notes": "2026-11-28T04:04:16Z Seth 开卡(S-931 结果之后)。"
+}
