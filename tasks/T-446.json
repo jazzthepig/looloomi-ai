@@ -1,9 +1,13 @@
 {
   "id": "T-446",
   "owner": "lane-a",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-11-28",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-28T05:45:00Z",
+    "value": "lane-a/T-446@fa6b714a 已合进 main(24861e8e);docs/research/T-446_rule_check.md 在 main;核对数:main 上 s931 脚本 sha256 906c7181…c9de = 报告指纹;库内 cap_pit24 2023-01-03→2026-11-19 +130.4%、core_u_replay +175.4%,与报告一致。验收为文档类(非 SQL),按合并 + 复核数结卡。"
+  },
   "title": "复核 S-931(X1V + ⓪ 否决 + T-370 票)的设计 —— 只对规则与算式,不重算",
   "source": "台账 S-931 预注册与「S-931 结果(未复核)」两段(grep 标题);脚本 `docs/research/s931_x1v_zero_veto.py`(以 origin/main 为准);`docs/RULEBOOK.md`;生产 `src/data/signals/tom.py`、`src/data/universe/forward_books.py` 的 `TOM_ARMS['CORE_X1V']`、`src/data/evaluation/house_rules.py`。",
   "allowed_paths": [

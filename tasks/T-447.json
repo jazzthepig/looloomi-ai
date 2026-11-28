@@ -25,5 +25,5 @@
     "expect": "s931b_results.json + 一份 ≤40 行的 `docs/research/T-447_rerun.md`(每条判据一行:原值 → 新值 → 判定);卡 in_review,推 lane-c/T-447。"
   },
   "prior_value": "S-930:交互会话的结论复核前不算数;T-446 查出 S-931 的 BASE 两处输入不是生产(① 序列差 ~45pp、资金费固定 10%),「在生产之上削掉四成」那句要用生产输入重算后才成立或作废。",
-  "notes": "2026-11-28T04:50Z Seth 开卡(T-446 复核之后)。交给 C 道:不是作者、也不是复核者。"
+  "notes": "2026-11-28T04:50Z Seth 开卡(T-446 复核之后)。交给 C 道:不是作者、也不是复核者。\n\n2026-11-28T05:45Z Seth 审 lane-c/T-447@31835217:CHANGES(范围绿 5 文件)。①s931b_results.json 不是本分支脚本的产物(缺 judge_matches_s931_judge 键;ORIG_full disc 有值而 c1_disc_part=None)→ 原样重跑、提交其输出;②c4 跑满 500 次、种子 931;③c1 已知半边 false ⇒ c1 = ✗,不是不可判(judge_safe 改合取逻辑);④加臂 PROD_24(TOM_WARM_FROM=2024-01-01,forward_books.py:36/214/220),报 g 路径自哪天与 PROD_23 一致、两臂留出段 LUW;⑤删 docs/research/scenarios/lane-c-T-447.json(卡 ④ 不登情景),md「逐项相同」改为写明 17 vs 16。见 §Seth-1128b。"
 }
